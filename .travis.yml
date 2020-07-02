@@ -1,0 +1,36 @@
+language: rust
+rust: stable
+
+os: linux
+cache: cargo
+
+jobs:
+  allow_failures:
+    env:
+      - CAN_FAIL=true
+  fast_finish: true
+  include:
+    - {}
+    - stage: build
+      script:
+        - cargo build --no-default-features
+    - stage: test
+      script:
+        - cargo test --no-default-features
+    - stage: fmt
+      before_script:
+        - rustup component add rustfmt
+      script:
+        - cargo fmt -- --check
+    - stage: clippy
+      env: CAN_FAIL=true
+      before_script:
+        - rustup component add clippy
+      script:
+        - cargo clippy -- -D warnings
+
+stages:
+  - build
+  - test
+  - fmt
+  - clippy
