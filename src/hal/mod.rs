@@ -9,7 +9,7 @@
 pub mod traits;
 
 pub mod device;
-pub use device::{Factory as DeviceFactory, Info as DeviceInfo, List as DeviceList};
+pub use device::{Factory as DeviceFactory, List as DeviceList};
 
 #[cfg(feature = "v4l")]
 pub mod v4l2;

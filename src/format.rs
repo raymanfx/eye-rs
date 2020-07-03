@@ -122,10 +122,10 @@ impl Format {
 
 impl fmt::Display for Format {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "width  : {}", self.width)?;
-        writeln!(f, "height : {}", self.height)?;
-        writeln!(f, "fourcc : {}", self.fourcc)?;
-        writeln!(f, "stride : {}", self.stride.unwrap_or(0))?;
+        writeln!(f, "width      : {}", self.width)?;
+        writeln!(f, "height     : {}", self.height)?;
+        writeln!(f, "fourcc     : {}", self.fourcc)?;
+        writeln!(f, "stride     : {}", self.stride.unwrap_or(0))?;
         Ok(())
     }
 }

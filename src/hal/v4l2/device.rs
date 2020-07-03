@@ -6,10 +6,10 @@ use v4l::FourCC as FourCC_;
 
 use ffimage::packed::DynamicImageView;
 
+use crate::device::{FormatInfo, Info as DeviceInfo};
 use crate::format::{Format, FourCC};
 use crate::hal::traits::Device;
 use crate::hal::v4l2::stream::PlatformStream;
-use crate::hal::DeviceInfo;
 use crate::traits::Stream;
 
 pub(crate) struct PlatformList {}
@@ -27,7 +27,10 @@ impl PlatformList {
                 continue;
             }
 
+            let index = index.unwrap();
+            let name = name.unwrap();
             let caps = caps.unwrap();
+
             // For now, require video capture and streaming capabilities.
             // Very old devices may only support the read() I/O mechanism, so support for those
             // might be added in the future. Every recent (released during the last ten to twenty
@@ -40,9 +43,42 @@ impl PlatformList {
                 continue;
             }
 
+            let mut formats = Vec::new();
+            let dev = PlatformDevice::new(index);
+            if dev.is_err() {
+                continue;
+            }
+
+            let dev = dev.unwrap();
+            let plat_formats = dev.inner.enumerate_formats();
+            if plat_formats.is_err() {
+                continue;
+            }
+
+            for format in plat_formats.unwrap() {
+                let plat_sizes = dev.inner.enumerate_framesizes(format.fourcc);
+                if plat_sizes.is_err() {
+                    continue;
+                }
+                let mut info = FormatInfo {
+                    fourcc: FourCC::new(&format.fourcc.repr),
+                    resolutions: Vec::new(),
+                    emulated: format.flags & v4l::format::Flags::EMULATED
+                        == v4l::format::Flags::EMULATED,
+                };
+                for plat_size in plat_sizes.unwrap() {
+                    // TODO: consider stepwise formats
+                    if let v4l::framesize::FrameSizeEnum::Discrete(size) = plat_size.size {
+                        info.resolutions.push((size.width, size.height));
+                    }
+                }
+                formats.push(info);
+            }
+
             list.push(DeviceInfo {
-                index: index.unwrap() as u32,
-                name: name.unwrap(),
+                index: index as u32,
+                name,
+                formats,
             })
         }
 
