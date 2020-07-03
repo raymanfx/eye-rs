@@ -13,10 +13,22 @@ Eye is a very young library and its API is subject to change (as denoted by the 
 number). We follow the semver approach, meaning each new feature will bump the minor version by one.
 
 ## Goals
- * [x] Zero-copy (in userspace) image capture
- * [ ] Device discovery and identification
- * [ ] Device management, e.g. frame parameters or focus control
+
+Eye strives to provide a common feature set on all platforms. Some devices, mostly more expensive
+ones, will always offer more features than others though. Eye shall expose a dynamic featureset API
+which can be queried at runtime so device parameters can be configured accordingly.
+
+#### Common Features
+
  * [ ] Easy image conversion into common formats such as RGB
+
+#### OS Feature Matrix
+
+| Feature                                       | Linux     | Windows   | macOS     |
+| --------------------------------------------- |:---------:|:---------:|:---------:|
+| Zero-copy capture                             | &check;   | &#10540;  | &#10540;  |
+| Device enumeration                            | &check;   | &#10540;  | &#10540;  |
+| Device parameters (Focus, White Balance, ...) | &#10540;  | &#10540;  | &#10540;  |
 
 ## Usage
 Below you can find a quick example usage of this crate. It introduces the basics necessary for image capturing.
