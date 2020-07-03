@@ -1,6 +1,7 @@
 use std::{io, path::Path};
 
 use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
+use v4l::DeviceList;
 use v4l::FourCC as FourCC_;
 
 use ffimage::packed::DynamicImageView;
@@ -8,7 +9,46 @@ use ffimage::packed::DynamicImageView;
 use crate::format::{Format, FourCC};
 use crate::hal::traits::Device;
 use crate::hal::v4l2::stream::PlatformStream;
+use crate::hal::DeviceInfo;
 use crate::traits::Stream;
+
+pub(crate) struct PlatformList {}
+
+impl PlatformList {
+    pub fn enumerate() -> Vec<DeviceInfo> {
+        let mut list = Vec::new();
+        let platform_list = DeviceList::new();
+
+        for dev in platform_list {
+            let index = dev.index();
+            let name = dev.name();
+            let caps = dev.query_caps();
+            if index.is_none() || name.is_none() || caps.is_err() {
+                continue;
+            }
+
+            let caps = caps.unwrap();
+            // For now, require video capture and streaming capabilities.
+            // Very old devices may only support the read() I/O mechanism, so support for those
+            // might be added in the future. Every recent (released during the last ten to twenty
+            // years) webcam should support streaming though.
+            let capture_flag = v4l::capability::Flags::VIDEO_CAPTURE;
+            let streaming_flag = v4l::capability::Flags::STREAMING;
+            if caps.capabilities & capture_flag != capture_flag
+                || caps.capabilities & streaming_flag != streaming_flag
+            {
+                continue;
+            }
+
+            list.push(DeviceInfo {
+                index: index.unwrap() as u32,
+                name: name.unwrap(),
+            })
+        }
+
+        list
+    }
+}
 
 pub(crate) struct PlatformDevice {
     inner: CaptureDevice,

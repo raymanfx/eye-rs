@@ -8,8 +8,8 @@
 
 pub mod traits;
 
-pub mod factory;
-pub use factory::DeviceFactory;
+pub mod device;
+pub use device::{Factory as DeviceFactory, Info as DeviceInfo, List as DeviceList};
 
 #[cfg(feature = "v4l")]
 pub mod v4l2;

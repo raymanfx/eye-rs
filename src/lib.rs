@@ -7,7 +7,7 @@ pub mod prelude {
     pub use crate::{
         format::{Format, FourCC},
         hal::traits::Device,
-        hal::DeviceFactory,
+        hal::{DeviceFactory, DeviceInfo, DeviceList},
         traits::Stream,
     };
 }
