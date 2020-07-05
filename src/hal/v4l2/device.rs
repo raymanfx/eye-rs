@@ -1,12 +1,14 @@
 use std::{io, path::Path};
 
 use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
+use v4l::control::{MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::DeviceList;
 use v4l::FourCC as FourCC_;
 
 use ffimage::packed::DynamicImageView;
 
-use crate::device::{FormatInfo, Info as DeviceInfo};
+use crate::control;
+use crate::device::{ControlInfo, FormatInfo, Info as DeviceInfo};
 use crate::format::{Format, FourCC};
 use crate::hal::traits::Device;
 use crate::hal::v4l2::stream::PlatformStream;
@@ -41,6 +43,61 @@ impl PlatformList {
                 || caps.capabilities & streaming_flag != streaming_flag
             {
                 continue;
+            }
+
+            let mut controls = Vec::new();
+            let plat_controls = dev.query_controls();
+            if plat_controls.is_err() {
+                continue;
+            }
+
+            for control in plat_controls.unwrap() {
+                let mut repr = control::Representation::Unknown;
+                match control.typ {
+                    ControlType::Integer | ControlType::Integer64 => {
+                        let constraints = control::Integer {
+                            range: (control.minimum as i64, control.maximum as i64),
+                            step: control.step as u64,
+                            default: control.default as i64,
+                        };
+                        repr = control::Representation::Integer(constraints);
+                    }
+                    ControlType::Boolean => {
+                        repr = control::Representation::Boolean;
+                    }
+                    ControlType::Menu => {
+                        let mut items = Vec::new();
+                        if let Some(plat_items) = control.items {
+                            for plat_item in plat_items {
+                                match plat_item.1 {
+                                    ControlMenuItem::Name(name) => {
+                                        items.push(control::MenuItem::String(name));
+                                    }
+                                    ControlMenuItem::Value(value) => {
+                                        items.push(control::MenuItem::Integer(value));
+                                    }
+                                }
+                            }
+                        }
+                        repr = control::Representation::Menu(items);
+                    }
+                    ControlType::Button => {
+                        repr = control::Representation::Button;
+                    }
+                    ControlType::String => {
+                        repr = control::Representation::String;
+                    }
+                    ControlType::Bitmask => {
+                        repr = control::Representation::Bitmask;
+                    }
+                    _ => {}
+                }
+
+                controls.push(ControlInfo {
+                    id: control.id,
+                    name: control.name,
+                    repr,
+                })
             }
 
             let mut formats = Vec::new();
@@ -79,6 +136,7 @@ impl PlatformList {
                 index: index as u32,
                 name,
                 formats,
+                controls,
             })
         }
 
