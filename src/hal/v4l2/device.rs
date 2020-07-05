@@ -4,6 +4,7 @@ use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
 use v4l::control::{MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::DeviceList;
 use v4l::FourCC as FourCC_;
+use v4l::QueryDevice;
 
 use ffimage::packed::DynamicImageView;
 
@@ -24,13 +25,23 @@ impl PlatformList {
         for dev in platform_list {
             let index = dev.index();
             let name = dev.name();
-            let caps = dev.query_caps();
-            if index.is_none() || name.is_none() || caps.is_err() {
+
+            if index.is_none() || name.is_none() {
                 continue;
             }
-
             let index = index.unwrap();
             let name = name.unwrap();
+
+            let dev = PlatformDevice::new(index);
+            if dev.is_err() {
+                continue;
+            }
+            let dev = dev.unwrap();
+
+            let caps = dev.inner.query_caps();
+            if caps.is_err() {
+                continue;
+            }
             let caps = caps.unwrap();
 
             // For now, require video capture and streaming capabilities.
@@ -46,7 +57,7 @@ impl PlatformList {
             }
 
             let mut controls = Vec::new();
-            let plat_controls = dev.query_controls();
+            let plat_controls = dev.inner.query_controls();
             if plat_controls.is_err() {
                 continue;
             }
@@ -101,19 +112,13 @@ impl PlatformList {
             }
 
             let mut formats = Vec::new();
-            let dev = PlatformDevice::new(index);
-            if dev.is_err() {
-                continue;
-            }
-
-            let dev = dev.unwrap();
-            let plat_formats = dev.inner.enumerate_formats();
+            let plat_formats = dev.inner.enum_formats();
             if plat_formats.is_err() {
                 continue;
             }
 
             for format in plat_formats.unwrap() {
-                let plat_sizes = dev.inner.enumerate_framesizes(format.fourcc);
+                let plat_sizes = dev.inner.enum_framesizes(format.fourcc);
                 if plat_sizes.is_err() {
                     continue;
                 }

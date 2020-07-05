@@ -16,5 +16,5 @@ cfg-if = "0.1"
 ffimage = "^0.4"
 
 [target.'cfg(target_os = "linux")'.dependencies.v4l]
-version = "^0.6"
+version = "^0.7"
 optional = true
