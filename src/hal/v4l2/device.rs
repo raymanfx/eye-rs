@@ -1,7 +1,7 @@
 use std::{io, path::Path};
 
 use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
-use v4l::control::{MenuItem as ControlMenuItem, Type as ControlType};
+use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::DeviceList;
 use v4l::FourCC as FourCC_;
 use v4l::QueryDevice;
@@ -178,6 +178,34 @@ impl PlatformDevice {
 }
 
 impl Device for PlatformDevice {
+    fn get_control(&mut self, id: u32) -> io::Result<control::Value> {
+        let ctrl = self.inner.get_control(id)?;
+        match ctrl {
+            Control::Value(val) => Ok(control::Value::Integer(val as i64)),
+            _ => Err(io::Error::new(
+                io::ErrorKind::Other,
+                "control type cannot be mapped",
+            )),
+        }
+    }
+
+    fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
+        match val {
+            control::Value::Integer(val) => {
+                let ctrl = Control::Value(*val as i32);
+                self.inner.set_control(id, ctrl)?;
+            }
+            _ => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "control type cannot be mapped",
+                ))
+            }
+        }
+
+        Ok(())
+    }
+
     fn get_format(&mut self) -> io::Result<Format> {
         let fmt = self.inner.get_format()?;
         Ok(Format::with_stride(

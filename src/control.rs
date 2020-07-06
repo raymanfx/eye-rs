@@ -32,3 +32,11 @@ pub enum Representation {
     Bitmask,
     Menu(Vec<MenuItem>),
 }
+
+/// Device control value representation
+pub enum Value {
+    /* Single value controls */
+    String(String),
+    Boolean(bool),
+    Integer(i64),
+}
