@@ -11,8 +11,20 @@ fn main() {
     for info in list {
         println!("Index {}", info.index);
         println!("  Name    : {}", info.name);
+        let dev = DeviceFactory::create(info.index as usize);
+        if dev.is_err() {
+            println!("Failed to open video device {}", info.index);
+        }
+        let dev = dev.unwrap();
+
+        let controls = dev.query_controls();
+        if controls.is_err() {
+            println!("Failed to query controls");
+        }
+        let controls = controls.unwrap();
+
         println!("  Controls:");
-        for ctrl in &info.controls {
+        for ctrl in &controls {
             println!("    * {}", ctrl.name);
             #[allow(unreachable_patterns)]
             match &ctrl.repr {

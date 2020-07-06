@@ -10,8 +10,20 @@ fn main() {
     for info in list {
         println!("Index {}", info.index);
         println!("  Name    : {}", info.name);
+        let dev = DeviceFactory::create(info.index as usize);
+        if dev.is_err() {
+            println!("Failed to open video device {}", info.index);
+        }
+        let dev = dev.unwrap();
+
+        let formats = dev.query_formats();
+        if formats.is_err() {
+            println!("Failed to query formats");
+        }
+        let formats = formats.unwrap();
+
         println!("  Formats:");
-        for fmt in &info.formats {
+        for fmt in &formats {
             println!("    Fourcc        : {}", fmt.fourcc);
             println!("    Resolutions   : {:?}", fmt.resolutions);
             println!("    Emulated      : {}", fmt.emulated);

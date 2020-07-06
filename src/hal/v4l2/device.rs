@@ -56,92 +56,9 @@ impl PlatformList {
                 continue;
             }
 
-            let mut controls = Vec::new();
-            let plat_controls = dev.inner.query_controls();
-            if plat_controls.is_err() {
-                continue;
-            }
-
-            for control in plat_controls.unwrap() {
-                let mut repr = control::Representation::Unknown;
-                match control.typ {
-                    ControlType::Integer | ControlType::Integer64 => {
-                        let constraints = control::Integer {
-                            range: (control.minimum as i64, control.maximum as i64),
-                            step: control.step as u64,
-                            default: control.default as i64,
-                        };
-                        repr = control::Representation::Integer(constraints);
-                    }
-                    ControlType::Boolean => {
-                        repr = control::Representation::Boolean;
-                    }
-                    ControlType::Menu => {
-                        let mut items = Vec::new();
-                        if let Some(plat_items) = control.items {
-                            for plat_item in plat_items {
-                                match plat_item.1 {
-                                    ControlMenuItem::Name(name) => {
-                                        items.push(control::MenuItem::String(name));
-                                    }
-                                    ControlMenuItem::Value(value) => {
-                                        items.push(control::MenuItem::Integer(value));
-                                    }
-                                }
-                            }
-                        }
-                        repr = control::Representation::Menu(items);
-                    }
-                    ControlType::Button => {
-                        repr = control::Representation::Button;
-                    }
-                    ControlType::String => {
-                        repr = control::Representation::String;
-                    }
-                    ControlType::Bitmask => {
-                        repr = control::Representation::Bitmask;
-                    }
-                    _ => {}
-                }
-
-                controls.push(ControlInfo {
-                    id: control.id,
-                    name: control.name,
-                    repr,
-                })
-            }
-
-            let mut formats = Vec::new();
-            let plat_formats = dev.inner.enum_formats();
-            if plat_formats.is_err() {
-                continue;
-            }
-
-            for format in plat_formats.unwrap() {
-                let plat_sizes = dev.inner.enum_framesizes(format.fourcc);
-                if plat_sizes.is_err() {
-                    continue;
-                }
-                let mut info = FormatInfo {
-                    fourcc: FourCC::new(&format.fourcc.repr),
-                    resolutions: Vec::new(),
-                    emulated: format.flags & v4l::format::Flags::EMULATED
-                        == v4l::format::Flags::EMULATED,
-                };
-                for plat_size in plat_sizes.unwrap() {
-                    // TODO: consider stepwise formats
-                    if let v4l::framesize::FrameSizeEnum::Discrete(size) = plat_size.size {
-                        info.resolutions.push((size.width, size.height));
-                    }
-                }
-                formats.push(info);
-            }
-
             list.push(DeviceInfo {
                 index: index as u32,
                 name,
-                formats,
-                controls,
             })
         }
 
@@ -178,6 +95,89 @@ impl PlatformDevice {
 }
 
 impl Device for PlatformDevice {
+    fn query_formats(&self) -> io::Result<Vec<FormatInfo>> {
+        let mut formats = Vec::new();
+        let plat_formats = self.inner.enum_formats()?;
+
+        for format in plat_formats {
+            let plat_sizes = self.inner.enum_framesizes(format.fourcc);
+            if plat_sizes.is_err() {
+                continue;
+            }
+            let mut info = FormatInfo {
+                fourcc: FourCC::new(&format.fourcc.repr),
+                resolutions: Vec::new(),
+                emulated: format.flags & v4l::format::Flags::EMULATED
+                    == v4l::format::Flags::EMULATED,
+            };
+            for plat_size in plat_sizes.unwrap() {
+                // TODO: consider stepwise formats
+                if let v4l::framesize::FrameSizeEnum::Discrete(size) = plat_size.size {
+                    info.resolutions.push((size.width, size.height));
+                }
+            }
+            formats.push(info);
+        }
+
+        Ok(formats)
+    }
+
+    fn query_controls(&self) -> io::Result<Vec<ControlInfo>> {
+        let mut controls = Vec::new();
+        let plat_controls = self.inner.query_controls()?;
+
+        for control in plat_controls {
+            let mut repr = control::Representation::Unknown;
+            match control.typ {
+                ControlType::Integer | ControlType::Integer64 => {
+                    let constraints = control::Integer {
+                        range: (control.minimum as i64, control.maximum as i64),
+                        step: control.step as u64,
+                        default: control.default as i64,
+                    };
+                    repr = control::Representation::Integer(constraints);
+                }
+                ControlType::Boolean => {
+                    repr = control::Representation::Boolean;
+                }
+                ControlType::Menu => {
+                    let mut items = Vec::new();
+                    if let Some(plat_items) = control.items {
+                        for plat_item in plat_items {
+                            match plat_item.1 {
+                                ControlMenuItem::Name(name) => {
+                                    items.push(control::MenuItem::String(name));
+                                }
+                                ControlMenuItem::Value(value) => {
+                                    items.push(control::MenuItem::Integer(value));
+                                }
+                            }
+                        }
+                    }
+                    repr = control::Representation::Menu(items);
+                }
+                ControlType::Button => {
+                    repr = control::Representation::Button;
+                }
+                ControlType::String => {
+                    repr = control::Representation::String;
+                }
+                ControlType::Bitmask => {
+                    repr = control::Representation::Bitmask;
+                }
+                _ => {}
+            }
+
+            controls.push(ControlInfo {
+                id: control.id,
+                name: control.name,
+                repr,
+            })
+        }
+
+        Ok(controls)
+    }
+
     fn get_control(&mut self, id: u32) -> io::Result<control::Value> {
         let ctrl = self.inner.get_control(id)?;
         match ctrl {

@@ -31,10 +31,4 @@ pub struct Info {
     pub index: u32,
     /// Name of the device (non unique)
     pub name: String,
-
-    /// Formats supported by the device
-    pub formats: Vec<FormatInfo>,
-
-    /// Controls supported by the device
-    pub controls: Vec<ControlInfo>,
 }
