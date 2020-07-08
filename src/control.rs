@@ -1,3 +1,4 @@
+#[derive(Clone)]
 /// Integer control knob
 pub struct Integer {
     /// Valid value range (inclusive on both ends)
@@ -7,6 +8,8 @@ pub struct Integer {
     /// Default value
     pub default: i64,
 }
+
+#[derive(Clone)]
 /// Device control menu item
 pub enum MenuItem {
     /// String representation, use this as fallback
@@ -15,6 +18,7 @@ pub enum MenuItem {
     Integer(i64),
 }
 
+#[derive(Clone)]
 /// Device control representation
 pub enum Representation {
     /* Unknown */
@@ -33,6 +37,7 @@ pub enum Representation {
     Menu(Vec<MenuItem>),
 }
 
+#[derive(Clone)]
 /// Device control value representation
 pub enum Value {
     /* Single value controls */

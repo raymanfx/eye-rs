@@ -1,6 +1,7 @@
 use crate::control;
 use crate::format::FourCC;
 
+#[derive(Clone)]
 /// Image buffer format description
 pub struct FormatInfo {
     /// Pixelformat
@@ -12,6 +13,7 @@ pub struct FormatInfo {
     pub emulated: bool,
 }
 
+#[derive(Clone)]
 /// Device control description
 pub struct ControlInfo {
     /// Implementation specific ID (unique)
@@ -23,6 +25,7 @@ pub struct ControlInfo {
     pub repr: control::Representation,
 }
 
+#[derive(Clone)]
 /// Platform device info
 ///
 /// Only fields supported by all backends shall be added here.
