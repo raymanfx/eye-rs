@@ -9,11 +9,14 @@ readme = "README.md"
 repository= "https://github.com/raymanfx/eye-rs"
 
 [features]
-default = ["v4l"]
+default = ["jpeg", "v4l"]
+jpeg = ["jpeg-decoder"]
 
 [dependencies]
 cfg-if = "0.1"
 ffimage = "^0.5"
+
+jpeg-decoder = { version = "^0.1", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies.v4l]
 version = "^0.7"

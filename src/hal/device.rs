@@ -3,6 +3,8 @@ use std::io;
 use crate::device::Info;
 use crate::hal::traits::Device;
 
+use crate::hal::common::device::TransparentDevice;
+
 pub struct List {}
 
 impl List {
@@ -31,6 +33,7 @@ impl Factory {
         #[cfg(feature = "v4l")]
         {
             let dev = crate::hal::v4l2::device::PlatformDevice::new(_index)?;
+            let dev = TransparentDevice::new(Box::new(dev));
             return Ok(Box::new(dev));
         }
 

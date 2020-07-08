@@ -11,5 +11,7 @@ pub mod traits;
 pub mod device;
 pub use device::{Factory as DeviceFactory, List as DeviceList};
 
+pub mod common;
+
 #[cfg(feature = "v4l")]
 pub mod v4l2;
