@@ -11,9 +11,8 @@ use ffimage::packed::DynamicImageView;
 use crate::control;
 use crate::device::{ControlInfo, FormatInfo, Info as DeviceInfo};
 use crate::format::{Format, FourCC};
-use crate::hal::traits::Device;
+use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
-use crate::traits::Stream;
 
 pub(crate) struct PlatformList {}
 

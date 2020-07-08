@@ -6,8 +6,8 @@ use v4l::buffer::{Buffer, BufferStream};
 use v4l::MappedBufferStream;
 
 use crate::format::{Format, FourCC};
+use crate::hal::traits::Stream;
 use crate::hal::v4l2::device::PlatformDevice;
-use crate::traits::Stream;
 
 pub(crate) struct PlatformStream<'a> {
     format: Format,
@@ -104,10 +104,6 @@ impl<'a> Drop for PlatformStream<'a> {
 
 impl<'a> Stream for PlatformStream<'a> {
     type Item = DynamicImageView<'a>;
-
-    fn format(&self) -> Format {
-        self.format
-    }
 
     fn next(&mut self) -> io::Result<Self::Item> {
         self.queue()?;

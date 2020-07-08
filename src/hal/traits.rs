@@ -5,7 +5,6 @@ use ffimage::packed::DynamicImageView;
 use crate::control;
 use crate::device::{ControlInfo, FormatInfo};
 use crate::format::Format;
-use crate::traits::Stream;
 
 /// Platform device abstraction
 pub trait Device {
@@ -30,4 +29,16 @@ pub trait Device {
 
     /// Returns a zero-copy stream for direct frame access
     fn stream<'a>(&'a mut self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>>;
+}
+
+/// Stream abstraction
+///
+/// A stream is a construct which offers one item at a time. Once the next item is available, the
+/// previous one is discarded and thus not accessible any longer.
+pub trait Stream {
+    /// Type of the stream elements
+    type Item;
+
+    /// Advances the stream and returns the next item
+    fn next(&mut self) -> io::Result<Self::Item>;
 }
