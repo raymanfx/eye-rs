@@ -13,7 +13,7 @@ default = ["v4l"]
 
 [dependencies]
 cfg-if = "0.1"
-ffimage = "^0.4"
+ffimage = "^0.5"
 
 [target.'cfg(target_os = "linux")'.dependencies.v4l]
 version = "^0.7"
