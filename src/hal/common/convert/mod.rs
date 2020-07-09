@@ -38,7 +38,10 @@ impl Converter {
         formats.push((FourCC::new(b"RGB3"), vec![FourCC::new(b"AB24")]));
 
         #[cfg(feature = "jpeg")]
-        formats.push((FourCC::new(b"MJPG"), vec![FourCC::new(b"RGB3")]));
+        formats.push((
+            FourCC::new(b"MJPG"),
+            vec![FourCC::new(b"RGB3"), FourCC::new(b"AB24")],
+        ));
 
         formats
     }

@@ -1,11 +1,12 @@
 use std::io;
 
-use ffimage::packed::image::dynamic::MemoryView;
+use ffimage::packed::image::dynamic::{MemoryView, StorageType};
 use ffimage::packed::{DynamicImageBuffer, DynamicImageView};
 
 use jpeg_decoder::{Decoder, PixelFormat};
 
 use crate::format::FourCC;
+use crate::hal::common::convert::rgb;
 
 pub fn convert_to_rgb(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
     match src.raw() {
@@ -47,6 +48,18 @@ pub fn convert_to_rgb(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> i
     }
 }
 
+pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
+    let mut intermediate = DynamicImageBuffer::empty(StorageType::U8);
+    convert_to_rgb(src, &mut intermediate)?;
+    let view = DynamicImageView::new(
+        intermediate.raw().as_slice::<u8>().unwrap(),
+        src.width(),
+        src.height(),
+    )
+    .unwrap();
+    rgb::convert_to_rgba(&view, dst)
+}
+
 pub fn convert(
     src: &DynamicImageView,
     dst: &mut DynamicImageBuffer,
@@ -54,6 +67,8 @@ pub fn convert(
 ) -> io::Result<()> {
     if dst_fmt == FourCC::new(b"RGB3") {
         return convert_to_rgb(src, dst);
+    } else if dst_fmt == FourCC::new(b"AB24") {
+        return convert_to_rgba(src, dst);
     }
 
     Err(io::Error::new(
