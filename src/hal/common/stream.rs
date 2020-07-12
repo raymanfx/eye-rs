@@ -5,7 +5,7 @@ use ffimage::packed::{DynamicImageBuffer, DynamicImageView};
 
 use crate::format::{Format, FourCC};
 use crate::hal::common::convert::Converter;
-use crate::hal::traits::Stream;
+use crate::hal::traits::{Stream, StreamItem};
 
 /// A transparent wrapper for native platform streams.
 pub struct TransparentStream<'a> {
@@ -41,7 +41,7 @@ impl<'a> TransparentStream<'a> {
 impl<'a> Stream for TransparentStream<'a> {
     type Item = DynamicImageView<'a>;
 
-    fn next(&mut self) -> io::Result<Self::Item> {
+    fn next<'b>(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
         let mut view = self.stream.next()?;
 
         // emulate format by converting the buffer if necessary
@@ -56,7 +56,7 @@ impl<'a> Stream for TransparentStream<'a> {
             }
 
             Converter::convert(&view, self.format.fourcc, &mut self.convert_buffer, map.1)?;
-            view = self.convert_buffer.as_view();
+            view = StreamItem::new(self.convert_buffer.as_view())
         }
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
