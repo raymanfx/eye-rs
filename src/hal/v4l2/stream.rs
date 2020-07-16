@@ -9,7 +9,7 @@ use crate::format::{Format, FourCC};
 use crate::hal::traits::{Stream, StreamItem};
 use crate::hal::v4l2::device::PlatformDevice;
 
-pub(crate) struct PlatformStream<'a> {
+pub struct PlatformStream<'a> {
     format: Format,
     stream: Option<MappedBufferStream<'a>>,
     active: bool,

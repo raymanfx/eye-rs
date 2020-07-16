@@ -14,7 +14,7 @@ use crate::format::{Format, FourCC};
 use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
 
-pub(crate) struct PlatformList {}
+pub struct PlatformList {}
 
 impl PlatformList {
     pub fn enumerate() -> Vec<DeviceInfo> {
@@ -65,7 +65,7 @@ impl PlatformList {
     }
 }
 
-pub(crate) struct PlatformDevice {
+pub struct PlatformDevice {
     inner: CaptureDevice,
 }
 

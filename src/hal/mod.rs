@@ -14,4 +14,4 @@ pub use device::{Factory as DeviceFactory, List as DeviceList};
 pub mod common;
 
 #[cfg(feature = "v4l")]
-pub mod v4l2;
+pub(crate) mod v4l2;
