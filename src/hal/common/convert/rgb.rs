@@ -49,7 +49,7 @@ pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
         ));
     }
 
-    *dst = DynamicImageBuffer::with_raw(src.width(), src.height(), rgba.raw()).unwrap();
+    *dst = DynamicImageBuffer::from_raw(src.width(), src.height(), rgba.into()).unwrap();
     Ok(())
 }
 
@@ -63,7 +63,7 @@ pub fn convert_to_bgra(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
         ));
     }
 
-    *dst = DynamicImageBuffer::with_raw(src.width(), src.height(), bgra.raw()).unwrap();
+    *dst = DynamicImageBuffer::from_raw(src.width(), src.height(), bgra.into()).unwrap();
     Ok(())
 }
 

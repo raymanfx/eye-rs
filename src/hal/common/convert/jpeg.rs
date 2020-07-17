@@ -32,7 +32,7 @@ pub fn convert_to_rgb(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> i
 
             match info.pixel_format {
                 PixelFormat::RGB24 => {
-                    *dst = DynamicImageBuffer::with_raw(src.width(), src.height(), &data).unwrap();
+                    *dst = DynamicImageBuffer::from_raw(src.width(), src.height(), data).unwrap();
                     Ok(())
                 }
                 _ => Err(io::Error::new(

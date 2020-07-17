@@ -14,7 +14,7 @@ jpeg = ["jpeg-decoder"]
 
 [dependencies]
 cfg-if = "0.1"
-ffimage = "^0.5"
+ffimage = "^0.7"
 
 jpeg-decoder = { version = "^0.1", optional = true }
 
