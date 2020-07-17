@@ -35,12 +35,19 @@ impl Converter {
     pub fn formats() -> Vec<(FourCC, Vec<FourCC>)> {
         let mut formats = Vec::new();
 
-        formats.push((FourCC::new(b"RGB3"), vec![FourCC::new(b"AB24")]));
+        formats.push((
+            FourCC::new(b"RGB3"),
+            vec![FourCC::new(b"AB24"), FourCC::new(b"AR24")],
+        ));
 
         #[cfg(feature = "jpeg")]
         formats.push((
             FourCC::new(b"MJPG"),
-            vec![FourCC::new(b"RGB3"), FourCC::new(b"AB24")],
+            vec![
+                FourCC::new(b"RGB3"),
+                FourCC::new(b"AB24"),
+                FourCC::new(b"AR24"),
+            ],
         ));
 
         formats

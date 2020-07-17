@@ -60,6 +60,18 @@ pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
     rgb::convert_to_rgba(&view, dst)
 }
 
+pub fn convert_to_bgra(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
+    let mut intermediate = DynamicImageBuffer::empty(StorageType::U8);
+    convert_to_rgb(src, &mut intermediate)?;
+    let view = DynamicImageView::new(
+        intermediate.raw().as_slice::<u8>().unwrap(),
+        src.width(),
+        src.height(),
+    )
+    .unwrap();
+    rgb::convert_to_bgra(&view, dst)
+}
+
 pub fn convert(
     src: &DynamicImageView,
     dst: &mut DynamicImageBuffer,
@@ -69,6 +81,8 @@ pub fn convert(
         return convert_to_rgb(src, dst);
     } else if dst_fmt == FourCC::new(b"AB24") {
         return convert_to_rgba(src, dst);
+    } else if dst_fmt == FourCC::new(b"AR24") {
+        return convert_to_bgra(src, dst);
     }
 
     Err(io::Error::new(

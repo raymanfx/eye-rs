@@ -1,12 +1,15 @@
 use std::io;
 
-use ffimage::color::{Rgb, Rgba};
-use ffimage::core::TryConvert;
+use ffimage::color::{Bgra, Rgb, Rgba};
+use ffimage::core::{Pixel, TryConvert};
 use ffimage::packed::{DynamicImageBuffer, DynamicImageView, GenericImageBuffer, GenericImageView};
 
 use crate::format::FourCC;
 
-pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
+fn _convert<DP: Pixel + From<Rgb<u8>>>(
+    src: &DynamicImageView,
+    dst: &mut GenericImageBuffer<DP>,
+) -> io::Result<()> {
     let data = src.raw().as_slice();
     if data.is_none() {
         return Err(io::Error::new(
@@ -25,8 +28,20 @@ pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
     }
     let rgb = rgb.unwrap();
 
+    let res = rgb.try_convert(dst);
+    if res.is_err() {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "failed to convert RGB",
+        ));
+    }
+
+    Ok(())
+}
+
+pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
     let mut rgba = GenericImageBuffer::<Rgba<u8>>::new(src.width(), src.height());
-    let res = rgb.try_convert(&mut rgba);
+    let res = _convert(src, &mut rgba);
     if res.is_err() {
         return Err(io::Error::new(
             io::ErrorKind::Other,
@@ -38,6 +53,20 @@ pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
     Ok(())
 }
 
+pub fn convert_to_bgra(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
+    let mut bgra = GenericImageBuffer::<Bgra<u8>>::new(src.width(), src.height());
+    let res = _convert(src, &mut bgra);
+    if res.is_err() {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "failed to convert RGB to BGRA",
+        ));
+    }
+
+    *dst = DynamicImageBuffer::with_raw(src.width(), src.height(), bgra.raw()).unwrap();
+    Ok(())
+}
+
 pub fn convert(
     src: &DynamicImageView,
     dst: &mut DynamicImageBuffer,
@@ -45,6 +74,8 @@ pub fn convert(
 ) -> io::Result<()> {
     if dst_fmt == FourCC::new(b"AB24") {
         return convert_to_rgba(src, dst);
+    } else if dst_fmt == FourCC::new(b"AR24") {
+        return convert_to_bgra(src, dst);
     }
 
     Err(io::Error::new(
