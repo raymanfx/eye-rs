@@ -3,7 +3,7 @@ use std::{io, mem};
 use ffimage::packed::image::dynamic::{MemoryView, StorageType};
 use ffimage::packed::{DynamicImageBuffer, DynamicImageView};
 
-use crate::format::{Format, FourCC};
+use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::hal::traits::{Stream, StreamItem};
 
@@ -11,7 +11,7 @@ use crate::hal::traits::{Stream, StreamItem};
 pub struct TransparentStream<'a> {
     stream: Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>,
     format: Format,
-    mapping: Option<(FourCC, FourCC)>,
+    mapping: Option<(PixelFormat, PixelFormat)>,
     convert_buffer: DynamicImageBuffer,
 }
 
@@ -33,7 +33,7 @@ impl<'a> TransparentStream<'a> {
     /// * `src` - Source format to be set on the device
     /// * `dst` - Target format to emulate
     ///
-    pub fn map(&mut self, src: FourCC, dst: FourCC) {
+    pub fn map(&mut self, src: PixelFormat, dst: PixelFormat) {
         self.mapping = Some((src, dst))
     }
 }
@@ -55,7 +55,7 @@ impl<'a> Stream for TransparentStream<'a> {
                 }
             }
 
-            Converter::convert(&view, self.format.fourcc, &mut self.convert_buffer, map.1)?;
+            Converter::convert(&view, self.format.pixfmt, &mut self.convert_buffer, map.1)?;
             view = StreamItem::new(self.convert_buffer.as_view())
         }
 

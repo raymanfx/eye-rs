@@ -7,7 +7,7 @@ pub mod hal;
 pub mod prelude {
     pub use crate::{
         device::Info as DeviceInfo,
-        format::{Format, FourCC},
+        format::{Format, FourCC, PixelFormat},
         hal::traits::{Device, Stream},
         hal::{DeviceFactory, DeviceList},
     };

@@ -6,23 +6,23 @@ use std::io;
 
 use ffimage::packed::{DynamicImageBuffer, DynamicImageView};
 
-use crate::format::FourCC;
+use crate::format::{FourCC, PixelFormat};
 
 pub struct Converter {}
 
 impl Converter {
     pub fn convert(
         src: &DynamicImageView,
-        src_fmt: FourCC,
+        src_fmt: PixelFormat,
         dst: &mut DynamicImageBuffer,
-        dst_fmt: FourCC,
+        dst_fmt: PixelFormat,
     ) -> io::Result<()> {
-        if src_fmt == FourCC::new(b"RGB3") {
+        if src_fmt == PixelFormat::Rgb(24) {
             return rgb::convert(src, dst, dst_fmt);
         }
 
         #[cfg(feature = "jpeg")]
-        if src_fmt == FourCC::new(b"MJPG") {
+        if src_fmt == PixelFormat::Custom(FourCC::new(b"MJPG")) {
             return jpeg::convert(src, dst, dst_fmt);
         }
 
@@ -32,21 +32,21 @@ impl Converter {
         ))
     }
 
-    pub fn formats() -> Vec<(FourCC, Vec<FourCC>)> {
+    pub fn formats() -> Vec<(PixelFormat, Vec<PixelFormat>)> {
         let mut formats = Vec::new();
 
         formats.push((
-            FourCC::new(b"RGB3"),
-            vec![FourCC::new(b"AB24"), FourCC::new(b"AR24")],
+            PixelFormat::Rgb(24),
+            vec![PixelFormat::Bgra(32), PixelFormat::Rgba(32)],
         ));
 
         #[cfg(feature = "jpeg")]
         formats.push((
-            FourCC::new(b"MJPG"),
+            PixelFormat::Custom(FourCC::new(b"MJPG")),
             vec![
-                FourCC::new(b"RGB3"),
-                FourCC::new(b"AB24"),
-                FourCC::new(b"AR24"),
+                PixelFormat::Rgb(24),
+                PixelFormat::Bgra(32),
+                PixelFormat::Rgba(32),
             ],
         ));
 

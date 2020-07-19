@@ -24,7 +24,7 @@ fn main() {
 
         println!("  Formats:");
         for fmt in &formats {
-            println!("    Fourcc        : {}", fmt.fourcc);
+            println!("    Pixelformat   : {}", fmt.pixfmt);
             println!("    Resolutions   : {:?}", fmt.resolutions);
             println!("    Emulated      : {}", fmt.emulated);
         }

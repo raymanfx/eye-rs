@@ -4,7 +4,7 @@ use ffimage::color::{Bgra, Rgb, Rgba};
 use ffimage::core::{Pixel, TryConvert};
 use ffimage::packed::{DynamicImageBuffer, DynamicImageView, GenericImageBuffer, GenericImageView};
 
-use crate::format::FourCC;
+use crate::format::PixelFormat;
 
 fn _convert<DP: Pixel + From<Rgb<u8>>>(
     src: &DynamicImageView,
@@ -70,12 +70,12 @@ pub fn convert_to_bgra(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
 pub fn convert(
     src: &DynamicImageView,
     dst: &mut DynamicImageBuffer,
-    dst_fmt: FourCC,
+    dst_fmt: PixelFormat,
 ) -> io::Result<()> {
-    if dst_fmt == FourCC::new(b"AB24") {
-        return convert_to_rgba(src, dst);
-    } else if dst_fmt == FourCC::new(b"AR24") {
-        return convert_to_bgra(src, dst);
+    match dst_fmt {
+        PixelFormat::Bgra(32) => return convert_to_bgra(src, dst),
+        PixelFormat::Rgba(32) => return convert_to_rgba(src, dst),
+        _ => {}
     }
 
     Err(io::Error::new(

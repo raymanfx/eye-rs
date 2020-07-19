@@ -1,11 +1,11 @@
 use crate::control;
-use crate::format::FourCC;
+use crate::format::PixelFormat;
 
 #[derive(Clone)]
 /// Image buffer format description
 pub struct FormatInfo {
-    /// Pixelformat
-    pub fourcc: FourCC,
+    /// PixelFormat
+    pub pixfmt: PixelFormat,
     /// Length of a pixel row in bytes
     pub resolutions: Vec<(u32, u32)>,
 

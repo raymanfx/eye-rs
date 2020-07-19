@@ -1,4 +1,4 @@
-use std::{io, path::Path};
+use std::{convert::TryFrom, io, path::Path};
 
 use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
@@ -10,7 +10,7 @@ use ffimage::packed::DynamicImageView;
 
 use crate::control;
 use crate::device::{ControlInfo, FormatInfo, Info as DeviceInfo};
-use crate::format::{Format, FourCC};
+use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
 
@@ -104,7 +104,7 @@ impl Device for PlatformDevice {
                 continue;
             }
             let mut info = FormatInfo {
-                fourcc: FourCC::new(&format.fourcc.repr),
+                pixfmt: PixelFormat::from(FourCC::new(&format.fourcc.repr)),
                 resolutions: Vec::new(),
                 emulated: format.flags & v4l::format::Flags::EMULATED
                     == v4l::format::Flags::EMULATED,
@@ -210,13 +210,21 @@ impl Device for PlatformDevice {
         Ok(Format::with_stride(
             fmt.width,
             fmt.height,
-            FourCC::new(&fmt.fourcc.repr),
+            PixelFormat::from(FourCC::new(&fmt.fourcc.repr)),
             fmt.stride as usize,
         ))
     }
 
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format> {
-        let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(&fmt.fourcc.repr));
+        let fourcc = FourCC::try_from(fmt.pixfmt);
+        if fourcc.is_err() {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "failed to map pixelformat to fourcc",
+            ));
+        }
+
+        let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(&fourcc.unwrap().repr));
         self.inner.set_format(&fmt)?;
         self.get_format()
     }

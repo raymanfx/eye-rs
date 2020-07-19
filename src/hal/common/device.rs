@@ -4,7 +4,7 @@ use ffimage::packed::DynamicImageView;
 
 use crate::control;
 use crate::device::{ControlInfo, FormatInfo};
-use crate::format::{Format, FourCC};
+use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::hal::common::stream::TransparentStream;
 use crate::hal::traits::{Device, Stream};
@@ -16,7 +16,7 @@ pub struct TransparentDevice {
     // active format
     emulated_format: Option<Format>,
     // formats which are emulated by us
-    emulated_formats: Vec<(FourCC, FourCC)>,
+    emulated_formats: Vec<(PixelFormat, PixelFormat)>,
 }
 
 impl TransparentDevice {
@@ -33,21 +33,21 @@ impl TransparentDevice {
 
     /// Returns a list of format mappings where the first field is a native format and the second
     /// is a format which can be emulated by the common converter abstraction layer.
-    fn query_emulated_formats(&self) -> io::Result<Vec<(FourCC, FourCC)>> {
+    fn query_emulated_formats(&self) -> io::Result<Vec<(PixelFormat, PixelFormat)>> {
         let converter_formats = Converter::formats();
         let mut emulated_formats = Vec::new();
 
         let native_formats = self.dev.query_formats()?;
         for native_format in &native_formats {
             for emulated in &converter_formats {
-                if emulated.0 == native_format.fourcc {
+                if emulated.0 == native_format.pixfmt {
                     // we can emulate formats based on this native format
                     for emulated_dst in &emulated.1 {
                         // first check if the format we can emulate is actually already supported
                         // natively
                         let mut supported_natively = false;
                         for format in &native_formats {
-                            if format.fourcc == *emulated_dst {
+                            if format.pixfmt == *emulated_dst {
                                 supported_natively = true;
                                 break;
                             }
@@ -59,7 +59,7 @@ impl TransparentDevice {
                         }
 
                         // looks like the format is not already supported, so let's add it
-                        emulated_formats.push((native_format.fourcc, *emulated_dst));
+                        emulated_formats.push((native_format.pixfmt, *emulated_dst));
                     }
                 }
             }
@@ -77,10 +77,10 @@ impl Device for TransparentDevice {
         let mut emulated_formats = Vec::new();
         for plat_format in &formats {
             for mapping in &self.emulated_formats {
-                if mapping.0 == plat_format.fourcc {
+                if mapping.0 == plat_format.pixfmt {
                     // transparently add the emulated format
                     let mut emulated_format = plat_format.clone();
-                    emulated_format.fourcc = mapping.1;
+                    emulated_format.pixfmt = mapping.1;
                     emulated_format.emulated = true;
                     emulated_formats.push(emulated_format);
                 }
@@ -117,8 +117,8 @@ impl Device for TransparentDevice {
         // check whether we need to emulate the requested format
         let mut emulate = None;
         for format in &self.emulated_formats {
-            if format.1 == fmt.fourcc {
-                fmt.fourcc = format.0;
+            if format.1 == fmt.pixfmt {
+                fmt.pixfmt = format.0;
                 emulate = Some((format.0, format.1));
                 break;
             }
@@ -132,8 +132,8 @@ impl Device for TransparentDevice {
 
         let mut fmt = self.dev.set_format(&fmt)?;
         if let Some(mapping) = emulate {
-            if fmt.fourcc == mapping.0 {
-                fmt.fourcc = mapping.1;
+            if fmt.pixfmt == mapping.0 {
+                fmt.pixfmt = mapping.1;
             }
         }
 
@@ -146,7 +146,7 @@ impl Device for TransparentDevice {
         let mut stream = TransparentStream::new(native_stream, native_format);
 
         if let Some(format) = self.emulated_format {
-            stream.map(native_format.fourcc, format.fourcc);
+            stream.map(native_format.pixfmt, format.pixfmt);
         }
 
         Ok(Box::new(stream))

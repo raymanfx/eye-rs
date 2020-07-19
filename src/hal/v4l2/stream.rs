@@ -5,7 +5,7 @@ use ffimage::packed::DynamicImageView;
 use v4l::buffer::{Buffer, BufferStream};
 use v4l::MappedBufferStream;
 
-use crate::format::{Format, FourCC};
+use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Stream, StreamItem};
 use crate::hal::v4l2::device::PlatformDevice;
 
@@ -22,7 +22,7 @@ impl<'a> PlatformStream<'a> {
         let format = Format::with_stride(
             format_.width,
             format_.height,
-            FourCC::new(&format_.fourcc.repr),
+            PixelFormat::from(FourCC::new(&format_.fourcc.repr)),
             format_.stride as usize,
         );
 
