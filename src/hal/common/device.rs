@@ -130,14 +130,8 @@ impl Device for TransparentDevice {
             self.emulated_format = Some(emulated_format);
         }
 
-        let mut fmt = self.dev.set_format(&fmt)?;
-        if let Some(mapping) = emulate {
-            if fmt.pixfmt == mapping.0 {
-                fmt.pixfmt = mapping.1;
-            }
-        }
-
-        Ok(fmt)
+        self.dev.set_format(&fmt)?;
+        self.get_format()
     }
 
     fn stream<'a>(&'a mut self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
