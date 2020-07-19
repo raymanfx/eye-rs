@@ -20,7 +20,7 @@ which can be queried at runtime so device parameters can be configured according
 
 #### Common Features
 
- * [ ] Easy image conversion into common formats such as RGB
+ * [x] Transparent pixel format conversion
 
 #### OS Feature Matrix
 
@@ -28,7 +28,7 @@ which can be queried at runtime so device parameters can be configured according
 | --------------------------------------------- |:---------:|:---------:|:---------:|
 | Zero-copy capture                             | &check;   | &#10540;  | &#10540;  |
 | Device enumeration                            | &check;   | &#10540;  | &#10540;  |
-| Device parameters (Focus, White Balance, ...) | &#10540;  | &#10540;  | &#10540;  |
+| Device parameters (Focus, White Balance, ...) | (&check;) | &#10540;  | &#10540;  |
 
 ## Usage
 Below you can find a quick example usage of this crate. It introduces the basics necessary for image capturing.
