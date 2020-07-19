@@ -255,12 +255,17 @@ impl Format {
     /// let format = Format::new(1280, 720, PixelFormat::Rgb(24));
     /// ```
     pub fn new(width: u32, height: u32, pixfmt: PixelFormat) -> Self {
-        Format {
+        let mut fmt = Format {
             width,
             height,
             pixfmt,
             stride: None,
+        };
+
+        if let Some(bits) = pixfmt.bits() {
+            fmt.stride = Some(width as usize * bits as usize);
         }
+        fmt
     }
 
     /// Returns an image format representation with a custom stride
