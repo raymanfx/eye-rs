@@ -5,7 +5,7 @@ use eye::prelude::*;
 
 fn main() {
     // Create a list of valid capture devices in the system.
-    let list = DeviceList::enumerate();
+    let list = DeviceFactory::enumerate();
 
     // Print the supported controls for each device.
     for info in list {

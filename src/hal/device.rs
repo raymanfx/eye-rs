@@ -5,11 +5,14 @@ use crate::hal::traits::Device;
 
 use crate::hal::common::device::TransparentDevice;
 
-pub struct List {}
+/// Platform device factory
+///
+/// Automatically selects a suitable backend.
+pub struct Factory {}
 
-impl List {
+impl Factory {
     #[allow(unreachable_code)]
-    /// Returns a list of device info structs
+    /// Returns a list of available devices
     pub fn enumerate() -> Vec<Info> {
         #[cfg(feature = "v4l")]
         {
@@ -19,14 +22,7 @@ impl List {
 
         Vec::new()
     }
-}
 
-/// Platform device factory
-///
-/// Automatically selects a suitable backend.
-pub struct Factory {}
-
-impl Factory {
     #[allow(unreachable_code)]
     /// Returns a new platform device abstraction
     pub fn create(_index: usize) -> io::Result<Box<dyn Device>> {

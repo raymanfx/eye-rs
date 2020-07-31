@@ -5,7 +5,7 @@
 pub mod traits;
 
 pub mod device;
-pub use device::{Factory as DeviceFactory, List as DeviceList};
+pub use device::Factory as DeviceFactory;
 
 pub mod common;
 

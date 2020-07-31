@@ -59,6 +59,6 @@ pub mod prelude {
         device::Info as DeviceInfo,
         format::{Format, FourCC, PixelFormat},
         hal::traits::{Device, Stream},
-        hal::{DeviceFactory, DeviceList},
+        hal::DeviceFactory,
     };
 }
