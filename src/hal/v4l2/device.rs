@@ -9,7 +9,7 @@ use v4l::QueryDevice;
 use ffimage::packed::DynamicImageView;
 
 use crate::control;
-use crate::device::{ControlInfo, FormatInfo, Info as DeviceInfo};
+use crate::device::{ControlFlags, ControlInfo, FormatInfo, Info as DeviceInfo};
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
@@ -172,9 +172,24 @@ impl Device for PlatformDevice {
                 _ => {}
             }
 
+            let mut flags = ControlFlags::NONE;
+            if control.flags & v4l::control::Flags::READ_ONLY == v4l::control::Flags::READ_ONLY {
+                flags |= ControlFlags::READ_ONLY;
+            }
+            if control.flags & v4l::control::Flags::WRITE_ONLY == v4l::control::Flags::WRITE_ONLY {
+                flags |= ControlFlags::WRITE_ONLY;
+            }
+            if control.flags & v4l::control::Flags::GRABBED == v4l::control::Flags::GRABBED {
+                flags |= ControlFlags::GRABBED;
+            }
+            if control.flags & v4l::control::Flags::INACTIVE == v4l::control::Flags::INACTIVE {
+                flags |= ControlFlags::INACTIVE;
+            }
+
             controls.push(ControlInfo {
                 id: control.id,
                 name: control.name,
+                flags,
                 repr,
             })
         }

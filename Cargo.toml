@@ -13,6 +13,7 @@ default = ["jpeg", "v4l"]
 jpeg = ["jpeg-decoder"]
 
 [dependencies]
+bitflags = "^1.2"
 ffimage = "^0.7"
 
 jpeg-decoder = { version = "^0.1", optional = true }
