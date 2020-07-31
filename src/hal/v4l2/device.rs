@@ -126,6 +126,11 @@ impl Device for PlatformDevice {
         let plat_controls = self.inner.query_controls()?;
 
         for control in plat_controls {
+            // The v4l docs say applications should ignore permanently disabled controls.
+            if control.flags & v4l::control::Flags::DISABLED == v4l::control::Flags::DISABLED {
+                continue;
+            }
+
             let mut repr = control::Representation::Unknown;
             match control.typ {
                 ControlType::Integer | ControlType::Integer64 => {
