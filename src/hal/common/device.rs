@@ -94,7 +94,7 @@ impl Device for TransparentDevice {
         self.dev.query_controls()
     }
 
-    fn control(&mut self, id: u32) -> io::Result<control::Value> {
+    fn control(&self, id: u32) -> io::Result<control::Value> {
         self.dev.control(id)
     }
 
@@ -102,7 +102,7 @@ impl Device for TransparentDevice {
         self.dev.set_control(id, val)
     }
 
-    fn format(&mut self) -> io::Result<Format> {
+    fn format(&self) -> io::Result<Format> {
         // in case of active format emulation, we don't need to query the actual device
         if self.emulated_format.is_some() {
             return Ok(self.emulated_format.unwrap());
@@ -134,7 +134,7 @@ impl Device for TransparentDevice {
         self.format()
     }
 
-    fn stream<'a>(&'a mut self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
+    fn stream<'a>(&'a self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
         let native_format = self.dev.format()?;
         let native_stream = self.dev.stream()?;
         let mut stream = TransparentStream::new(native_stream, native_format);

@@ -17,7 +17,7 @@ pub struct PlatformStream<'a> {
 }
 
 impl<'a> PlatformStream<'a> {
-    pub fn new(dev: &'a mut PlatformDevice) -> io::Result<Self> {
+    pub fn new(dev: &'a PlatformDevice) -> io::Result<Self> {
         let format_ = dev.inner().get_format()?;
         let format = Format::with_stride(
             format_.width,
@@ -35,7 +35,7 @@ impl<'a> PlatformStream<'a> {
             // call for this high-level interface
             queued: true,
         };
-        stream.stream = Some(MappedBufferStream::new(dev.inner_mut())?);
+        stream.stream = Some(MappedBufferStream::new(dev.inner())?);
         Ok(stream)
     }
 

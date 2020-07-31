@@ -8,7 +8,7 @@ fn main() {
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device the system assigned the index zero. For Linux, this will be the first device
     // that the machine saw.
-    let mut dev = DeviceFactory::create(0).expect("Failed to open video device");
+    let dev = DeviceFactory::create(0).expect("Failed to open video device");
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).

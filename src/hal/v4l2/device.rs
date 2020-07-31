@@ -87,10 +87,6 @@ impl PlatformDevice {
     pub fn inner(&self) -> &CaptureDevice {
         &self.inner
     }
-
-    pub fn inner_mut(&mut self) -> &mut CaptureDevice {
-        &mut self.inner
-    }
 }
 
 impl Device for PlatformDevice {
@@ -197,7 +193,7 @@ impl Device for PlatformDevice {
         Ok(controls)
     }
 
-    fn control(&mut self, id: u32) -> io::Result<control::Value> {
+    fn control(&self, id: u32) -> io::Result<control::Value> {
         let ctrl = self.inner.get_control(id)?;
         match ctrl {
             Control::Value(val) => Ok(control::Value::Integer(val as i64)),
@@ -229,7 +225,7 @@ impl Device for PlatformDevice {
         Ok(())
     }
 
-    fn format(&mut self) -> io::Result<Format> {
+    fn format(&self) -> io::Result<Format> {
         let fmt = self.inner.get_format()?;
         Ok(Format::with_stride(
             fmt.width,
@@ -253,7 +249,7 @@ impl Device for PlatformDevice {
         self.format()
     }
 
-    fn stream<'a>(&'a mut self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
+    fn stream<'a>(&'a self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
         let stream = PlatformStream::new(self)?;
         Ok(Box::new(stream))
     }

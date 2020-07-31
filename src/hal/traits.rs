@@ -15,20 +15,20 @@ pub trait Device {
     fn query_controls(&self) -> io::Result<Vec<ControlInfo>>;
 
     /// Returns the current control value for an ID
-    fn control(&mut self, id: u32) -> io::Result<control::Value>;
+    fn control(&self, id: u32) -> io::Result<control::Value>;
 
     /// Sets the control value, returns error for incompatible value types
     fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()>;
 
     /// Returns the current format in use by the device
-    fn format(&mut self) -> io::Result<Format>;
+    fn format(&self) -> io::Result<Format>;
 
     /// Attempts to match the requested format to a device format on a best-effort basis and
     /// returns the actual format in use
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream<'a>(&'a mut self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>>;
+    fn stream<'a>(&'a self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>>;
 }
 
 /// Stream item wrapper
