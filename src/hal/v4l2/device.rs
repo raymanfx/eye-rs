@@ -177,7 +177,7 @@ impl Device for PlatformDevice {
         Ok(controls)
     }
 
-    fn get_control(&mut self, id: u32) -> io::Result<control::Value> {
+    fn control(&mut self, id: u32) -> io::Result<control::Value> {
         let ctrl = self.inner.get_control(id)?;
         match ctrl {
             Control::Value(val) => Ok(control::Value::Integer(val as i64)),
@@ -209,7 +209,7 @@ impl Device for PlatformDevice {
         Ok(())
     }
 
-    fn get_format(&mut self) -> io::Result<Format> {
+    fn format(&mut self) -> io::Result<Format> {
         let fmt = self.inner.get_format()?;
         Ok(Format::with_stride(
             fmt.width,
@@ -230,7 +230,7 @@ impl Device for PlatformDevice {
 
         let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(&fourcc.unwrap().repr));
         self.inner.set_format(&fmt)?;
-        self.get_format()
+        self.format()
     }
 
     fn stream<'a>(&'a mut self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {

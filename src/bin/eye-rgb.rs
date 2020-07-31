@@ -12,7 +12,7 @@ fn main() {
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).
-    let mut format = dev.get_format().expect("Failed to read native format");
+    let mut format = dev.format().expect("Failed to read native format");
     println!("Current format:\n{}", format);
 
     // Explictly request RGB pixelformat, either native or emulated.

@@ -12,7 +12,7 @@ fn main() {
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).
-    let format = dev.get_format().expect("Failed to read native format");
+    let format = dev.format().expect("Failed to read native format");
     println!("Format:\n{}", format);
 
     // Since we want to capture images, we need to access the native image stream of the device.

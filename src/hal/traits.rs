@@ -15,13 +15,13 @@ pub trait Device {
     fn query_controls(&self) -> io::Result<Vec<ControlInfo>>;
 
     /// Returns the current control value for an ID
-    fn get_control(&mut self, id: u32) -> io::Result<control::Value>;
+    fn control(&mut self, id: u32) -> io::Result<control::Value>;
 
     /// Sets the control value, returns error for incompatible value types
     fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()>;
 
     /// Returns the current format in use by the device
-    fn get_format(&mut self) -> io::Result<Format>;
+    fn format(&mut self) -> io::Result<Format>;
 
     /// Attempts to match the requested format to a device format on a best-effort basis and
     /// returns the actual format in use
