@@ -194,6 +194,10 @@ impl Device for PlatformDevice {
                 let ctrl = Control::Value(*val as i32);
                 self.inner.set_control(id, ctrl)?;
             }
+            control::Value::Boolean(val) => {
+                let ctrl = Control::Value(*val as i32);
+                self.inner.set_control(id, ctrl)?;
+            }
             _ => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
