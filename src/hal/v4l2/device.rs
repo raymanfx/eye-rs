@@ -2,9 +2,9 @@ use std::{convert::TryFrom, io, path::Path};
 
 use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
-use v4l::DeviceList;
+use v4l::device::List;
+use v4l::device::QueryDevice;
 use v4l::FourCC as FourCC_;
-use v4l::QueryDevice;
 
 use ffimage::packed::DynamicImageView;
 
@@ -19,7 +19,7 @@ pub struct PlatformList {}
 impl PlatformList {
     pub fn enumerate() -> Vec<DeviceInfo> {
         let mut list = Vec::new();
-        let platform_list = DeviceList::new();
+        let platform_list = List::new();
 
         for dev in platform_list {
             let index = dev.index();
@@ -194,7 +194,7 @@ impl Device for PlatformDevice {
     }
 
     fn control(&self, id: u32) -> io::Result<control::Value> {
-        let ctrl = self.inner.get_control(id)?;
+        let ctrl = self.inner.control(id)?;
         match ctrl {
             Control::Value(val) => Ok(control::Value::Integer(val as i64)),
             _ => Err(io::Error::new(
@@ -226,7 +226,7 @@ impl Device for PlatformDevice {
     }
 
     fn format(&self) -> io::Result<Format> {
-        let fmt = self.inner.get_format()?;
+        let fmt = self.inner.format()?;
         Ok(Format::with_stride(
             fmt.width,
             fmt.height,

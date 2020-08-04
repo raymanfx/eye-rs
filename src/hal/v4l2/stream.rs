@@ -2,8 +2,8 @@ use std::{io, mem};
 
 use ffimage::packed::DynamicImageView;
 
-use v4l::buffer::{Buffer, BufferStream};
-use v4l::MappedBufferStream;
+use v4l::buffer::Stream as _Stream;
+use v4l::io::mmap::Stream as MmapStream;
 
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Stream, StreamItem};
@@ -11,14 +11,14 @@ use crate::hal::v4l2::device::PlatformDevice;
 
 pub struct PlatformStream<'a> {
     format: Format,
-    stream: Option<MappedBufferStream<'a>>,
+    stream: Option<MmapStream<'a>>,
     active: bool,
     queued: bool,
 }
 
 impl<'a> PlatformStream<'a> {
     pub fn new(dev: &'a PlatformDevice) -> io::Result<Self> {
-        let format_ = dev.inner().get_format()?;
+        let format_ = dev.inner().format()?;
         let format = Format::with_stride(
             format_.width,
             format_.height,
@@ -35,7 +35,7 @@ impl<'a> PlatformStream<'a> {
             // call for this high-level interface
             queued: true,
         };
-        stream.stream = Some(MappedBufferStream::new(dev.inner())?);
+        stream.stream = Some(MmapStream::new(dev.inner())?);
         Ok(stream)
     }
 
