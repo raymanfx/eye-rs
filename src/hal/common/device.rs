@@ -134,7 +134,7 @@ impl Device for TransparentDevice {
         self.format()
     }
 
-    fn stream<'a>(&'a self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
+    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>> {
         let native_format = self.dev.format()?;
         let native_stream = self.dev.stream()?;
         let mut stream = TransparentStream::new(native_stream, native_format);

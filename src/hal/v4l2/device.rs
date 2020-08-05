@@ -249,7 +249,7 @@ impl Device for PlatformDevice {
         self.format()
     }
 
-    fn stream<'a>(&'a self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>> {
+    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>> {
         let stream = PlatformStream::new(self)?;
         Ok(Box::new(stream))
     }

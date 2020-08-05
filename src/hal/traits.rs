@@ -28,7 +28,7 @@ pub trait Device {
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream<'a>(&'a self) -> io::Result<Box<dyn Stream<Item = DynamicImageView> + 'a>>;
+    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>>;
 }
 
 /// Stream item wrapper

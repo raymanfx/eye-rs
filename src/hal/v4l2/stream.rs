@@ -17,7 +17,7 @@ pub struct PlatformStream<'a> {
 }
 
 impl<'a> PlatformStream<'a> {
-    pub fn new(dev: &'a PlatformDevice) -> io::Result<Self> {
+    pub fn new(dev: &PlatformDevice) -> io::Result<Self> {
         let format_ = dev.inner().format()?;
         let format = Format::with_stride(
             format_.width,
