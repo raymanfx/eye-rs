@@ -4,7 +4,7 @@ pub mod rgb;
 
 use std::io;
 
-use ffimage::packed::{DynamicImageBuffer, DynamicImageView};
+use ffimage::packed::dynamic::{ImageBuffer, ImageView};
 
 use crate::format::{FourCC, PixelFormat};
 
@@ -12,9 +12,9 @@ pub struct Converter {}
 
 impl Converter {
     pub fn convert(
-        src: &DynamicImageView,
+        src: &ImageView,
         src_fmt: PixelFormat,
-        dst: &mut DynamicImageBuffer,
+        dst: &mut ImageBuffer,
         dst_fmt: PixelFormat,
     ) -> io::Result<()> {
         if src_fmt == PixelFormat::Rgb(24) {

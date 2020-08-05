@@ -6,7 +6,7 @@ use v4l::device::List;
 use v4l::device::QueryDevice;
 use v4l::FourCC as FourCC_;
 
-use ffimage::packed::DynamicImageView;
+use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
 use crate::device::{ControlFlags, ControlInfo, FormatInfo, Info as DeviceInfo};
@@ -249,7 +249,7 @@ impl Device for PlatformDevice {
         self.format()
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>> {
+    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = ImageView<'a>> + 'a>> {
         let stream = PlatformStream::new(self)?;
         Ok(Box::new(stream))
     }

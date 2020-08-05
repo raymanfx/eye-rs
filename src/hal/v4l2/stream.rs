@@ -1,6 +1,6 @@
 use std::{io, mem};
 
-use ffimage::packed::DynamicImageView;
+use ffimage::packed::dynamic::ImageView;
 
 use v4l::buffer::Stream as _Stream;
 use v4l::io::mmap::Stream as MmapStream;
@@ -73,11 +73,11 @@ impl<'a> PlatformStream<'a> {
         Ok(())
     }
 
-    fn dequeue(&mut self) -> io::Result<DynamicImageView<'a>> {
+    fn dequeue(&mut self) -> io::Result<ImageView<'a>> {
         let frame = self.stream.as_mut().unwrap().dequeue()?;
         self.queued = false;
 
-        let view = DynamicImageView::with_stride(
+        let view = ImageView::with_stride(
             frame.data(),
             self.format.width,
             self.format.height,
@@ -103,7 +103,7 @@ impl<'a> Drop for PlatformStream<'a> {
 }
 
 impl<'a> Stream for PlatformStream<'a> {
-    type Item = DynamicImageView<'a>;
+    type Item = ImageView<'a>;
 
     fn next<'b>(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
         self.queue()?;

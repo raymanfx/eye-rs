@@ -1,6 +1,6 @@
 use std::{io, marker::PhantomData, ops::Deref};
 
-use ffimage::packed::DynamicImageView;
+use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
 use crate::device::{ControlInfo, FormatInfo};
@@ -28,7 +28,7 @@ pub trait Device {
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>>;
+    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = ImageView<'a>> + 'a>>;
 }
 
 /// Stream item wrapper

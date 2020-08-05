@@ -2,12 +2,13 @@ use std::io;
 
 use ffimage::color::{Bgra, Rgb, Rgba};
 use ffimage::core::{Pixel, TryConvert};
-use ffimage::packed::{DynamicImageBuffer, DynamicImageView, GenericImageBuffer, GenericImageView};
+use ffimage::packed::dynamic::{ImageBuffer, ImageView};
+use ffimage::packed::generic::{ImageBuffer as GenericImageBuffer, ImageView as GenericImageView};
 
 use crate::format::PixelFormat;
 
 fn _convert<DP: Pixel + From<Rgb<u8>>>(
-    src: &DynamicImageView,
+    src: &ImageView,
     dst: &mut GenericImageBuffer<DP>,
 ) -> io::Result<()> {
     let data = src.raw().as_slice();
@@ -39,7 +40,7 @@ fn _convert<DP: Pixel + From<Rgb<u8>>>(
     Ok(())
 }
 
-pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
+pub fn convert_to_rgba(src: &ImageView, dst: &mut ImageBuffer) -> io::Result<()> {
     let mut rgba = GenericImageBuffer::<Rgba<u8>>::new(src.width(), src.height());
     let res = _convert(src, &mut rgba);
     if res.is_err() {
@@ -49,11 +50,11 @@ pub fn convert_to_rgba(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
         ));
     }
 
-    *dst = DynamicImageBuffer::from_raw(src.width(), src.height(), rgba.into()).unwrap();
+    *dst = ImageBuffer::from_raw(src.width(), src.height(), rgba.into()).unwrap();
     Ok(())
 }
 
-pub fn convert_to_bgra(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> io::Result<()> {
+pub fn convert_to_bgra(src: &ImageView, dst: &mut ImageBuffer) -> io::Result<()> {
     let mut bgra = GenericImageBuffer::<Bgra<u8>>::new(src.width(), src.height());
     let res = _convert(src, &mut bgra);
     if res.is_err() {
@@ -63,15 +64,11 @@ pub fn convert_to_bgra(src: &DynamicImageView, dst: &mut DynamicImageBuffer) -> 
         ));
     }
 
-    *dst = DynamicImageBuffer::from_raw(src.width(), src.height(), bgra.into()).unwrap();
+    *dst = ImageBuffer::from_raw(src.width(), src.height(), bgra.into()).unwrap();
     Ok(())
 }
 
-pub fn convert(
-    src: &DynamicImageView,
-    dst: &mut DynamicImageBuffer,
-    dst_fmt: PixelFormat,
-) -> io::Result<()> {
+pub fn convert(src: &ImageView, dst: &mut ImageBuffer, dst_fmt: PixelFormat) -> io::Result<()> {
     match dst_fmt {
         PixelFormat::Bgra(32) => return convert_to_bgra(src, dst),
         PixelFormat::Rgba(32) => return convert_to_rgba(src, dst),

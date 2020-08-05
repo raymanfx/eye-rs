@@ -14,7 +14,7 @@ jpeg = ["jpeg-decoder"]
 
 [dependencies]
 bitflags = "^1.2"
-ffimage = "^0.7"
+ffimage = "^0.8"
 
 jpeg-decoder = { version = "^0.1", optional = true }
 

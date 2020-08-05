@@ -1,7 +1,6 @@
 use std::{io, mem};
 
-use ffimage::packed::image::dynamic::{MemoryView, StorageType};
-use ffimage::packed::{DynamicImageBuffer, DynamicImageView};
+use ffimage::packed::dynamic::{ImageBuffer, ImageView, MemoryView, StorageType};
 
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
@@ -9,19 +8,19 @@ use crate::hal::traits::{Stream, StreamItem};
 
 /// A transparent wrapper for native platform streams.
 pub struct TransparentStream<'a> {
-    stream: Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>,
+    stream: Box<dyn Stream<Item = ImageView<'a>> + 'a>,
     format: Format,
     mapping: Option<(PixelFormat, PixelFormat)>,
-    convert_buffer: DynamicImageBuffer,
+    convert_buffer: ImageBuffer,
 }
 
 impl<'a> TransparentStream<'a> {
-    pub fn new(stream: Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>, format: Format) -> Self {
+    pub fn new(stream: Box<dyn Stream<Item = ImageView<'a>> + 'a>, format: Format) -> Self {
         TransparentStream {
             stream,
             format,
             mapping: None,
-            convert_buffer: DynamicImageBuffer::empty(StorageType::U8),
+            convert_buffer: ImageBuffer::empty(StorageType::U8),
         }
     }
 
@@ -39,7 +38,7 @@ impl<'a> TransparentStream<'a> {
 }
 
 impl<'a> Stream for TransparentStream<'a> {
-    type Item = DynamicImageView<'a>;
+    type Item = ImageView<'a>;
 
     fn next<'b>(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
         let mut view = self.stream.next()?;
@@ -48,10 +47,10 @@ impl<'a> Stream for TransparentStream<'a> {
         if let Some(map) = self.mapping {
             match view.raw() {
                 MemoryView::U8(_) => {
-                    self.convert_buffer = DynamicImageBuffer::empty(StorageType::U8);
+                    self.convert_buffer = ImageBuffer::empty(StorageType::U8);
                 }
                 MemoryView::U16(_) => {
-                    self.convert_buffer = DynamicImageBuffer::empty(StorageType::U16);
+                    self.convert_buffer = ImageBuffer::empty(StorageType::U16);
                 }
             }
 

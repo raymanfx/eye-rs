@@ -1,6 +1,6 @@
 use std::io;
 
-use ffimage::packed::DynamicImageView;
+use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
 use crate::device::{ControlInfo, FormatInfo};
@@ -134,7 +134,7 @@ impl Device for TransparentDevice {
         self.format()
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = DynamicImageView<'a>> + 'a>> {
+    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = ImageView<'a>> + 'a>> {
         let native_format = self.dev.format()?;
         let native_stream = self.dev.stream()?;
         let mut stream = TransparentStream::new(native_stream, native_format);
