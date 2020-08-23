@@ -94,7 +94,7 @@ impl Device for TransparentDevice {
         self.dev.query_controls()
     }
 
-    fn control(&self, id: u32) -> io::Result<control::Value> {
+    fn control(&self, id: u32) -> io::Result<Option<control::Value>> {
         self.dev.control(id)
     }
 
