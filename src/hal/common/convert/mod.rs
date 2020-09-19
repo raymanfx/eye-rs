@@ -1,6 +1,7 @@
+mod rgb;
+
 #[cfg(feature = "jpeg")]
-pub mod jpeg;
-pub mod rgb;
+mod jpeg;
 
 use std::io;
 
