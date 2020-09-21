@@ -1,9 +1,10 @@
 use std::{convert::TryFrom, io, path::Path};
 
-use v4l::capture::{Device as CaptureDevice, Format as CaptureFormat};
+use v4l::capture::Device as CaptureDevice;
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::device::List;
 use v4l::device::QueryDevice;
+use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
 
 use ffimage::packed::dynamic::ImageView;
@@ -102,8 +103,8 @@ impl Device for PlatformDevice {
             let mut info = FormatInfo {
                 pixfmt: PixelFormat::from(FourCC::new(&format.fourcc.repr)),
                 resolutions: Vec::new(),
-                emulated: format.flags & v4l::format::Flags::EMULATED
-                    == v4l::format::Flags::EMULATED,
+                emulated: format.flags & v4l::format::description::Flags::EMULATED
+                    == v4l::format::description::Flags::EMULATED,
             };
             for plat_size in plat_sizes.unwrap() {
                 // TODO: consider stepwise formats
