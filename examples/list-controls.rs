@@ -1,27 +1,17 @@
-extern crate eye;
+use std::io;
 
 use eye::control::{MenuItem, Representation};
 use eye::prelude::*;
 
-fn main() {
+fn main() -> io::Result<()> {
     // Create a list of valid capture devices in the system.
     let list = DeviceFactory::enumerate();
 
     // Print the supported controls for each device.
-    for info in list {
-        println!("Index {}", info.index);
-        println!("  Name    : {}", info.name);
-        let dev = DeviceFactory::create(info.index as usize);
-        if dev.is_err() {
-            println!("Failed to open video device {}", info.index);
-        }
-        let dev = dev.unwrap();
-
-        let controls = dev.query_controls();
-        if controls.is_err() {
-            println!("Failed to query controls");
-        }
-        let controls = controls.unwrap();
+    for uri in list {
+        println!("{}", uri);
+        let dev = DeviceFactory::create(&uri)?;
+        let controls = dev.query_controls()?;
 
         println!("  Controls:");
         for ctrl in &controls {
@@ -69,4 +59,6 @@ fn main() {
             }
         }
     }
+
+    Ok(())
 }

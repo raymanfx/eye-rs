@@ -1,5 +1,3 @@
-extern crate eye;
-
 use eye::prelude::*;
 
 fn main() {
@@ -7,8 +5,7 @@ fn main() {
     let list = DeviceFactory::enumerate();
 
     // Print the info for each device.
-    for info in list {
-        println!("Index {}", info.index);
-        println!("  Name    : {}", info.name);
+    for uri in list {
+        println!("{}", uri);
     }
 }

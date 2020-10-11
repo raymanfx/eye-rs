@@ -37,10 +37,16 @@ Below you can find a quick example usage of this crate. It introduces the basics
 use eye::prelude::*;
 
 fn main() {
+    // Query for available devices.
+    let devices = DeviceFactory::enumerate();
+    if devices.len() == 0 {
+        println!("No devices available");
+        return;
+    }
+
     // First, we need a capture device to read images from. For this example, let's just choose
-    // whatever device the system assigned the index zero. For Linux, this will be the first device
-    // that the machine saw.
-    let mut dev = DeviceFactory::create(0).expect("Failed to open video device");
+    // whatever device is first in the list.
+    let dev = DeviceFactory::create(&devices[0]).expect("Failed to open video device");
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).

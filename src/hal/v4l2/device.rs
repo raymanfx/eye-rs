@@ -2,7 +2,6 @@ use std::{convert::TryFrom, io, path::Path};
 
 use v4l::capture::Device as CaptureDevice;
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
-use v4l::device::List;
 use v4l::device::QueryDevice;
 use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
@@ -10,61 +9,10 @@ use v4l::FourCC as FourCC_;
 use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
-use crate::device::{ControlFlags, ControlInfo, Info as DeviceInfo};
+use crate::device::{ControlFlags, ControlInfo};
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
-
-pub struct PlatformList {}
-
-impl PlatformList {
-    pub fn enumerate() -> Vec<DeviceInfo> {
-        let mut list = Vec::new();
-        let platform_list = List::new();
-
-        for dev in platform_list {
-            let index = dev.index();
-            let name = dev.name();
-
-            if index.is_none() || name.is_none() {
-                continue;
-            }
-            let index = index.unwrap();
-            let name = name.unwrap();
-
-            let dev = PlatformDevice::new(index);
-            if dev.is_err() {
-                continue;
-            }
-            let dev = dev.unwrap();
-
-            let caps = dev.inner.query_caps();
-            if caps.is_err() {
-                continue;
-            }
-            let caps = caps.unwrap();
-
-            // For now, require video capture and streaming capabilities.
-            // Very old devices may only support the read() I/O mechanism, so support for those
-            // might be added in the future. Every recent (released during the last ten to twenty
-            // years) webcam should support streaming though.
-            let capture_flag = v4l::capability::Flags::VIDEO_CAPTURE;
-            let streaming_flag = v4l::capability::Flags::STREAMING;
-            if caps.capabilities & capture_flag != capture_flag
-                || caps.capabilities & streaming_flag != streaming_flag
-            {
-                continue;
-            }
-
-            list.push(DeviceInfo {
-                index: index as u32,
-                name,
-            })
-        }
-
-        list
-    }
-}
 
 pub struct PlatformDevice {
     inner: CaptureDevice,
