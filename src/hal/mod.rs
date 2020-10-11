@@ -7,3 +7,6 @@ pub mod traits;
 
 #[cfg(feature = "v4l")]
 pub(crate) mod v4l2;
+
+#[cfg(feature = "openpnp")]
+pub(crate) mod openpnp;
