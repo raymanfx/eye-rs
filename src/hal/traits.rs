@@ -2,8 +2,7 @@ use std::{io, marker::PhantomData, ops::Deref};
 
 use ffimage::packed::dynamic::ImageView;
 
-use crate::control;
-use crate::device::ControlInfo;
+use crate::control::{Control, Value as ControlValue};
 use crate::format::Format;
 
 /// Platform device abstraction
@@ -12,13 +11,13 @@ pub trait Device {
     fn query_formats(&self) -> io::Result<Vec<Format>>;
 
     /// Returns the supported controls
-    fn query_controls(&self) -> io::Result<Vec<ControlInfo>>;
+    fn query_controls(&self) -> io::Result<Vec<Control>>;
 
     /// Returns the current control value for an ID
-    fn control(&self, id: u32) -> io::Result<Option<control::Value>>;
+    fn control(&self, id: u32) -> io::Result<Option<ControlValue>>;
 
     /// Sets the control value, returns error for incompatible value types
-    fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()>;
+    fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
 
     /// Returns the current format in use by the device
     fn format(&self) -> io::Result<Format>;

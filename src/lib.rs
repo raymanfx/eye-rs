@@ -55,7 +55,6 @@
 //! Have a look at the examples to learn more about device and stream management.
 
 pub mod control;
-pub mod device;
 pub mod format;
 
 pub mod hal;

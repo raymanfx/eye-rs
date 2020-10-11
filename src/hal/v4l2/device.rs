@@ -9,7 +9,6 @@ use v4l::FourCC as FourCC_;
 use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
-use crate::device::{ControlFlags, ControlInfo};
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
@@ -61,7 +60,7 @@ impl Device for PlatformDevice {
         Ok(formats)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<ControlInfo>> {
+    fn query_controls(&self) -> io::Result<Vec<control::Control>> {
         let mut controls = Vec::new();
         let plat_controls = self.inner.query_controls()?;
 
@@ -74,12 +73,11 @@ impl Device for PlatformDevice {
             let mut repr = control::Representation::Unknown;
             match control.typ {
                 ControlType::Integer | ControlType::Integer64 => {
-                    let constraints = control::Integer {
+                    repr = control::Representation::Integer {
                         range: (control.minimum as i64, control.maximum as i64),
                         step: control.step as u64,
                         default: control.default as i64,
                     };
-                    repr = control::Representation::Integer(constraints);
                 }
                 ControlType::Boolean => {
                     repr = control::Representation::Boolean;
@@ -112,25 +110,25 @@ impl Device for PlatformDevice {
                 _ => {}
             }
 
-            let mut flags = ControlFlags::NONE;
+            let mut flags = control::Flags::NONE;
             if control.flags & v4l::control::Flags::READ_ONLY == v4l::control::Flags::READ_ONLY {
-                flags |= ControlFlags::READ_ONLY;
+                flags |= control::Flags::READ_ONLY;
             }
             if control.flags & v4l::control::Flags::WRITE_ONLY == v4l::control::Flags::WRITE_ONLY {
-                flags |= ControlFlags::WRITE_ONLY;
+                flags |= control::Flags::WRITE_ONLY;
             }
             if control.flags & v4l::control::Flags::GRABBED == v4l::control::Flags::GRABBED {
-                flags |= ControlFlags::GRABBED;
+                flags |= control::Flags::GRABBED;
             }
             if control.flags & v4l::control::Flags::INACTIVE == v4l::control::Flags::INACTIVE {
-                flags |= ControlFlags::INACTIVE;
+                flags |= control::Flags::INACTIVE;
             }
 
-            controls.push(ControlInfo {
+            controls.push(control::Control {
                 id: control.id,
                 name: control.name,
-                flags,
                 repr,
+                flags,
             })
         }
 

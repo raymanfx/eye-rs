@@ -3,7 +3,6 @@ use std::io;
 use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
-use crate::device::ControlInfo;
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::hal::common::stream::TransparentStream;
@@ -102,7 +101,7 @@ impl Device for TransparentDevice {
         Ok(formats)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<ControlInfo>> {
+    fn query_controls(&self) -> io::Result<Vec<control::Control>> {
         self.dev.query_controls()
     }
 

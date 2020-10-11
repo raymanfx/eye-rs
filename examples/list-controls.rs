@@ -27,14 +27,15 @@ fn main() -> io::Result<()> {
                 Representation::Boolean => {
                     println!("      Type    : Boolean");
                 }
-                Representation::Integer(constraints) => {
+                Representation::Integer {
+                    range,
+                    step,
+                    default,
+                } => {
                     println!("      Type    : Integer");
-                    println!(
-                        "      Range   : ({}, {})",
-                        constraints.range.0, constraints.range.1
-                    );
-                    println!("      Step    : {}", constraints.step);
-                    println!("      Default : {}", constraints.default);
+                    println!("      Range   : ({}, {})", range.0, range.1);
+                    println!("      Step    : {}", step);
+                    println!("      Default : {}", default);
                 }
                 Representation::String => {
                     println!("      Type    : String");
