@@ -4,12 +4,12 @@ use eye::prelude::*;
 
 fn main() -> io::Result<()> {
     // Create a list of valid capture devices in the system.
-    let list = DeviceFactory::enumerate();
+    let list = Device::enumerate();
 
     // Print the supported formats for each device.
     for uri in list {
         println!("{}", uri);
-        let dev = DeviceFactory::create(&uri)?;
+        let dev = Device::with_uri(&uri)?;
         let formats = dev.query_formats()?;
 
         // group by pixelformat

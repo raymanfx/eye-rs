@@ -4,7 +4,7 @@ use eye::prelude::*;
 
 fn main() {
     // Query for available devices.
-    let devices = DeviceFactory::enumerate();
+    let devices = Device::enumerate();
     if devices.len() == 0 {
         println!("No devices available");
         return;
@@ -12,7 +12,7 @@ fn main() {
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let mut dev = DeviceFactory::create(&devices[0]).expect("Failed to open video device");
+    let mut dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).

@@ -33,7 +33,7 @@
 //! use eye::prelude::*;
 //!
 //! // Query for available devices.
-//! let devices = DeviceFactory::enumerate();
+//! let devices = Device::enumerate();
 //! if devices.len() == 0 {
 //!     println!("No devices available");
 //!     return;
@@ -41,7 +41,7 @@
 //!
 //! // First, we need a capture device to read images from. For this example, let's just choose
 //! // whatever device is first in the list.
-//! let dev = DeviceFactory::create(&devices[0]).expect("Failed to open video device");
+//! let dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
 //!
 //! // Since we want to capture images, we need to access the native image stream of the device.
 //! // The backend will internally select a suitable implementation for the platform stream. On
@@ -55,14 +55,15 @@
 //! Have a look at the examples to learn more about device and stream management.
 
 pub mod control;
+pub mod device;
 pub mod format;
 
 pub mod hal;
 
 pub mod prelude {
     pub use crate::{
+        device::Device,
         format::{Format, FourCC, PixelFormat},
-        hal::traits::{Device, Stream},
-        hal::DeviceFactory,
+        hal::traits::{Device as DeviceTrait, Stream as StreamTrait},
     };
 }

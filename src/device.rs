@@ -1,15 +1,16 @@
 use std::io;
 
 use crate::hal::common::device::TransparentDevice;
-use crate::hal::traits::Device;
+use crate::hal::traits::Device as DeviceTrait;
 
-/// Platform device factory
+/// Capture device
 ///
-/// Automatically selects a suitable backend.
-pub struct Factory {}
+/// This struct is used to create the actual platform-specific capture device instances. All
+/// structs returned implement the Device HAL trait, allowing for device manipulation and image
+/// streaming.
+pub struct Device {}
 
-impl Factory {
-    #[allow(unreachable_code)]
+impl Device {
     /// Returns a list of available devices
     pub fn enumerate() -> Vec<String> {
         let mut list = Vec::new();
@@ -26,9 +27,8 @@ impl Factory {
         list
     }
 
-    #[allow(unreachable_code)]
     /// Returns a new platform device abstraction
-    pub fn create(_uri: &str) -> io::Result<Box<dyn Device>> {
+    pub fn with_uri(_uri: &str) -> io::Result<Box<dyn DeviceTrait>> {
         #[cfg(feature = "v4l")]
         if _uri.starts_with("v4l://") {
             let path = _uri[6..].to_string();
