@@ -27,7 +27,7 @@ pub trait Device {
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream<'a>(&self) -> io::Result<Box<dyn Stream<Item = ImageView<'a>> + 'a>>;
+    fn stream<'a>(&self) -> io::Result<Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>>;
 }
 
 /// Stream item wrapper
@@ -78,10 +78,10 @@ impl<'a, T> Deref for StreamItem<'a, T> {
 ///
 /// A stream is a construct which offers one item at a time. Once the next item is available, the
 /// previous one is discarded and thus not accessible any longer.
-pub trait Stream {
+pub trait Stream<'a> {
     /// Type of the stream elements
     type Item;
 
     /// Advances the stream and returns the next item
-    fn next<'a>(&'a mut self) -> io::Result<StreamItem<'a, Self::Item>>;
+    fn next(&'a mut self) -> io::Result<StreamItem<'a, Self::Item>>;
 }

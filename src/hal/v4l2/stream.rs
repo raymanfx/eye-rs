@@ -73,7 +73,7 @@ impl<'a> PlatformStream<'a> {
         Ok(())
     }
 
-    fn dequeue(&mut self) -> io::Result<ImageView<'a>> {
+    fn dequeue<'b>(&'b mut self) -> io::Result<ImageView<'b>> {
         let frame = self.stream.as_mut().unwrap().dequeue()?;
         self.queued = false;
 
@@ -102,10 +102,10 @@ impl<'a> Drop for PlatformStream<'a> {
     }
 }
 
-impl<'a> Stream for PlatformStream<'a> {
-    type Item = ImageView<'a>;
+impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
+    type Item = ImageView<'b>;
 
-    fn next<'b>(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
+    fn next(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
         self.queue()?;
         let item = self.dequeue()?;
 

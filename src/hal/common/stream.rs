@@ -1,4 +1,4 @@
-use std::{io, mem};
+use std::io;
 
 use ffimage::packed::dynamic::{ImageBuffer, ImageView, MemoryView, StorageType};
 
@@ -8,14 +8,17 @@ use crate::hal::traits::{Stream, StreamItem};
 
 /// A transparent wrapper for native platform streams.
 pub struct TransparentStream<'a> {
-    stream: Box<dyn Stream<Item = ImageView<'a>> + 'a>,
+    stream: Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>,
     format: Format,
     mapping: Option<(PixelFormat, PixelFormat)>,
     convert_buffer: ImageBuffer,
 }
 
 impl<'a> TransparentStream<'a> {
-    pub fn new(stream: Box<dyn Stream<Item = ImageView<'a>> + 'a>, format: Format) -> Self {
+    pub fn new(
+        stream: Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>,
+        format: Format,
+    ) -> Self {
         TransparentStream {
             stream,
             format,
@@ -37,10 +40,10 @@ impl<'a> TransparentStream<'a> {
     }
 }
 
-impl<'a> Stream for TransparentStream<'a> {
-    type Item = ImageView<'a>;
+impl<'a, 'b> Stream<'b> for TransparentStream<'a> {
+    type Item = ImageView<'b>;
 
-    fn next<'b>(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
+    fn next(&'b mut self) -> io::Result<StreamItem<Self::Item>> {
         let mut view = self.stream.next()?;
 
         // emulate format by converting the buffer if necessary
@@ -58,10 +61,6 @@ impl<'a> Stream for TransparentStream<'a> {
             view = StreamItem::new(self.convert_buffer.as_view())
         }
 
-        // The Rust compiler thinks we're returning a value (view) which references data owned by
-        // the local function (frame). This is actually not the case since the data slice is
-        // memory mapped and thus the actual backing memory resides somewhere else
-        // (kernel, on-chip, etc).
-        unsafe { Ok(mem::transmute(view)) }
+        Ok(view)
     }
 }
