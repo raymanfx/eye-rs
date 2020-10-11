@@ -11,23 +11,20 @@ pub fn convert_to_rgb(src: &ImageView, dst: &mut ImageBuffer) -> io::Result<()> 
     match src.raw() {
         MemoryView::U8(data) => {
             let mut decoder = Decoder::new(*data);
-            let data = decoder.decode();
-            if data.is_err() {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "failed to decode JPEG",
-                ));
-            }
-            let data = data.unwrap();
-
-            let info = decoder.info();
-            if info.is_none() {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "failed to read JPEG metadata",
-                ));
+            let data = match decoder.decode() {
+                Ok(data) => data,
+                Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, e)),
             };
-            let info = info.unwrap();
+
+            let info = match decoder.info() {
+                Some(info) => info,
+                None => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "failed to read JPEG metadata",
+                    ))
+                }
+            };
 
             match info.pixel_format {
                 JpegFormat::RGB24 => {
