@@ -1,19 +1,6 @@
 use bitflags::bitflags;
 
 use crate::control;
-use crate::format::PixelFormat;
-
-#[derive(Clone)]
-/// Image buffer format description
-pub struct FormatInfo {
-    /// PixelFormat
-    pub pixfmt: PixelFormat,
-    /// Length of a pixel row in bytes
-    pub resolutions: Vec<(u32, u32)>,
-
-    /// Whether this format is emulated or natively supported
-    pub emulated: bool,
-}
 
 #[derive(Clone)]
 /// Device control description

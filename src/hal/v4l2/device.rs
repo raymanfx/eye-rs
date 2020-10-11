@@ -10,7 +10,7 @@ use v4l::FourCC as FourCC_;
 use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
-use crate::device::{ControlFlags, ControlInfo, FormatInfo, Info as DeviceInfo};
+use crate::device::{ControlFlags, ControlInfo, Info as DeviceInfo};
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
@@ -91,28 +91,23 @@ impl PlatformDevice {
 }
 
 impl Device for PlatformDevice {
-    fn query_formats(&self) -> io::Result<Vec<FormatInfo>> {
+    fn query_formats(&self) -> io::Result<Vec<Format>> {
         let mut formats = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
         for format in plat_formats {
-            let plat_sizes = self.inner.enum_framesizes(format.fourcc);
-            if plat_sizes.is_err() {
-                continue;
-            }
-            let mut info = FormatInfo {
-                pixfmt: PixelFormat::from(FourCC::new(&format.fourcc.repr)),
-                resolutions: Vec::new(),
-                emulated: format.flags & v4l::format::description::Flags::EMULATED
-                    == v4l::format::description::Flags::EMULATED,
-            };
-            for plat_size in plat_sizes.unwrap() {
+            for framesize in self.inner.enum_framesizes(format.fourcc)? {
                 // TODO: consider stepwise formats
-                if let v4l::framesize::FrameSizeEnum::Discrete(size) = plat_size.size {
-                    info.resolutions.push((size.width, size.height));
+                if let v4l::framesize::FrameSizeEnum::Discrete(size) = framesize.size {
+                    let format = Format {
+                        width: size.width,
+                        height: size.height,
+                        pixfmt: PixelFormat::from(FourCC::new(&format.fourcc.repr)),
+                        stride: None,
+                    };
+                    formats.push(format);
                 }
             }
-            formats.push(info);
         }
 
         Ok(formats)

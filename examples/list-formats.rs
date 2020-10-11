@@ -22,11 +22,36 @@ fn main() {
         }
         let formats = formats.unwrap();
 
+        // group by pixelformat
+        let mut grouped: Vec<Vec<Format>> = Vec::new();
+        for fmt in formats {
+            let mut new = true;
+            for group in &mut grouped {
+                let first = group[0];
+                if first.pixfmt == fmt.pixfmt {
+                    group.push(fmt);
+                    new = false;
+                }
+            }
+
+            if new {
+                grouped.push(vec![fmt]);
+            }
+        }
+
+        // sort the resolutions
+        for group in &mut grouped {
+            group.sort_by(|a, b| a.width.cmp(&b.width));
+        }
+
         println!("  Formats:");
-        for fmt in &formats {
-            println!("    Pixelformat   : {}", fmt.pixfmt);
-            println!("    Resolutions   : {:?}", fmt.resolutions);
-            println!("    Emulated      : {}", fmt.emulated);
+        for group in &grouped {
+            println!("    Pixelformat   : {}", group[0].pixfmt);
+            print!("    Resolutions   : ");
+            for fmt in group {
+                print!("{}x{} ", fmt.width, fmt.height);
+            }
+            println!();
         }
     }
 }

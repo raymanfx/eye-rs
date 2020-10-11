@@ -3,13 +3,13 @@ use std::{io, marker::PhantomData, ops::Deref};
 use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
-use crate::device::{ControlInfo, FormatInfo};
+use crate::device::ControlInfo;
 use crate::format::Format;
 
 /// Platform device abstraction
 pub trait Device {
     /// Returns the supported formats
-    fn query_formats(&self) -> io::Result<Vec<FormatInfo>>;
+    fn query_formats(&self) -> io::Result<Vec<Format>>;
 
     /// Returns the supported controls
     fn query_controls(&self) -> io::Result<Vec<ControlInfo>>;

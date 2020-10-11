@@ -3,7 +3,7 @@ use std::io;
 use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
-use crate::device::{ControlInfo, FormatInfo};
+use crate::device::ControlInfo;
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::hal::common::stream::TransparentStream;
@@ -35,7 +35,7 @@ impl TransparentDevice {
     /// is a format which can be emulated by the common converter abstraction layer.
     fn query_emulated_formats(&self) -> io::Result<Vec<(PixelFormat, PixelFormat)>> {
         let converter_formats = Converter::formats();
-        let mut emulated_formats = Vec::new();
+        let mut emulated_formats: Vec<(PixelFormat, PixelFormat)> = Vec::new();
 
         let native_formats = self.dev.query_formats()?;
         for native_format in &native_formats {
@@ -45,16 +45,24 @@ impl TransparentDevice {
                     for emulated_dst in &emulated.1 {
                         // first check if the format we can emulate is actually already supported
                         // natively
-                        let mut supported_natively = false;
+                        let mut emulate = true;
                         for format in &native_formats {
                             if format.pixfmt == *emulated_dst {
-                                supported_natively = true;
+                                emulate = false;
                                 break;
                             }
                         }
 
-                        // always prefer native formats
-                        if supported_natively {
+                        // now check whether we already emulate this format
+                        for format in &emulated_formats {
+                            if format.1 == *emulated_dst {
+                                emulate = false;
+                                break;
+                            }
+                        }
+
+                        // skip emulation if we already support the format
+                        if !emulate {
                             continue;
                         }
 
@@ -70,22 +78,26 @@ impl TransparentDevice {
 }
 
 impl Device for TransparentDevice {
-    fn query_formats(&self) -> io::Result<Vec<FormatInfo>> {
+    fn query_formats(&self) -> io::Result<Vec<Format>> {
         let mut formats = self.dev.query_formats()?;
 
         // add emulated formats
         let mut emulated_formats = Vec::new();
+
         for plat_format in &formats {
             for mapping in &self.emulated_formats {
                 if mapping.0 == plat_format.pixfmt {
                     // transparently add the emulated format
-                    let mut emulated_format = plat_format.clone();
-                    emulated_format.pixfmt = mapping.1;
-                    emulated_format.emulated = true;
-                    emulated_formats.push(emulated_format);
+                    emulated_formats.push(Format {
+                        width: plat_format.width,
+                        height: plat_format.height,
+                        pixfmt: mapping.1,
+                        stride: None,
+                    });
                 }
             }
         }
+
         formats.extend(emulated_formats);
         Ok(formats)
     }
