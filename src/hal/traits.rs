@@ -14,7 +14,7 @@ pub trait Device {
     fn query_controls(&self) -> io::Result<Vec<Control>>;
 
     /// Returns the current control value for an ID
-    fn control(&self, id: u32) -> io::Result<Option<ControlValue>>;
+    fn control(&self, id: u32) -> io::Result<ControlValue>;
 
     /// Sets the control value, returns error for incompatible value types
     fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;

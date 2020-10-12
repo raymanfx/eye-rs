@@ -135,10 +135,10 @@ impl Device for PlatformDevice {
         Ok(controls)
     }
 
-    fn control(&self, id: u32) -> io::Result<Option<control::Value>> {
+    fn control(&self, id: u32) -> io::Result<control::Value> {
         let ctrl = self.inner.control(id)?;
         match ctrl {
-            Control::Value(val) => Ok(Some(control::Value::Integer(val as i64))),
+            Control::Value(val) => Ok(control::Value::Integer(val as i64)),
             _ => Err(io::Error::new(
                 io::ErrorKind::Other,
                 "control type cannot be mapped",

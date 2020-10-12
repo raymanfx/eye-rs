@@ -81,6 +81,9 @@ bitflags! {
 #[derive(Debug, Clone)]
 /// Device control value representation
 pub enum Value {
+    /* Stateless controls */
+    None,
+
     /* Single value controls */
     String(String),
     Boolean(bool),

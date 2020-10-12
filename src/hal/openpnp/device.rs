@@ -82,7 +82,7 @@ impl Device for PlatformDevice {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
     }
 
-    fn control(&self, _id: u32) -> io::Result<Option<control::Value>> {
+    fn control(&self, _id: u32) -> io::Result<control::Value> {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
     }
 
