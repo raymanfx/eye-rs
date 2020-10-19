@@ -15,7 +15,7 @@ impl Device {
     pub fn enumerate() -> Vec<String> {
         let mut list = Vec::new();
 
-        #[cfg(feature = "v4l")]
+        #[cfg(target_os = "linux")]
         {
             let _list: Vec<String> = crate::hal::v4l2::devices()
                 .into_iter()
@@ -24,7 +24,7 @@ impl Device {
             list.extend(_list);
         }
 
-        #[cfg(feature = "openpnp")]
+        #[cfg(feature = "hal-openpnp")]
         {
             let _list: Vec<String> = crate::hal::openpnp::devices()
                 .into_iter()
@@ -38,7 +38,7 @@ impl Device {
 
     /// Returns a new platform device abstraction
     pub fn with_uri(_uri: &str) -> io::Result<Box<dyn DeviceTrait>> {
-        #[cfg(feature = "v4l")]
+        #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
             let path = _uri[6..].to_string();
             let dev = crate::hal::v4l2::device::PlatformDevice::with_path(path)?;
@@ -46,7 +46,7 @@ impl Device {
             return Ok(Box::new(dev));
         }
 
-        #[cfg(feature = "openpnp")]
+        #[cfg(feature = "hal-openpnp")]
         if _uri.starts_with("pnp://") {
             let index = _uri[6..].to_string();
             let index = match index.parse::<u32>() {

@@ -5,8 +5,8 @@
 pub mod common;
 pub mod traits;
 
-#[cfg(feature = "v4l")]
+#[cfg(target_os = "linux")]
 pub(crate) mod v4l2;
 
-#[cfg(feature = "openpnp")]
+#[cfg(feature = "hal-openpnp")]
 pub(crate) mod openpnp;

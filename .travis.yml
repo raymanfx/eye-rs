@@ -4,7 +4,7 @@ rust: stable
 os: linux
 
 before_install:
-  - sudo apt-get install libv4l-dev
+  - sudo apt-get install cmake libv4l-dev nasm
 
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
 # cargo-update to work
@@ -25,11 +25,11 @@ jobs:
     - name: check
       script:
         - cargo check --no-default-features
-        - cargo check --features v4l
+        - cargo check --features hal-openpnp
     - name: test
       script:
         - cargo test --no-default-features
-        - cargo test --features v4l
+        - cargo test --features hal-openpnp
     - name: fmt
       before_script:
         - rustup component add rustfmt
