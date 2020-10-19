@@ -4,7 +4,7 @@ use ffimage::packed::dynamic::{ImageBuffer, ImageView, MemoryView, StorageType};
 
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
-use crate::hal::traits::{Stream, StreamItem};
+use crate::hal::traits::Stream;
 
 /// A transparent wrapper for native platform streams.
 pub struct TransparentStream<'a> {
@@ -43,7 +43,7 @@ impl<'a> TransparentStream<'a> {
 impl<'a, 'b> Stream<'b> for TransparentStream<'a> {
     type Item = ImageView<'b>;
 
-    fn next(&'b mut self) -> io::Result<StreamItem<Self::Item>> {
+    fn next(&'b mut self) -> io::Result<Self::Item> {
         let mut view = self.stream.next()?;
 
         // emulate format by converting the buffer if necessary
@@ -58,7 +58,7 @@ impl<'a, 'b> Stream<'b> for TransparentStream<'a> {
             }
 
             Converter::convert(&view, self.format.pixfmt, &mut self.convert_buffer, map.1)?;
-            view = StreamItem::new(self.convert_buffer.as_view())
+            view = self.convert_buffer.as_view()
         }
 
         Ok(view)

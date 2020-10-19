@@ -7,7 +7,7 @@ use openpnp_capture as pnp;
 
 use crate::format::{Format, FourCC};
 use crate::hal::openpnp::device::PlatformDevice;
-use crate::hal::traits::{Device, Stream, StreamItem};
+use crate::hal::traits::{Device, Stream};
 
 pub struct PlatformStream {
     inner: pnp::Stream,
@@ -46,7 +46,7 @@ impl PlatformStream {
 impl<'a> Stream<'a> for PlatformStream {
     type Item = ImageView<'a>;
 
-    fn next(&'a mut self) -> io::Result<StreamItem<'a, Self::Item>> {
+    fn next(&'a mut self) -> io::Result<Self::Item> {
         while !self.inner.poll() { /* busy loop */ }
         self.inner.read(&mut self.buffer)?;
 
@@ -58,6 +58,6 @@ impl<'a> Stream<'a> for PlatformStream {
         )
         .unwrap();
 
-        Ok(StreamItem::new(view))
+        Ok(view)
     }
 }

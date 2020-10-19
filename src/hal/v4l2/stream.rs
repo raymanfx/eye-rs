@@ -6,7 +6,7 @@ use v4l::buffer::Stream as _Stream;
 use v4l::io::mmap::Stream as MmapStream;
 
 use crate::format::{Format, FourCC, PixelFormat};
-use crate::hal::traits::{Stream, StreamItem};
+use crate::hal::traits::Stream;
 use crate::hal::v4l2::device::PlatformDevice;
 
 pub struct PlatformStream<'a> {
@@ -105,10 +105,8 @@ impl<'a> Drop for PlatformStream<'a> {
 impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
     type Item = ImageView<'b>;
 
-    fn next(&'b mut self) -> io::Result<StreamItem<'b, Self::Item>> {
+    fn next(&'b mut self) -> io::Result<Self::Item> {
         self.queue()?;
-        let item = self.dequeue()?;
-
-        Ok(StreamItem::new(item))
+        Ok(self.dequeue()?)
     }
 }
