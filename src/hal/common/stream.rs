@@ -4,7 +4,7 @@ use ffimage::packed::dynamic::{ImageBuffer, ImageView, MemoryView, StorageType};
 
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
-use crate::hal::traits::Stream;
+use crate::traits::Stream;
 
 /// A transparent wrapper for native platform streams.
 pub struct TransparentStream<'a> {

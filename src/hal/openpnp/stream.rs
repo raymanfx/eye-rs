@@ -7,7 +7,7 @@ use openpnp_capture as pnp;
 
 use crate::format::{Format, FourCC};
 use crate::hal::openpnp::device::PlatformDevice;
-use crate::hal::traits::{Device, Stream};
+use crate::traits::{Device, Stream};
 
 pub struct PlatformStream {
     inner: pnp::Stream,

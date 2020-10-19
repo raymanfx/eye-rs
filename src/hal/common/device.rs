@@ -6,7 +6,7 @@ use crate::control;
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::hal::common::stream::TransparentStream;
-use crate::hal::traits::{Device, Stream};
+use crate::traits::{Device, Stream};
 
 /// A transparent wrapper type for native platform devices.
 pub struct TransparentDevice {

@@ -6,8 +6,8 @@ use v4l::buffer::Stream as _Stream;
 use v4l::io::mmap::Stream as MmapStream;
 
 use crate::format::{Format, FourCC, PixelFormat};
-use crate::hal::traits::Stream;
 use crate::hal::v4l2::device::PlatformDevice;
+use crate::traits::Stream;
 
 pub struct PlatformStream<'a> {
     format: Format,

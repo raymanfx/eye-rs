@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::hal::common::device::TransparentDevice;
-use crate::hal::traits::Device as DeviceTrait;
+use crate::traits::Device as DeviceTrait;
 
 /// Capture device
 ///

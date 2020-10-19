@@ -7,7 +7,7 @@ use ffimage::packed::dynamic::ImageView;
 use crate::control;
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::openpnp::stream::PlatformStream;
-use crate::hal::traits::{Device, Stream};
+use crate::traits::{Device, Stream};
 
 pub struct PlatformDevice {
     inner: pnp::Device,

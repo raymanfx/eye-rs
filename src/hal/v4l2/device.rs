@@ -10,8 +10,8 @@ use ffimage::packed::dynamic::ImageView;
 
 use crate::control;
 use crate::format::{Format, FourCC, PixelFormat};
-use crate::hal::traits::{Device, Stream};
 use crate::hal::v4l2::stream::PlatformStream;
+use crate::traits::{Device, Stream};
 
 pub struct PlatformDevice {
     inner: CaptureDevice,

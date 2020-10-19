@@ -57,6 +57,7 @@
 pub mod control;
 pub mod device;
 pub mod format;
+pub mod traits;
 
 pub mod hal;
 
@@ -64,6 +65,6 @@ pub mod prelude {
     pub use crate::{
         device::Device,
         format::{Format, FourCC, PixelFormat},
-        hal::traits::{Device as DeviceTrait, Stream as StreamTrait},
+        traits::{Device as DeviceTrait, Stream as StreamTrait},
     };
 }
