@@ -7,6 +7,7 @@ use openpnp_capture as pnp;
 
 use crate::format::{Format, FourCC};
 use crate::hal::openpnp::device::PlatformDevice;
+use crate::image::CowImage;
 use crate::traits::{Device, Stream};
 
 pub struct PlatformStream {
@@ -44,7 +45,7 @@ impl PlatformStream {
 }
 
 impl<'a> Stream<'a> for PlatformStream {
-    type Item = ImageView<'a>;
+    type Item = CowImage<'a>;
 
     fn next(&'a mut self) -> io::Result<Self::Item> {
         while !self.inner.poll() { /* busy loop */ }
@@ -58,6 +59,6 @@ impl<'a> Stream<'a> for PlatformStream {
         )
         .unwrap();
 
-        Ok(view)
+        Ok(CowImage::from(view))
     }
 }

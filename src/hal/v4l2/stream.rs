@@ -7,6 +7,7 @@ use v4l::io::mmap::Stream as MmapStream;
 
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::v4l2::device::PlatformDevice;
+use crate::image::CowImage;
 use crate::traits::Stream;
 
 pub struct PlatformStream<'a> {
@@ -73,7 +74,7 @@ impl<'a> PlatformStream<'a> {
         Ok(())
     }
 
-    fn dequeue<'b>(&'b mut self) -> io::Result<ImageView<'b>> {
+    fn dequeue<'b>(&'b mut self) -> io::Result<CowImage<'b>> {
         let frame = self.stream.as_mut().unwrap().dequeue()?;
         self.queued = false;
 
@@ -85,11 +86,13 @@ impl<'a> PlatformStream<'a> {
         )
         .unwrap();
 
+        let image = CowImage::from(view);
+
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is
         // memory mapped and thus the actual backing memory resides somewhere else
         // (kernel, on-chip, etc).
-        unsafe { Ok(mem::transmute(view)) }
+        unsafe { Ok(mem::transmute(image)) }
     }
 }
 
@@ -103,7 +106,7 @@ impl<'a> Drop for PlatformStream<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
-    type Item = ImageView<'b>;
+    type Item = CowImage<'b>;
 
     fn next(&'b mut self) -> io::Result<Self::Item> {
         self.queue()?;

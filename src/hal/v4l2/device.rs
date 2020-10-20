@@ -6,12 +6,10 @@ use v4l::device::QueryDevice;
 use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
 
-use ffimage::packed::dynamic::ImageView;
-
 use crate::control;
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::v4l2::stream::PlatformStream;
-use crate::traits::{Device, Stream};
+use crate::traits::{Device, ImageStream};
 
 pub struct PlatformDevice {
     inner: CaptureDevice,
@@ -191,7 +189,7 @@ impl Device for PlatformDevice {
         self.format()
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>> {
+    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>> {
         let stream = PlatformStream::new(self)?;
         Ok(Box::new(stream))
     }

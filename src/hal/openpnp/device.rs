@@ -2,12 +2,10 @@ use std::io;
 
 use openpnp_capture as pnp;
 
-use ffimage::packed::dynamic::ImageView;
-
 use crate::control;
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::openpnp::stream::PlatformStream;
-use crate::traits::{Device, Stream};
+use crate::traits::{Device, ImageStream};
 
 pub struct PlatformDevice {
     inner: pnp::Device,
@@ -130,7 +128,7 @@ impl Device for PlatformDevice {
         Ok(*fmt)
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>> {
+    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>> {
         let stream = PlatformStream::new(self)?;
         Ok(Box::new(stream))
     }

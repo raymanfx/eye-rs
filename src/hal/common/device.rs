@@ -1,12 +1,10 @@
 use std::io;
 
-use ffimage::packed::dynamic::ImageView;
-
 use crate::control;
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::hal::common::stream::TransparentStream;
-use crate::traits::{Device, Stream};
+use crate::traits::{Device, ImageStream};
 
 /// A transparent wrapper type for native platform devices.
 pub struct TransparentDevice {
@@ -145,7 +143,7 @@ impl Device for TransparentDevice {
         self.format()
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>> {
+    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>> {
         let native_format = self.dev.format()?;
         let native_stream = self.dev.stream()?;
         let mut stream = TransparentStream::new(native_stream, native_format);

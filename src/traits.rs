@@ -1,9 +1,8 @@
 use std::io;
 
-use ffimage::packed::dynamic::ImageView;
-
 use crate::control::{Control, Value as ControlValue};
 use crate::format::Format;
+use crate::image::CowImage;
 
 /// Platform device abstraction
 pub trait Device {
@@ -27,7 +26,7 @@ pub trait Device {
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream<'a>(&self) -> io::Result<Box<dyn 'a + for<'b> Stream<'b, Item = ImageView<'b>>>>;
+    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>>;
 }
 
 /// Stream abstraction
@@ -41,3 +40,6 @@ pub trait Stream<'a> {
     /// Advances the stream and returns the next item
     fn next(&'a mut self) -> io::Result<Self::Item>;
 }
+
+/// A stream producing images
+pub type ImageStream<'a> = dyn 'a + for<'b> Stream<'b, Item = CowImage<'b>>;
