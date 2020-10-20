@@ -13,29 +13,22 @@ jobs:
       - CAN_FAIL=true
   fast_finish: true
   include:
-    - {}
-    - stage: build
+    - name: check
       script:
-        - cargo build --no-default-features
-        - cargo build --features v4l
-    - stage: test
+        - cargo check --no-default-features
+        - cargo check --features v4l
+    - name: test
       script:
         - cargo test --no-default-features
         - cargo test --features v4l
-    - stage: fmt
+    - name: fmt
       before_script:
         - rustup component add rustfmt
       script:
         - cargo fmt -- --check
-    - stage: clippy
+    - name: clippy
       env: CAN_FAIL=true
       before_script:
         - rustup component add clippy
       script:
         - cargo clippy -- -D warnings
-
-stages:
-  - build
-  - test
-  - fmt
-  - clippy
