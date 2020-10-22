@@ -38,8 +38,8 @@ pub trait Stream<'a> {
     type Item;
 
     /// Advances the stream and returns the next item
-    fn next(&'a mut self) -> io::Result<Self::Item>;
+    fn next(&'a mut self) -> Option<Self::Item>;
 }
 
 /// A stream producing images
-pub type ImageStream<'a> = dyn 'a + for<'b> Stream<'b, Item = CowImage<'b>>;
+pub type ImageStream<'a> = dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>>;

@@ -106,10 +106,13 @@ impl<'a> Drop for PlatformStream<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
-    type Item = CowImage<'b>;
+    type Item = io::Result<CowImage<'b>>;
 
-    fn next(&'b mut self) -> io::Result<Self::Item> {
-        self.queue()?;
-        Ok(self.dequeue()?)
+    fn next(&'b mut self) -> Option<Self::Item> {
+        if let Err(e) = self.queue() {
+            return Some(Err(e));
+        }
+
+        Some(self.dequeue())
     }
 }

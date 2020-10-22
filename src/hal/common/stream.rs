@@ -35,19 +35,29 @@ impl<'a> TransparentStream<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for TransparentStream<'a> {
-    type Item = CowImage<'b>;
+    type Item = io::Result<CowImage<'b>>;
 
-    fn next(&'b mut self) -> io::Result<Self::Item> {
-        let image = self.stream.next()?;
+    fn next(&'b mut self) -> Option<Self::Item> {
+        let image = match self.stream.next() {
+            Some(res) => match res {
+                Ok(img) => img,
+                Err(e) => return Some(Err(e)),
+            },
+            None => return None,
+        };
 
         // emulate format by converting the buffer if necessary
         if let Some(map) = self.mapping {
             let mut buf = image.clone();
 
-            Converter::convert(&image.as_view(), self.format.pixfmt, buf.to_mut(), map.1)?;
-            Ok(CowImage::from(buf))
+            if let Err(e) =
+                Converter::convert(&image.as_view(), self.format.pixfmt, buf.to_mut(), map.1)
+            {
+                return Some(Err(e));
+            }
+            Some(Ok(CowImage::from(buf)))
         } else {
-            Ok(image)
+            Some(Ok(image))
         }
     }
 }

@@ -64,7 +64,10 @@ fn main() {
     // Here we create a loop and just capture images as long as the device produces them. Normally,
     // this loop will run forever unless we unplug the camera or exit the program.
     loop {
-        let frame = stream.next().expect("Failed to capture frame");
+        let frame = stream
+            .next()
+            .expect("Stream is dead")
+            .expect("Failed to capture frame");
     }
 }
 ```

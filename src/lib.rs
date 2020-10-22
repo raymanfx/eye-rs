@@ -49,8 +49,12 @@
 //! let mut stream = dev.stream().expect("Failed to setup capture stream");
 //!
 //! // Now we are all set to start capturing some frames!
-//! let _frame = stream.next().expect("Failed to capture frame");
+//! let _frame = stream
+//!     .next()
+//!     .expect("Stream is dead")
+//!     .expect("Failed to capture frame");
 //!```
+
 //!
 //! Have a look at the examples to learn more about device and stream management.
 

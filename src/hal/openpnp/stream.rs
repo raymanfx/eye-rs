@@ -45,11 +45,14 @@ impl PlatformStream {
 }
 
 impl<'a> Stream<'a> for PlatformStream {
-    type Item = CowImage<'a>;
+    type Item = io::Result<CowImage<'a>>;
 
-    fn next(&'a mut self) -> io::Result<Self::Item> {
+    fn next(&'a mut self) -> Option<Self::Item> {
         while !self.inner.poll() { /* busy loop */ }
-        self.inner.read(&mut self.buffer)?;
+        match self.inner.read(&mut self.buffer) {
+            Ok(()) => {}
+            Err(e) => return Some(Err(e)),
+        }
 
         let view = ImageView::with_stride(
             &self.buffer,
@@ -59,6 +62,6 @@ impl<'a> Stream<'a> for PlatformStream {
         )
         .unwrap();
 
-        Ok(CowImage::from(view))
+        Some(Ok(CowImage::from(view)))
     }
 }
