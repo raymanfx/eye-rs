@@ -5,12 +5,12 @@ use eye::prelude::*;
 
 fn main() -> io::Result<()> {
     // Create a list of valid capture devices in the system.
-    let list = Device::enumerate();
+    let list = Context::enumerate_devices();
 
     // Print the supported controls for each device.
     for uri in list {
         println!("{}", uri);
-        let dev = Device::with_uri(&uri)?;
+        let dev = Context::open_device(&uri)?;
         let controls = dev.query_controls()?;
 
         println!("  Controls:");

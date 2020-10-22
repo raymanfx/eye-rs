@@ -1,18 +1,14 @@
 use std::io;
 
 use crate::hal::common::device::TransparentDevice;
-use crate::traits::Device as DeviceTrait;
+use crate::traits::Device;
 
-/// Capture device
-///
-/// This struct is used to create the actual platform-specific capture device instances. All
-/// structs returned implement the Device HAL trait, allowing for device manipulation and image
-/// streaming.
-pub struct Device {}
+/// Runtime context
+pub struct Context {}
 
-impl Device {
+impl Context {
     /// Returns a list of available devices
-    pub fn enumerate() -> Vec<String> {
+    pub fn enumerate_devices() -> Vec<String> {
         let mut list = Vec::new();
 
         #[cfg(target_os = "linux")]
@@ -37,7 +33,9 @@ impl Device {
     }
 
     /// Returns a new platform device abstraction
-    pub fn with_uri(_uri: &str) -> io::Result<Box<dyn DeviceTrait>> {
+    pub fn open_device<S: AsRef<str>>(_uri: S) -> io::Result<Box<dyn Device>> {
+        let _uri = _uri.as_ref();
+
         #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
             let path = _uri[6..].to_string();

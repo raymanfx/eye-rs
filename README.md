@@ -38,7 +38,7 @@ use eye::prelude::*;
 
 fn main() {
     // Query for available devices.
-    let devices = Device::enumerate();
+    let devices = Context::enumerate_devices();
     if devices.len() == 0 {
         println!("No devices available");
         return;
@@ -46,7 +46,7 @@ fn main() {
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
+    let dev = Context::open_device(&devices[0]).expect("Failed to open video device");
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).
