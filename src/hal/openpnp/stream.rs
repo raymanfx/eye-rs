@@ -5,7 +5,7 @@ use ffimage::packed::dynamic::ImageView;
 
 use openpnp_capture as pnp;
 
-use crate::format::{Format, FourCC};
+use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::openpnp::device::PlatformDevice;
 use crate::image::CowImage;
 use crate::traits::{Device, Stream};
@@ -61,7 +61,8 @@ impl<'a> Stream<'a> for PlatformStream {
             self.format.stride.unwrap_or(0),
         )
         .unwrap();
+        let pixfmt = PixelFormat::Rgba(24);
 
-        Some(Ok(CowImage::from(view)))
+        Some(Ok(CowImage::from_view(view, pixfmt)))
     }
 }

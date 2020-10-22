@@ -1,5 +1,7 @@
 use ffimage::packed::dynamic::{ImageBuffer, ImageView, MemoryBuffer, MemoryView};
 
+use crate::format::PixelFormat;
+
 #[derive(Debug, Clone)]
 enum Cow<'a> {
     Borrowed(ImageView<'a>),
@@ -9,9 +11,26 @@ enum Cow<'a> {
 #[derive(Debug)]
 pub struct CowImage<'a> {
     data: Cow<'a>,
+    pixfmt: PixelFormat,
 }
 
 impl<'a> CowImage<'a> {
+    /// Converts an image view into a cow image
+    pub fn from_view(view: ImageView<'a>, pixfmt: PixelFormat) -> Self {
+        CowImage {
+            data: Cow::Borrowed(view),
+            pixfmt,
+        }
+    }
+
+    /// Converts an image buffer into a cow image
+    pub fn from_buf(buf: ImageBuffer, pixfmt: PixelFormat) -> Self {
+        CowImage {
+            data: Cow::Owned(buf),
+            pixfmt,
+        }
+    }
+
     /// Returns the raw pixel data
     pub fn raw(&self) -> MemoryView {
         match &self.data {
@@ -45,6 +64,11 @@ impl<'a> CowImage<'a> {
             Cow::Borrowed(view) => view.stride(),
             Cow::Owned(buf) => buf.stride(),
         }
+    }
+
+    /// Returns the format of the image pixels
+    pub fn pixfmt(&self) -> PixelFormat {
+        self.pixfmt
     }
 
     /// Returns a view into the image
@@ -82,6 +106,7 @@ impl<'a> CowImage<'a> {
 
         CowImage {
             data: Cow::Owned(buf),
+            pixfmt: self.pixfmt,
         }
     }
 
@@ -90,9 +115,11 @@ impl<'a> CowImage<'a> {
         match &self.data {
             Cow::Borrowed(view) => CowImage {
                 data: Cow::Owned(ImageBuffer::from(view)),
+                pixfmt: self.pixfmt,
             },
             Cow::Owned(buf) => CowImage {
                 data: Cow::Owned(buf.clone()),
+                pixfmt: self.pixfmt,
             },
         }
     }
@@ -101,22 +128,6 @@ impl<'a> CowImage<'a> {
 impl<'a> Clone for CowImage<'a> {
     fn clone(&self) -> Self {
         self.clone()
-    }
-}
-
-impl<'a> From<ImageView<'a>> for CowImage<'a> {
-    fn from(view: ImageView<'a>) -> Self {
-        CowImage {
-            data: Cow::Borrowed(view),
-        }
-    }
-}
-
-impl<'a> From<ImageBuffer> for CowImage<'a> {
-    fn from(buf: ImageBuffer) -> Self {
-        CowImage {
-            data: Cow::Owned(buf),
-        }
     }
 }
 

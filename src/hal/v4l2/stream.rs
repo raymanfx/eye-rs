@@ -86,7 +86,7 @@ impl<'a> PlatformStream<'a> {
         )
         .unwrap();
 
-        let image = CowImage::from(view);
+        let image = CowImage::from_view(view, self.format.pixfmt);
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is
