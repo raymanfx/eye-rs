@@ -17,7 +17,7 @@ hal-openpnp = ["openpnp_capture"]
 
 [dependencies]
 bitflags = "^1.2"
-ffimage = "0.8.1"
+ffimage = "0.8.2"
 
 jpeg-decoder = { version = "^0.1", optional = true }
 openpnp_capture = { version = "^0.1", optional = true }
