@@ -1,82 +1,56 @@
-use std::io;
-
 use ffimage::color::{Bgra, Rgb, Rgba};
 use ffimage::core::{Pixel, TryConvert};
-use ffimage::packed::dynamic::{ImageBuffer, ImageView};
-use ffimage::packed::generic::{ImageBuffer as GenericImageBuffer, ImageView as GenericImageView};
+use ffimage::packed::generic::{ImageBuffer, ImageView};
 
-use crate::format::PixelFormat;
+use crate::format::{Format, PixelFormat};
 
 fn _convert<DP: Pixel + From<Rgb<u8>>>(
-    src: &ImageView,
-    dst: &mut GenericImageBuffer<DP>,
-) -> io::Result<()> {
-    let data = src.raw().as_slice();
-    if data.is_none() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "failed to get raw [u8] data",
-        ));
-    }
-    let data = data.unwrap();
+    src: &[u8],
+    src_fmt: Format,
+    dst: &mut ImageBuffer<DP>,
+) -> Result<(), &'static str> {
+    let rgb = match ImageView::<Rgb<u8>>::new(src, src_fmt.width, src_fmt.height) {
+        Some(view) => view,
+        None => return Err("failed to create RGB view"),
+    };
 
-    let rgb = GenericImageView::<Rgb<u8>>::new(data, src.width(), src.height());
-    if rgb.is_none() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "failed to create RGB view",
-        ));
+    match rgb.try_convert(dst) {
+        Ok(()) => Ok(()),
+        Err(_) => return Err("failed to convert RGB"),
     }
-    let rgb = rgb.unwrap();
-
-    let res = rgb.try_convert(dst);
-    if res.is_err() {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "failed to convert RGB",
-        ));
-    }
-
-    Ok(())
 }
 
-pub fn convert_to_rgba(src: &ImageView, dst: &mut ImageBuffer) -> io::Result<()> {
-    let mut rgba = GenericImageBuffer::<Rgba<u8>>::new(src.width(), src.height());
-    let res = _convert(src, &mut rgba);
-    if res.is_err() {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "failed to convert RGB to RGBA",
-        ));
+pub fn convert_to_rgba(src: &[u8], src_fmt: Format, dst: &mut Vec<u8>) -> Result<(), &'static str> {
+    let mut rgba = ImageBuffer::<Rgba<u8>>::new(src_fmt.width, src_fmt.height);
+    match _convert(src, src_fmt, &mut rgba) {
+        Ok(()) => {
+            *dst = rgba.into_vec();
+            Ok(())
+        }
+        Err(e) => Err(e),
     }
-
-    *dst = ImageBuffer::from_raw(src.width(), src.height(), rgba.into()).unwrap();
-    Ok(())
 }
 
-pub fn convert_to_bgra(src: &ImageView, dst: &mut ImageBuffer) -> io::Result<()> {
-    let mut bgra = GenericImageBuffer::<Bgra<u8>>::new(src.width(), src.height());
-    let res = _convert(src, &mut bgra);
-    if res.is_err() {
-        return Err(io::Error::new(
-            io::ErrorKind::Other,
-            "failed to convert RGB to BGRA",
-        ));
+pub fn convert_to_bgra(src: &[u8], src_fmt: Format, dst: &mut Vec<u8>) -> Result<(), &'static str> {
+    let mut bgra = ImageBuffer::<Bgra<u8>>::new(src_fmt.width, src_fmt.height);
+    match _convert(src, src_fmt, &mut bgra) {
+        Ok(()) => {
+            *dst = bgra.into_vec();
+            Ok(())
+        }
+        Err(e) => Err(e),
     }
-
-    *dst = ImageBuffer::from_raw(src.width(), src.height(), bgra.into()).unwrap();
-    Ok(())
 }
 
-pub fn convert(src: &ImageView, dst: &mut ImageBuffer, dst_fmt: PixelFormat) -> io::Result<()> {
-    match dst_fmt {
-        PixelFormat::Bgra(32) => return convert_to_bgra(src, dst),
-        PixelFormat::Rgba(32) => return convert_to_rgba(src, dst),
-        _ => {}
+pub fn convert(
+    src: &[u8],
+    src_fmt: Format,
+    dst: &mut Vec<u8>,
+    dst_fmt: Format,
+) -> Result<(), &'static str> {
+    match dst_fmt.pixfmt {
+        PixelFormat::Bgra(32) => convert_to_bgra(src, src_fmt, dst),
+        PixelFormat::Rgba(32) => convert_to_rgba(src, src_fmt, dst),
+        _ => Err("cannot handle target format"),
     }
-
-    Err(io::Error::new(
-        io::ErrorKind::InvalidInput,
-        "cannot handle target format",
-    ))
 }

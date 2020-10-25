@@ -1,7 +1,5 @@
 use std::io;
 
-use ffimage::packed::dynamic::{ImageBuffer, MemoryView, StorageType};
-
 use crate::format::{Format, PixelFormat};
 use crate::hal::common::convert::Converter;
 use crate::image::CowImage;
@@ -50,17 +48,17 @@ impl<'a, 'b> Stream<'b> for TransparentStream<'a> {
 
         // emulate format by converting the buffer if necessary
         if let Some(map) = self.mapping {
-            let mut buf = match image.as_view().raw() {
-                MemoryView::U8(_) => ImageBuffer::empty(StorageType::U8),
-                MemoryView::U16(_) => ImageBuffer::empty(StorageType::U16),
-            };
+            let mut buf = Vec::new();
+            let mut buf_fmt = self.format;
+            buf_fmt.pixfmt = map.1;
 
-            if let Err(e) =
-                Converter::convert(&image.as_view(), self.format.pixfmt, &mut buf, map.1)
-            {
-                return Some(Err(e));
+            if let Err(e) = Converter::convert(image.as_bytes(), self.format, &mut buf, buf_fmt) {
+                return Some(Err(io::Error::new(io::ErrorKind::Other, e)));
             }
-            Some(Ok(CowImage::from_buf(buf, map.1)))
+
+            let mut fmt = self.format;
+            fmt.pixfmt = map.1;
+            Some(Ok(CowImage::from_bytes(buf.into_iter(), fmt)))
         } else {
             Some(Ok(image))
         }

@@ -1,8 +1,6 @@
 use std::convert::TryFrom;
 use std::io;
 
-use ffimage::packed::dynamic::ImageView;
-
 use openpnp_capture as pnp;
 
 use crate::format::{Format, FourCC, PixelFormat};
@@ -54,15 +52,9 @@ impl<'a> Stream<'a> for PlatformStream {
             Err(e) => return Some(Err(e)),
         }
 
-        let view = ImageView::with_stride(
-            &self.buffer,
-            self.format.width,
-            self.format.height,
-            self.format.stride.unwrap_or(0),
-        )
-        .unwrap();
-        let pixfmt = PixelFormat::Rgba(24);
+        let mut fmt = self.format;
+        fmt.pixfmt = PixelFormat::Rgba(24);
 
-        Some(Ok(CowImage::from_view(view, pixfmt)))
+        Some(Ok(CowImage::from_slice(&self.buffer, fmt)))
     }
 }

@@ -1,7 +1,5 @@
 use std::{io, mem};
 
-use ffimage::packed::dynamic::ImageView;
-
 use v4l::buffer::Stream as _Stream;
 use v4l::io::mmap::Stream as MmapStream;
 
@@ -78,15 +76,7 @@ impl<'a> PlatformStream<'a> {
         let frame = self.stream.as_mut().unwrap().dequeue()?;
         self.queued = false;
 
-        let view = ImageView::with_stride(
-            frame.data(),
-            self.format.width,
-            self.format.height,
-            self.format.stride.unwrap_or(0),
-        )
-        .unwrap();
-
-        let image = CowImage::from_view(view, self.format.pixfmt);
+        let image = CowImage::from_slice(frame.data(), self.format);
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is
