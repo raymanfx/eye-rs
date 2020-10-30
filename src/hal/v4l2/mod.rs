@@ -8,7 +8,6 @@
 pub mod device;
 pub mod stream;
 
-use v4l;
 use v4l::device::QueryDevice;
 
 pub fn devices() -> Vec<String> {

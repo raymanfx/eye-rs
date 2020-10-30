@@ -16,7 +16,7 @@ fn _convert<DP: Pixel + From<Rgb<u8>>>(
 
     match rgb.try_convert(dst) {
         Ok(()) => Ok(()),
-        Err(_) => return Err("failed to convert RGB"),
+        Err(_) => Err("failed to convert RGB"),
     }
 }
 

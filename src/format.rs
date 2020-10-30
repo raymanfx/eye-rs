@@ -206,9 +206,7 @@ impl PartialEq for PixelFormat {
             let fourcc_1 = FourCC::try_from(*self);
             let fourcc_2 = FourCC::try_from(*other);
 
-            if fourcc_1.is_ok() && fourcc_2.is_ok() {
-                let fourcc_1 = fourcc_1.unwrap();
-                let fourcc_2 = fourcc_2.unwrap();
+            if let (Ok(fourcc_1), Ok(fourcc_2)) = (fourcc_1, fourcc_2) {
                 fourcc_1 == fourcc_2
             } else {
                 false

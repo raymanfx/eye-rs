@@ -34,7 +34,7 @@
 //!
 //! // Query for available devices.
 //! let devices = Context::enumerate_devices();
-//! if devices.len() == 0 {
+//! if devices.is_empty() {
 //!     println!("No devices available");
 //!     return;
 //! }
