@@ -9,6 +9,8 @@ It features multiple platform backends, such as v4l2 for Linux. Buffers are capt
 'streams'. The stream concept is used to facilitate additional features such as colorspace
 conversion.
 
+A backend is also called 'HAL' aka hardware abstraction layer in eye-rs. An OS may support multiple HALs at runtime, depending on which HALs were selected at compile time. Capture devices are then identified via their URI so you can choose the HAL which best fits your needs.
+
 Eye is a very young library and its API is subject to change (as denoted by the 0.x.x version
 number). We follow the semver approach, meaning each new feature will bump the minor version by one.
 
@@ -26,9 +28,11 @@ which can be queried at runtime so device parameters can be configured according
 
 | Feature                                       | Linux     | Windows   | macOS     |
 | --------------------------------------------- |:---------:|:---------:|:---------:|
-| Zero-copy capture                             | &check;   | &#10540;  | &#10540;  |
-| Device enumeration                            | &check;   | &#10540;  | &#10540;  |
-| Device parameters (Focus, White Balance, ...) | (&check;) | &#10540;  | &#10540;  |
+| Image capture                                 | &check;   | &#10540;  | &check;   |
+| Device enumeration                            | &check;   | &#10540;  | &check;   |
+| Device parameters (Focus, White Balance, ...) | &check;   | &#10540;  | &#10540;  |
+
+There are various HAL specific properties. For example, the v4l2 HAL on Linux supports zero-copy capture (as far as userspace is concerned - the kernel driver may still perform a copy). Those will be enumerated here in the future.
 
 ## Usage
 Below you can find a quick example usage of this crate. It introduces the basics necessary for image capturing.
