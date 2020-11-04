@@ -5,7 +5,7 @@ use crate::format::Format;
 use crate::image::CowImage;
 
 /// Platform device abstraction
-pub trait Device {
+pub trait Device: Send {
     /// Returns the supported formats
     fn query_formats(&self) -> io::Result<Vec<Format>>;
 
@@ -33,7 +33,7 @@ pub trait Device {
 ///
 /// A stream is a construct which offers one item at a time. Once the next item is available, the
 /// previous one is discarded and thus not accessible any longer.
-pub trait Stream<'a> {
+pub trait Stream<'a>: Send {
     /// Type of the stream elements
     type Item;
 
