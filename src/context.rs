@@ -33,7 +33,7 @@ impl Context {
     }
 
     /// Returns a new platform device abstraction
-    pub fn open_device<S: AsRef<str>>(_uri: S) -> io::Result<Box<dyn Device>> {
+    pub fn open_device<S: AsRef<str>>(_uri: S) -> io::Result<Box<dyn Device + Send>> {
         let _uri = _uri.as_ref();
 
         #[cfg(target_os = "linux")]

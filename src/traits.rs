@@ -42,4 +42,4 @@ pub trait Stream<'a>: Send {
 }
 
 /// A stream producing images
-pub type ImageStream<'a> = dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>>;
+pub type ImageStream<'a> = dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>> + Send;
