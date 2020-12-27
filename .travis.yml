@@ -25,11 +25,9 @@ jobs:
     - name: check
       script:
         - cargo check --no-default-features
-        - cargo check --features hal-openpnp
     - name: test
       script:
         - cargo test --no-default-features
-        - cargo test --features hal-openpnp
     - name: fmt
       before_script:
         - rustup component add rustfmt

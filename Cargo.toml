@@ -12,15 +12,11 @@ repository= "https://github.com/raymanfx/eye-rs"
 default = ["jpeg"]
 jpeg = ["jpeg-decoder"]
 
-# capture backends
-hal-openpnp = ["openpnp_capture"]
-
 [dependencies]
 bitflags = "^1.2"
 ffimage = "0.8.2"
 
 jpeg-decoder = { version = "^0.1", optional = true }
-openpnp_capture = { version = "^0.1", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 v4l = { version = "^0.10" }

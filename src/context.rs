@@ -20,15 +20,6 @@ impl Context {
             list.extend(_list);
         }
 
-        #[cfg(feature = "hal-openpnp")]
-        {
-            let _list: Vec<String> = crate::hal::openpnp::devices()
-                .into_iter()
-                .map(|uri| format!("pnp://{}", uri))
-                .collect();
-            list.extend(_list);
-        }
-
         list
     }
 
@@ -40,26 +31,6 @@ impl Context {
         if _uri.starts_with("v4l://") {
             let path = _uri[6..].to_string();
             let dev = crate::hal::v4l2::device::PlatformDevice::with_path(path)?;
-            let dev = TransparentDevice::new(Box::new(dev));
-            return Ok(Box::new(dev));
-        }
-
-        #[cfg(feature = "hal-openpnp")]
-        if _uri.starts_with("pnp://") {
-            let index = _uri[6..].to_string();
-            let index = match index.parse::<u32>() {
-                Ok(index) => index,
-                Err(_) => return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI")),
-            };
-            let dev = match crate::hal::openpnp::device::PlatformDevice::new(index) {
-                Some(dev) => dev,
-                None => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        "failed to open device",
-                    ))
-                }
-            };
             let dev = TransparentDevice::new(Box::new(dev));
             return Ok(Box::new(dev));
         }
