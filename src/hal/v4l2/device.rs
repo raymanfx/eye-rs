@@ -35,7 +35,7 @@ impl PlatformDevice {
     }
 }
 
-impl DeviceTrait for PlatformDevice {
+impl<'a> DeviceTrait<'a> for PlatformDevice {
     fn query_formats(&self) -> io::Result<Vec<Format>> {
         let mut formats = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
@@ -189,7 +189,7 @@ impl DeviceTrait for PlatformDevice {
         self.format()
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>> {
+    fn stream(&self) -> io::Result<Box<ImageStream<'a>>> {
         let stream = PlatformStream::new(self)?;
         Ok(Box::new(stream))
     }

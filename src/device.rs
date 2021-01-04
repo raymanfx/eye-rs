@@ -7,14 +7,14 @@ use crate::stream::TransparentStream;
 use crate::traits::{Device as DeviceTrait, ImageStream};
 
 /// A transparent wrapper type for native platform devices.
-pub struct Device {
-    inner: Box<dyn DeviceTrait>,
+pub struct Device<'a> {
+    inner: Box<dyn DeviceTrait<'a>>,
 
     // active format
     emulated_format: Option<Format>,
 }
 
-impl Device {
+impl<'a> Device<'a> {
     pub fn with_uri<S: AsRef<str>>(_uri: S) -> io::Result<Self> {
         let _uri = _uri.as_ref();
 
@@ -80,7 +80,7 @@ impl Device {
     }
 }
 
-impl DeviceTrait for Device {
+impl<'a> DeviceTrait<'a> for Device<'a> {
     fn query_formats(&self) -> io::Result<Vec<Format>> {
         let mut formats = self.inner.query_formats()?;
 
@@ -149,7 +149,7 @@ impl DeviceTrait for Device {
         self.format()
     }
 
-    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>> {
+    fn stream(&self) -> io::Result<Box<ImageStream<'a>>> {
         let native_format = self.inner.format()?;
         let native_stream = self.inner.stream()?;
         let mut stream = TransparentStream::new(native_stream, native_format);

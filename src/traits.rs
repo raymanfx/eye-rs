@@ -5,7 +5,7 @@ use crate::format::Format;
 use crate::image::CowImage;
 
 /// Platform device abstraction
-pub trait Device: Send {
+pub trait Device<'a>: Send {
     /// Returns the supported formats
     fn query_formats(&self) -> io::Result<Vec<Format>>;
 
@@ -26,7 +26,7 @@ pub trait Device: Send {
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>>;
+    fn stream(&self) -> io::Result<Box<ImageStream<'a>>>;
 }
 
 /// Stream abstraction
