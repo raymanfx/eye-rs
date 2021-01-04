@@ -1,7 +1,7 @@
 use std::io;
 
+use crate::colorconvert::Converter;
 use crate::format::{Format, PixelFormat};
-use crate::hal::common::convert::Converter;
 use crate::image::CowImage;
 use crate::traits::{ImageStream, Stream};
 

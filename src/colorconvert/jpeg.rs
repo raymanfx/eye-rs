@@ -1,7 +1,7 @@
 use jpeg_decoder::{Decoder, PixelFormat as JpegFormat};
 
+use crate::colorconvert::rgb;
 use crate::format::{Format, PixelFormat};
-use crate::hal::common::convert::rgb;
 
 pub fn convert_to_rgb(src: &[u8], _src_fmt: Format, dst: &mut Vec<u8>) -> Result<(), &'static str> {
     let mut decoder = Decoder::new(src);

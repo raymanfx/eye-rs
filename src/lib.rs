@@ -58,6 +58,7 @@
 //!
 //! Have a look at the examples to learn more about device and stream management.
 
+pub mod colorconvert;
 pub mod context;
 pub mod control;
 pub mod format;
