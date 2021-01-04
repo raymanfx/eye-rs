@@ -41,7 +41,7 @@
 //!
 //! // First, we need a capture device to read images from. For this example, let's just choose
 //! // whatever device is first in the list.
-//! let dev = Context::open_device(&devices[0]).expect("Failed to open video device");
+//! let dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
 //!
 //! // Since we want to capture images, we need to access the native image stream of the device.
 //! // The backend will internally select a suitable implementation for the platform stream. On
@@ -73,6 +73,7 @@ pub mod stream;
 pub mod prelude {
     pub use crate::{
         context::Context,
+        device::Device,
         format::{Format, FourCC, PixelFormat},
         traits::{Device as DeviceTrait, Stream as StreamTrait},
     };

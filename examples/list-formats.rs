@@ -9,7 +9,7 @@ fn main() -> io::Result<()> {
     // Print the supported formats for each device.
     for uri in list {
         println!("{}", uri);
-        let dev = Context::open_device(&uri)?;
+        let dev = Device::with_uri(&uri)?;
         let formats = dev.query_formats()?;
 
         // group by pixelformat

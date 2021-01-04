@@ -4,28 +4,34 @@ use crate::colorconvert::Converter;
 use crate::control;
 use crate::format::{Format, PixelFormat};
 use crate::stream::TransparentStream;
-use crate::traits::{Device, ImageStream};
+use crate::traits::{Device as DeviceTrait, ImageStream};
 
 /// A transparent wrapper type for native platform devices.
-pub struct TransparentDevice {
-    dev: Box<dyn Device>,
+pub struct Device {
+    inner: Box<dyn DeviceTrait>,
 
     // active format
     emulated_format: Option<Format>,
-    // formats which are emulated by us
-    emulated_formats: Vec<(PixelFormat, PixelFormat)>,
 }
 
-impl TransparentDevice {
-    pub fn new(dev: Box<dyn Device>) -> Self {
-        let mut dev = TransparentDevice {
-            dev,
-            emulated_format: None,
-            emulated_formats: Vec::new(),
-        };
+impl Device {
+    pub fn with_uri<S: AsRef<str>>(_uri: S) -> io::Result<Self> {
+        let _uri = _uri.as_ref();
 
-        dev.emulated_formats = dev.query_emulated_formats().unwrap_or_default();
-        dev
+        #[cfg(target_os = "linux")]
+        if _uri.starts_with("v4l://") {
+            let path = _uri[6..].to_string();
+            let inner = crate::hal::v4l2::device::PlatformDevice::with_path(path)?;
+            return Ok(Device {
+                inner: Box::new(inner),
+                emulated_format: None,
+            });
+        }
+
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "No suitable backend available",
+        ))
     }
 
     /// Returns a list of format mappings where the first field is a native format and the second
@@ -34,7 +40,7 @@ impl TransparentDevice {
         let converter_formats = Converter::formats();
         let mut emulated_formats: Vec<(PixelFormat, PixelFormat)> = Vec::new();
 
-        let native_formats = self.dev.query_formats()?;
+        let native_formats = self.inner.query_formats()?;
         for native_format in &native_formats {
             for emulated in &converter_formats {
                 if emulated.0 == native_format.pixfmt {
@@ -74,15 +80,15 @@ impl TransparentDevice {
     }
 }
 
-impl Device for TransparentDevice {
+impl DeviceTrait for Device {
     fn query_formats(&self) -> io::Result<Vec<Format>> {
-        let mut formats = self.dev.query_formats()?;
+        let mut formats = self.inner.query_formats()?;
 
         // add emulated formats
         let mut emulated_formats = Vec::new();
 
         for plat_format in &formats {
-            for mapping in &self.emulated_formats {
+            for mapping in self.query_emulated_formats()? {
                 if mapping.0 == plat_format.pixfmt {
                     // transparently add the emulated format
                     emulated_formats.push(Format {
@@ -100,15 +106,15 @@ impl Device for TransparentDevice {
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {
-        self.dev.query_controls()
+        self.inner.query_controls()
     }
 
     fn control(&self, id: u32) -> io::Result<control::Value> {
-        self.dev.control(id)
+        self.inner.control(id)
     }
 
     fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
-        self.dev.set_control(id, val)
+        self.inner.set_control(id, val)
     }
 
     fn format(&self) -> io::Result<Format> {
@@ -117,7 +123,7 @@ impl Device for TransparentDevice {
             return Ok(self.emulated_format.unwrap());
         }
 
-        self.dev.format()
+        self.inner.format()
     }
 
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format> {
@@ -125,7 +131,7 @@ impl Device for TransparentDevice {
 
         // check whether we need to emulate the requested format
         let mut emulate = None;
-        for format in &self.emulated_formats {
+        for format in self.query_emulated_formats()? {
             if format.1 == fmt.pixfmt {
                 fmt.pixfmt = format.0;
                 emulate = Some((format.0, format.1));
@@ -139,13 +145,13 @@ impl Device for TransparentDevice {
             self.emulated_format = Some(emulated_format);
         }
 
-        self.dev.set_format(&fmt)?;
+        self.inner.set_format(&fmt)?;
         self.format()
     }
 
     fn stream<'a>(&self) -> io::Result<Box<ImageStream<'a>>> {
-        let native_format = self.dev.format()?;
-        let native_stream = self.dev.stream()?;
+        let native_format = self.inner.format()?;
+        let native_stream = self.inner.stream()?;
         let mut stream = TransparentStream::new(native_stream, native_format);
 
         if let Some(format) = self.emulated_format {

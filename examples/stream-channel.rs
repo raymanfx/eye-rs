@@ -17,7 +17,7 @@ fn main() {
 
     let capture_thread = thread::spawn(move || {
         // Create a device instance.
-        let dev = Context::open_device(&devices[0]).expect("Failed to open video device");
+        let dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
 
         // Create a stream to capture frames from.
         let mut stream = dev.stream().expect("Failed to setup capture stream");
