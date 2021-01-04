@@ -4,3 +4,6 @@
 
 #[cfg(target_os = "linux")]
 pub(crate) mod v4l2;
+
+#[cfg(feature = "hal-uvc")]
+pub(crate) mod uvc;

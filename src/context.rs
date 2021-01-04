@@ -15,6 +15,15 @@ impl Context {
             list.extend(_list);
         }
 
+        #[cfg(feature = "hal-uvc")]
+        {
+            let _list: Vec<String> = crate::hal::uvc::devices()
+                .into_iter()
+                .map(|uri| format!("uvc://{}", uri))
+                .collect();
+            list.extend(_list);
+        }
+
         list
     }
 }
