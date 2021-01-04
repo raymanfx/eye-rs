@@ -3,7 +3,7 @@ use std::io;
 use crate::colorconvert::Converter;
 use crate::control;
 use crate::format::{Format, PixelFormat};
-use crate::hal::common::stream::TransparentStream;
+use crate::stream::TransparentStream;
 use crate::traits::{Device, ImageStream};
 
 /// A transparent wrapper type for native platform devices.

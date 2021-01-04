@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::hal::common::device::TransparentDevice;
+use crate::device::TransparentDevice;
 use crate::traits::Device;
 
 /// Runtime context

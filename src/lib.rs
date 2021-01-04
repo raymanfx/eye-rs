@@ -67,6 +67,9 @@ pub mod traits;
 
 pub mod hal;
 
+pub mod device;
+pub mod stream;
+
 pub mod prelude {
     pub use crate::{
         context::Context,
