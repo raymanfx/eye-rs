@@ -1,18 +1,20 @@
 use std::{io, mem};
 
-use v4l::buffer::Stream as _Stream;
+use v4l::buffer::Type as BufType;
 use v4l::io::mmap::Stream as MmapStream;
+use v4l::io::traits::{CaptureStream, Stream};
+use v4l::video::Capture;
 
 use crate::format::{Format, FourCC, PixelFormat};
 use crate::hal::v4l2::device::PlatformDevice;
 use crate::image::CowImage;
-use crate::traits::Stream;
+use crate::traits::Stream as StreamTrait;
 
 pub struct PlatformStream<'a> {
     format: Format,
-    stream: Option<MmapStream<'a>>,
+    stream: MmapStream<'a>,
+    stream_buf_index: usize,
     active: bool,
-    queued: bool,
 }
 
 impl<'a> PlatformStream<'a> {
@@ -25,17 +27,13 @@ impl<'a> PlatformStream<'a> {
             format_.stride as usize,
         );
 
-        let mut stream = PlatformStream {
+        let stream = MmapStream::new(dev.inner(), BufType::VideoCapture)?;
+        Ok(PlatformStream {
             format,
-            stream: None,
+            stream,
+            stream_buf_index: 0,
             active: false,
-
-            // the v4l2 backend queues a number of buffers by default, so skip the first queue()
-            // call for this high-level interface
-            queued: true,
-        };
-        stream.stream = Some(MmapStream::new(dev.inner())?);
-        Ok(stream)
+        })
     }
 
     fn start(&mut self) -> io::Result<()> {
@@ -43,7 +41,7 @@ impl<'a> PlatformStream<'a> {
             return Ok(());
         }
 
-        self.stream.as_mut().unwrap().start()?;
+        self.stream.start()?;
         self.active = true;
         Ok(())
     }
@@ -53,7 +51,7 @@ impl<'a> PlatformStream<'a> {
             return Ok(());
         }
 
-        self.stream.as_mut().unwrap().stop()?;
+        self.stream.stop()?;
         self.active = false;
         Ok(())
     }
@@ -63,20 +61,15 @@ impl<'a> PlatformStream<'a> {
             self.start()?;
         }
 
-        if self.queued {
-            return Ok(());
-        }
-
-        self.stream.as_mut().unwrap().queue()?;
-        self.queued = true;
+        self.stream.queue(self.stream_buf_index)?;
         Ok(())
     }
 
     fn dequeue<'b>(&'b mut self) -> io::Result<CowImage<'b>> {
-        let frame = self.stream.as_mut().unwrap().dequeue()?;
-        self.queued = false;
+        self.stream_buf_index = self.stream.dequeue()?;
 
-        let image = CowImage::from_slice(frame.data(), self.format);
+        let buf = self.stream.get(self.stream_buf_index).unwrap();
+        let image = CowImage::from_slice(buf, self.format);
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is
@@ -95,7 +88,7 @@ impl<'a> Drop for PlatformStream<'a> {
     }
 }
 
-impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
+impl<'a, 'b> StreamTrait<'b> for PlatformStream<'a> {
     type Item = io::Result<CowImage<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {

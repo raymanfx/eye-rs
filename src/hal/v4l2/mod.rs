@@ -8,13 +8,13 @@
 pub mod device;
 pub mod stream;
 
-use v4l::device::QueryDevice;
+use v4l::context;
 
 pub fn devices() -> Vec<String> {
-    v4l::device::List::new()
+    context::enum_devices()
         .into_iter()
         .filter_map(|dev| {
-            let index = dev.index()?;
+            let index = dev.index();
             let dev = match device::PlatformDevice::new(index) {
                 Ok(dev) => dev,
                 Err(_) => return None,
