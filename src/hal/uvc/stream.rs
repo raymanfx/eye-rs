@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time;
 
-use crate::format::Format;
+use crate::format::{Format, PixelFormat};
 use crate::image::CowImage;
 use crate::traits::Stream;
 
@@ -22,11 +22,11 @@ pub struct PlatformStream<'a> {
     _stream: uvc::ActiveStream<'a, Arc<RwLock<Buffer>>>,
     _handle: Box<uvc::StreamHandle<'a>>,
     buffer: Arc<RwLock<Buffer>>,
-    format: Format,
+    format: uvc::StreamFormat,
 }
 
 impl<'a> PlatformStream<'a> {
-    pub fn new(handle: uvc::StreamHandle<'a>, format: Format) -> Self {
+    pub fn new(handle: uvc::StreamHandle<'a>, format: uvc::StreamFormat) -> Self {
         let mut handle = Box::new(handle);
         let handle_ptr = &mut *handle as *mut uvc::StreamHandle;
         let handle_ref = unsafe { &mut *handle_ptr as &mut uvc::StreamHandle };
@@ -97,10 +97,12 @@ impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
             return None;
         };
 
+        let format = Format::new(self.format.width, self.format.height, PixelFormat::Rgb(24));
+
         buffer.state = BufferState::Empty;
         Some(Ok(CowImage::from_bytes(
             buffer.data.iter().cloned(),
-            self.format,
+            format,
         )))
     }
 }

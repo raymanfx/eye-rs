@@ -12,8 +12,7 @@ pub struct PlatformDevice<'a> {
     _dev: Arc<uvc::Device<'a>>,
     _ctx: Arc<uvc::Context<'a>>,
 
-    stream_fmts: Vec<Format>,
-    stream_fmt: Option<Format>,
+    stream_fmt: uvc::StreamFormat,
 }
 
 impl<'a> PlatformDevice<'a> {
@@ -35,23 +34,17 @@ impl<'a> PlatformDevice<'a> {
 
         let handle = Arc::new(dev_ref.open()?);
 
-        let mut dev = PlatformDevice {
+        Ok(PlatformDevice {
             handle,
             _dev: dev,
             _ctx: ctx,
-            stream_fmts: Vec::new(),
-            stream_fmt: None,
-        };
-
-        // query available formats
-        if let Ok(fmts) = dev.query_formats() {
-            if fmts.len() > 0 {
-                dev.stream_fmt = Some(fmts[0]);
-                dev.stream_fmts = fmts;
-            }
-        }
-
-        Ok(dev)
+            stream_fmt: uvc::StreamFormat {
+                width: 1280,
+                height: 720,
+                fps: 30,
+                format: uvc::FrameFormat::Any,
+            },
+        })
     }
 }
 
@@ -102,10 +95,11 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
     }
 
     fn format(&self) -> io::Result<Format> {
-        match self.stream_fmt {
-            Some(fmt) => Ok(fmt),
-            None => Err(io::Error::new(io::ErrorKind::Other, "not set")),
-        }
+        Ok(Format::new(
+            self.stream_fmt.width,
+            self.stream_fmt.height,
+            PixelFormat::Rgb(24),
+        ))
     }
 
     fn set_format(&mut self, fmt: &Format) -> io::Result<Format> {
@@ -114,10 +108,6 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
                 io::ErrorKind::InvalidInput,
                 "only RGB24 is supported",
             ));
-        }
-
-        if self.stream_fmts.len() == 0 {
-            return Err(io::Error::new(io::ErrorKind::Other, "no available formats"));
         }
 
         // helper - should really be in the standard library..
@@ -129,45 +119,46 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
             }
         }
 
-        // find the best match using L2 error metric
-        let mut prev = self.stream_fmts[0];
-        for stream_fmt in &self.stream_fmts {
-            let prev_error = ((absdiff(fmt.width, prev.width)) as f64).sqrt()
-                + ((absdiff(fmt.height, prev.height)) as f64).sqrt();
-            let error = ((absdiff(fmt.width, stream_fmt.width)) as f64).sqrt()
-                + ((absdiff(fmt.height, stream_fmt.height)) as f64).sqrt();
-            if error < prev_error {
-                prev = *stream_fmt;
-            }
+        if let Some(fmt) = self.handle.get_preferred_format(|x, y| {
+            // match against the resolution
+            let error_x = ((absdiff(fmt.width, x.width)) as f64).sqrt()
+                + ((absdiff(fmt.height, x.height)) as f64).sqrt();
+            let error_y = ((absdiff(fmt.width, y.width)) as f64).sqrt()
+                + ((absdiff(fmt.height, y.height)) as f64).sqrt();
 
-            if error == 0.0 {
-                // found the exact format
-                break;
+            if error_x == error_y {
+                // prefer lower frame times
+                if x.fps >= y.fps {
+                    x
+                } else {
+                    y
+                }
+            } else if error_x <= error_y {
+                x
+            } else {
+                y
             }
+        }) {
+            self.stream_fmt = fmt;
         }
 
-        self.stream_fmt = Some(prev);
-        Ok(prev)
+        Ok(Format::new(
+            self.stream_fmt.width,
+            self.stream_fmt.height,
+            PixelFormat::Rgb(32),
+        ))
     }
 
     fn stream(&self) -> io::Result<Box<ImageStream<'a>>> {
-        let format = self.format()?;
-        let uvc_fmt = uvc::StreamFormat {
-            width: format.width,
-            height: format.height,
-            fps: 30,
-            format: uvc::FrameFormat::Any,
-        };
-
         let handle_ptr = &*self.handle as *const uvc::DeviceHandle;
         let handle_ref = unsafe { &*handle_ptr as &uvc::DeviceHandle };
 
-        let uvc_stream = match handle_ref.get_stream_handle_with_format(uvc_fmt) {
+        let uvc_stream = match handle_ref.get_stream_handle_with_format(self.stream_fmt) {
             Ok(handle) => handle,
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
-        let stream = PlatformStream::new(uvc_stream, format);
+        let stream = PlatformStream::new(uvc_stream, self.stream_fmt);
         Ok(Box::new(stream))
     }
 }
