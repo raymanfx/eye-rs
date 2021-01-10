@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+    - next
+  pull_request:
+    branches:
+    - master
+    - next
+
+env:
+    CARGO_TERM_COLOR: always
+
+jobs:
+  rustfmt:
+    name: rustfmt
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: rustfmt
+    - name: Run rustfmt
+      run: cargo fmt -- --check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+        components: clippy
+    - name: Run clippy
+      continue-on-error: true
+      run: cargo clippy -- -D warnings
+
+  test:
+    name: test
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+    - name: Run tests
+      run: cargo test
+
+  check:
+    name: check
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+    - name: Check
+      run: cargo check --no-default-features
+    - name: Check examples
+      run: cargo check --no-default-features --examples
+
+  check-hals:
+    name: check-hals
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - build: v4l2-ubuntu
+          os: ubuntu-18.04
+          rust: stable
+          features: ""
+        - build: uvc-macos
+          os: macos-11.0
+          rust: stable
+          features: "--features hal-uvc"
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+    - name: Check
+      run: cargo check --no-default-features ${{ matrix.features }}

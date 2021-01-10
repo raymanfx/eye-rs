@@ -2,7 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/eye.svg?style=for-the-badge)](https://crates.io/crates/eye)
 [![license](https://img.shields.io/github/license/raymanfx/eye-rs?style=for-the-badge)](https://github.com/raymanfx/eye-rs/blob/master/LICENSE.txt)
-[![Build Status](https://img.shields.io/travis/raymanfx/eye-rs/master.svg?style=for-the-badge&logo=travis)](https://travis-ci.org/raymanfx/eye-rs)
+[![Build Status](https://img.shields.io/github/workflow/status/raymanfx/eye-rs/CI?style=for-the-badge&logo=github)](https://github.com/raymanfx/eye-rs/actions?query=workflow%3ACI)
 
 Eye is a cross platform camera capture and control library written in native Rust.
 It features multiple platform backends, such as v4l2 for Linux. Buffers are captured by accessing
