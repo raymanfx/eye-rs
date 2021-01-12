@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use crate::colorconvert::Converter;
 use crate::format::{Format, PixelFormat};
 
 #[derive(Clone)]
@@ -72,6 +73,27 @@ impl<'a> CowImage<'a> {
         CowImage {
             data: Cow::Owned(self.data.into_owned()),
             fmt: self.fmt,
+        }
+    }
+
+    /// Converts the image into a different format
+    ///
+    /// # Arguments
+    ///
+    /// * `pixfmt` - Target pixelFormat
+    pub fn convert(self, pixfmt: PixelFormat) -> Result<CowImage<'a>, &'static str> {
+        if pixfmt == self.pixfmt() {
+            Ok(self)
+        } else {
+            let mut buf = Vec::new();
+            let src_fmt = Format::new(self.width(), self.height(), self.pixfmt());
+            let dst_fmt = Format::new(self.width(), self.height(), pixfmt);
+            Converter::convert(self.as_bytes(), src_fmt, &mut buf, dst_fmt)?;
+
+            Ok(CowImage {
+                data: Cow::Owned(buf),
+                fmt: dst_fmt,
+            })
         }
     }
 }
