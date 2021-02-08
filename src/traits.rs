@@ -1,13 +1,13 @@
 use std::io;
 
 use crate::control::{Control, Value as ControlValue};
-use crate::format::Format;
+use crate::format::ImageFormat;
 use crate::image::CowImage;
 
 /// Platform device abstraction
 pub trait Device<'a>: Send {
     /// Returns the supported formats
-    fn query_formats(&self) -> io::Result<Vec<Format>>;
+    fn query_formats(&self) -> io::Result<Vec<ImageFormat>>;
 
     /// Returns the supported controls
     fn query_controls(&self) -> io::Result<Vec<Control>>;
@@ -19,11 +19,11 @@ pub trait Device<'a>: Send {
     fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
 
     /// Returns the current format in use by the device
-    fn format(&self) -> io::Result<Format>;
+    fn format(&self) -> io::Result<ImageFormat>;
 
     /// Attempts to match the requested format to a device format on a best-effort basis and
     /// returns the actual format in use
-    fn set_format(&mut self, fmt: &Format) -> io::Result<Format>;
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat>;
 
     /// Returns a zero-copy stream for direct frame access
     fn stream(&self) -> io::Result<Box<ImageStream<'a>>>;

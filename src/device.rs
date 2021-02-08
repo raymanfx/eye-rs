@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::control;
-use crate::format::Format;
+use crate::format::ImageFormat;
 use crate::traits::{Device as DeviceTrait, ImageStream};
 
 /// A transparent wrapper type for native platform devices.
@@ -65,7 +65,7 @@ impl<'a> Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
-    fn query_formats(&self) -> io::Result<Vec<Format>> {
+    fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
         self.inner.query_formats()
     }
 
@@ -81,11 +81,11 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.set_control(id, val)
     }
 
-    fn format(&self) -> io::Result<Format> {
+    fn format(&self) -> io::Result<ImageFormat> {
         self.inner.format()
     }
 
-    fn set_format(&mut self, fmt: &Format) -> io::Result<Format> {
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
         self.inner.set_format(&fmt)
     }
 

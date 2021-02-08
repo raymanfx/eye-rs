@@ -13,19 +13,19 @@ fn main() -> io::Result<()> {
         let formats = dev.query_formats()?;
 
         // group by pixelformat
-        let mut grouped: Vec<Vec<Format>> = Vec::new();
-        for fmt in formats {
+        let mut grouped: Vec<Vec<ImageFormat>> = Vec::new();
+        for fmt in &formats {
             let mut new = true;
             for group in &mut grouped {
-                let first = group[0];
+                let first = &group[0];
                 if first.pixfmt == fmt.pixfmt {
-                    group.push(fmt);
+                    group.push(fmt.clone());
                     new = false;
                 }
             }
 
             if new {
-                grouped.push(vec![fmt]);
+                grouped.push(vec![fmt.clone()]);
             }
         }
 

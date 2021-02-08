@@ -73,7 +73,7 @@ pub mod prelude {
     pub use crate::{
         context::Context,
         device::Device,
-        format::{Format, FourCC, PixelFormat},
+        format::{ImageFormat, PixelFormat},
         traits::{Device as DeviceTrait, Stream as StreamTrait},
     };
 }

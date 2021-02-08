@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, io, path::Path};
+use std::{convert::TryInto, io, path::Path};
 
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::video::Capture;
@@ -7,7 +7,7 @@ use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
 
 use crate::control;
-use crate::format::{Format, FourCC, PixelFormat};
+use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::v4l2::stream::PlatformStream;
 use crate::traits::{Device as DeviceTrait, ImageStream};
 
@@ -36,7 +36,7 @@ impl PlatformDevice {
 }
 
 impl<'a> DeviceTrait<'a> for PlatformDevice {
-    fn query_formats(&self) -> io::Result<Vec<Format>> {
+    fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
         let mut formats = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
@@ -44,13 +44,11 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
             for framesize in self.inner.enum_framesizes(format.fourcc)? {
                 // TODO: consider stepwise formats
                 if let v4l::framesize::FrameSizeEnum::Discrete(size) = framesize.size {
-                    let format = Format {
-                        width: size.width,
-                        height: size.height,
-                        pixfmt: PixelFormat::from(FourCC::new(&format.fourcc.repr)),
-                        stride: None,
-                    };
-                    formats.push(format);
+                    formats.push(ImageFormat::new(
+                        size.width,
+                        size.height,
+                        PixelFormat::from(&format.fourcc.repr),
+                    ));
                 }
             }
         }
@@ -165,26 +163,25 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
         Ok(())
     }
 
-    fn format(&self) -> io::Result<Format> {
+    fn format(&self) -> io::Result<ImageFormat> {
         let fmt = self.inner.format()?;
-        Ok(Format::with_stride(
-            fmt.width,
-            fmt.height,
-            PixelFormat::from(FourCC::new(&fmt.fourcc.repr)),
-            fmt.stride as usize,
-        ))
+        Ok(
+            ImageFormat::new(fmt.width, fmt.height, PixelFormat::from(&fmt.fourcc.repr))
+                .stride(fmt.stride as usize),
+        )
     }
 
-    fn set_format(&mut self, fmt: &Format) -> io::Result<Format> {
-        let fourcc = FourCC::try_from(fmt.pixfmt);
-        if fourcc.is_err() {
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
+        let fourcc: &[u8; 4] = if let Ok(fourcc) = fmt.pixfmt.clone().try_into() {
+            fourcc
+        } else {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
                 "failed to map pixelformat to fourcc",
             ));
-        }
+        };
 
-        let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(&fourcc.unwrap().repr));
+        let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(fourcc));
         self.inner.set_format(&fmt)?;
         self.format()
     }

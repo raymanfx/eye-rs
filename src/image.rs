@@ -1,17 +1,17 @@
 use std::borrow::Cow;
 
 use crate::colorconvert::Converter;
-use crate::format::{Format, PixelFormat};
+use crate::format::{ImageFormat, PixelFormat};
 
 #[derive(Clone)]
 pub struct CowImage<'a> {
     data: Cow<'a, [u8]>,
-    fmt: Format,
+    fmt: ImageFormat,
 }
 
 impl<'a> CowImage<'a> {
     /// Converts an image view into a cow image
-    pub(crate) fn from_slice(slice: &'a [u8], fmt: Format) -> Self {
+    pub(crate) fn from_slice(slice: &'a [u8], fmt: ImageFormat) -> Self {
         CowImage {
             data: Cow::Borrowed(slice),
             fmt,
@@ -19,7 +19,7 @@ impl<'a> CowImage<'a> {
     }
 
     /// Converts an image buffer into a cow image
-    pub(crate) fn from_bytes<I>(bytes: I, fmt: Format) -> Self
+    pub(crate) fn from_bytes<I>(bytes: I, fmt: ImageFormat) -> Self
     where
         I: Iterator<Item = u8>,
     {
@@ -61,8 +61,8 @@ impl<'a> CowImage<'a> {
     }
 
     /// Returns the format of the image pixels
-    pub fn pixfmt(&self) -> PixelFormat {
-        self.fmt.pixfmt
+    pub fn pixfmt(&self) -> &PixelFormat {
+        &self.fmt.pixfmt
     }
 
     /// Returns an instance that is guaranteed to own its data
@@ -81,14 +81,14 @@ impl<'a> CowImage<'a> {
     /// # Arguments
     ///
     /// * `pixfmt` - Target pixelFormat
-    pub fn convert(self, pixfmt: PixelFormat) -> Result<CowImage<'a>, &'static str> {
+    pub fn convert(self, pixfmt: &PixelFormat) -> Result<CowImage<'a>, &'static str> {
         if pixfmt == self.pixfmt() {
             Ok(self)
         } else {
             let mut buf = Vec::new();
-            let src_fmt = Format::new(self.width(), self.height(), self.pixfmt());
-            let dst_fmt = Format::new(self.width(), self.height(), pixfmt);
-            Converter::convert(self.as_bytes(), src_fmt, &mut buf, dst_fmt)?;
+            let src_fmt = ImageFormat::new(self.width(), self.height(), self.pixfmt().clone());
+            let dst_fmt = ImageFormat::new(self.width(), self.height(), pixfmt.clone());
+            Converter::convert(self.as_bytes(), &src_fmt, &mut buf, &dst_fmt.pixfmt)?;
 
             Ok(CowImage {
                 data: Cow::Owned(buf),

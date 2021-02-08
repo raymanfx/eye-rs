@@ -3,7 +3,7 @@ use std::ops::Sub;
 use std::sync::Arc;
 
 use crate::control;
-use crate::format::{Format, FourCC, PixelFormat};
+use crate::format::{pix, ImageFormat, PixelFormat};
 use crate::hal::uvc::stream::PlatformStream;
 use crate::traits::{Device, ImageStream};
 
@@ -49,7 +49,7 @@ impl<'a> PlatformDevice<'a> {
 }
 
 impl<'a> Device<'a> for PlatformDevice<'a> {
-    fn query_formats(&self) -> io::Result<Vec<Format>> {
+    fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
         let mut formats = Vec::new();
 
         self.handle
@@ -63,19 +63,16 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
                         let pixfmt = match frame_desc.subtype() {
                             uvc::DescriptionSubtype::FormatMJPEG
                             | uvc::DescriptionSubtype::FrameMJPEG => {
-                                PixelFormat::from(FourCC::new(b"MJPG"))
+                                PixelFormat::Compressed(pix::Compressed::Jpeg)
                             }
-                            _ => PixelFormat::from(FourCC::new(b"RGB3")),
+                            _ => PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
                         };
 
-                        let fmt = Format {
-                            width: frame_desc.width() as u32,
-                            height: frame_desc.height() as u32,
+                        formats.push(ImageFormat::new(
+                            frame_desc.width() as u32,
+                            frame_desc.height() as u32,
                             pixfmt,
-                            stride: None,
-                        };
-
-                        formats.push(fmt);
+                        ));
                     });
             });
 
@@ -94,16 +91,16 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
     }
 
-    fn format(&self) -> io::Result<Format> {
-        Ok(Format::new(
+    fn format(&self) -> io::Result<ImageFormat> {
+        Ok(ImageFormat::new(
             self.stream_fmt.width,
             self.stream_fmt.height,
-            PixelFormat::Rgb(24),
+            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
         ))
     }
 
-    fn set_format(&mut self, fmt: &Format) -> io::Result<Format> {
-        if fmt.pixfmt != PixelFormat::Rgb(24) {
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
+        if fmt.pixfmt != PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "only RGB24 is supported",
@@ -142,10 +139,10 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
             self.stream_fmt = fmt;
         }
 
-        Ok(Format::new(
+        Ok(ImageFormat::new(
             self.stream_fmt.width,
             self.stream_fmt.height,
-            PixelFormat::Rgb(32),
+            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
         ))
     }
 

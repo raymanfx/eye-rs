@@ -5,13 +5,13 @@ use v4l::io::mmap::Stream as MmapStream;
 use v4l::io::traits::{CaptureStream, Stream};
 use v4l::video::Capture;
 
-use crate::format::{Format, FourCC, PixelFormat};
+use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::v4l2::device::PlatformDevice;
 use crate::image::CowImage;
 use crate::traits::Stream as StreamTrait;
 
 pub struct PlatformStream<'a> {
-    format: Format,
+    format: ImageFormat,
     stream: MmapStream<'a>,
     stream_buf_index: usize,
     active: bool,
@@ -20,12 +20,12 @@ pub struct PlatformStream<'a> {
 impl<'a> PlatformStream<'a> {
     pub fn new(dev: &PlatformDevice) -> io::Result<Self> {
         let format_ = dev.inner().format()?;
-        let format = Format::with_stride(
+        let format = ImageFormat::new(
             format_.width,
             format_.height,
-            PixelFormat::from(FourCC::new(&format_.fourcc.repr)),
-            format_.stride as usize,
-        );
+            PixelFormat::from(&format_.fourcc.repr),
+        )
+        .stride(format_.stride as usize);
 
         let stream = MmapStream::new(dev.inner(), BufType::VideoCapture)?;
         Ok(PlatformStream {
@@ -69,7 +69,7 @@ impl<'a> PlatformStream<'a> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buf = self.stream.get(self.stream_buf_index).unwrap();
-        let image = CowImage::from_slice(buf, self.format);
+        let image = CowImage::from_slice(buf, self.format.clone());
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is

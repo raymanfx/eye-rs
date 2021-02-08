@@ -2,11 +2,11 @@ use ffimage::color::{Bgra, Rgb, Rgba};
 use ffimage::core::{Pixel, TryConvert};
 use ffimage::packed::generic::{ImageBuffer, ImageView};
 
-use crate::format::{Format, PixelFormat};
+use crate::format::{pix, ImageFormat, PixelFormat};
 
 fn _convert<DP: Pixel + From<Rgb<u8>>>(
     src: &[u8],
-    src_fmt: Format,
+    src_fmt: &ImageFormat,
     dst: &mut ImageBuffer<DP>,
 ) -> Result<(), &'static str> {
     let rgb = match ImageView::<Rgb<u8>>::new(src, src_fmt.width, src_fmt.height) {
@@ -20,7 +20,11 @@ fn _convert<DP: Pixel + From<Rgb<u8>>>(
     }
 }
 
-pub fn convert_to_rgba(src: &[u8], src_fmt: Format, dst: &mut Vec<u8>) -> Result<(), &'static str> {
+pub fn convert_to_rgba(
+    src: &[u8],
+    src_fmt: &ImageFormat,
+    dst: &mut Vec<u8>,
+) -> Result<(), &'static str> {
     let mut rgba = ImageBuffer::<Rgba<u8>>::new(src_fmt.width, src_fmt.height);
     match _convert(src, src_fmt, &mut rgba) {
         Ok(()) => {
@@ -31,7 +35,11 @@ pub fn convert_to_rgba(src: &[u8], src_fmt: Format, dst: &mut Vec<u8>) -> Result
     }
 }
 
-pub fn convert_to_bgra(src: &[u8], src_fmt: Format, dst: &mut Vec<u8>) -> Result<(), &'static str> {
+pub fn convert_to_bgra(
+    src: &[u8],
+    src_fmt: &ImageFormat,
+    dst: &mut Vec<u8>,
+) -> Result<(), &'static str> {
     let mut bgra = ImageBuffer::<Bgra<u8>>::new(src_fmt.width, src_fmt.height);
     match _convert(src, src_fmt, &mut bgra) {
         Ok(()) => {
@@ -44,13 +52,17 @@ pub fn convert_to_bgra(src: &[u8], src_fmt: Format, dst: &mut Vec<u8>) -> Result
 
 pub fn convert(
     src: &[u8],
-    src_fmt: Format,
+    src_fmt: &ImageFormat,
     dst: &mut Vec<u8>,
-    dst_fmt: Format,
+    dst_fmt: &PixelFormat,
 ) -> Result<(), &'static str> {
-    match dst_fmt.pixfmt {
-        PixelFormat::Bgra(32) => convert_to_bgra(src, src_fmt, dst),
-        PixelFormat::Rgba(32) => convert_to_rgba(src, src_fmt, dst),
+    match dst_fmt {
+        PixelFormat::Uncompressed(pix::Uncompressed::Bgra(32)) => {
+            convert_to_bgra(src, src_fmt, dst)
+        }
+        PixelFormat::Uncompressed(pix::Uncompressed::Rgba(32)) => {
+            convert_to_rgba(src, src_fmt, dst)
+        }
         _ => Err("cannot handle target format"),
     }
 }
