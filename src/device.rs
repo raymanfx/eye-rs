@@ -86,7 +86,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.format()
     }
 
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()> {
         self.inner.set_format(&fmt)
     }
 

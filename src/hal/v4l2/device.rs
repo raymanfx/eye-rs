@@ -172,7 +172,7 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
         )
     }
 
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()> {
         let fourcc: &[u8; 4] = if let Ok(fourcc) = fmt.pixfmt.clone().try_into() {
             fourcc
         } else {
@@ -184,7 +184,7 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
 
         let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(fourcc));
         self.inner.set_format(&fmt)?;
-        self.format()
+        Ok(())
     }
 
     fn stream(&self) -> io::Result<ImageStream<'a>> {

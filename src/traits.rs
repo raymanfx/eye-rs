@@ -21,9 +21,11 @@ pub trait Device<'a> {
     /// Returns the current format in use by the device
     fn format(&self) -> io::Result<ImageFormat>;
 
-    /// Attempts to match the requested format to a device format on a best-effort basis and
-    /// returns the actual format in use
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat>;
+    /// Sets the active format
+    ///
+    /// The actual behavior is HAL specific: some may try to match the requested format on a
+    /// best-effort basis while others may return an error if the exact format is not available.
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()>;
 
     /// Returns a zero-copy stream for direct frame access
     fn stream(&self) -> io::Result<ImageStream<'a>>;

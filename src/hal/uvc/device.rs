@@ -98,7 +98,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         ))
     }
 
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
+    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()> {
         if fmt.pixfmt != PixelFormat::Rgb(24) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -138,11 +138,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
             self.stream_fmt = fmt;
         }
 
-        Ok(ImageFormat::new(
-            self.stream_fmt.width,
-            self.stream_fmt.height,
-            PixelFormat::Rgb(24),
-        ))
+        Ok(())
     }
 
     fn stream(&self) -> io::Result<ImageStream<'a>> {
