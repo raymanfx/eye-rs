@@ -188,7 +188,8 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
     }
 
     fn stream(&self) -> io::Result<ImageStream<'a>> {
+        let format = self.format()?;
         let stream = PlatformStream::new(self)?;
-        Ok(ImageStream::new(Box::new(stream)))
+        Ok(ImageStream::new(Box::new(stream), format))
     }
 }

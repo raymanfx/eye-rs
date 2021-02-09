@@ -150,7 +150,8 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
+        let format = self.format()?;
         let stream = PlatformStream::new(uvc_stream, self.stream_fmt);
-        Ok(ImageStream::new(Box::new(stream)))
+        Ok(ImageStream::new(Box::new(stream), format))
     }
 }
