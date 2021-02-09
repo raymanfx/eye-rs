@@ -3,7 +3,7 @@ use std::ops::Sub;
 use std::sync::Arc;
 
 use crate::control;
-use crate::format::{pix, ImageFormat, PixelFormat};
+use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::uvc::stream::PlatformStream;
 use crate::stream::ImageStream;
 use crate::traits::Device;
@@ -63,10 +63,8 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
                     .for_each(|frame_desc| {
                         let pixfmt = match frame_desc.subtype() {
                             uvc::DescriptionSubtype::FormatMJPEG
-                            | uvc::DescriptionSubtype::FrameMJPEG => {
-                                PixelFormat::Compressed(pix::Compressed::Jpeg)
-                            }
-                            _ => PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
+                            | uvc::DescriptionSubtype::FrameMJPEG => PixelFormat::Jpeg,
+                            _ => PixelFormat::Rgb(24),
                         };
 
                         formats.push(ImageFormat::new(
@@ -96,12 +94,12 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         Ok(ImageFormat::new(
             self.stream_fmt.width,
             self.stream_fmt.height,
-            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
+            PixelFormat::Rgb(24),
         ))
     }
 
     fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat> {
-        if fmt.pixfmt != PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)) {
+        if fmt.pixfmt != PixelFormat::Rgb(24) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "only RGB24 is supported",
@@ -143,7 +141,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         Ok(ImageFormat::new(
             self.stream_fmt.width,
             self.stream_fmt.height,
-            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
+            PixelFormat::Rgb(24),
         ))
     }
 

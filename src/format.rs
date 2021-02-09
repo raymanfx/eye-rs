@@ -1,76 +1,5 @@
 use std::{cmp::PartialEq, fmt};
 
-pub mod pix {
-    #[derive(Debug, Clone, PartialEq)]
-    /// Compressed pixel formats
-    pub enum Compressed {
-        /// JPEG compression
-        Jpeg,
-    }
-
-    impl Compressed {
-        /// Returns the name
-        pub fn name(&self) -> &str {
-            match self {
-                Compressed::Jpeg => "Jpeg",
-            }
-        }
-    }
-
-    #[derive(Debug, Clone, PartialEq)]
-    /// Uncompressed pixel formats
-    pub enum Uncompressed {
-        /// Z buffers
-        Depth(u32),
-        /// Grayscale
-        Gray(u32),
-
-        /// Blue, Green, Red
-        Bgr(u32),
-        /// Blue, Green, Red, Alpha
-        Bgra(u32),
-        /// Red, Green, Blue
-        Rgb(u32),
-        /// Red, Green, Blue, Alpha
-        Rgba(u32),
-    }
-
-    impl Uncompressed {
-        /// Returns the name
-        pub fn name(&self) -> &str {
-            match self {
-                Uncompressed::Depth(_) => "Depth",
-                Uncompressed::Gray(_) => "Gray",
-                Uncompressed::Bgr(_) => "Bgr",
-                Uncompressed::Bgra(_) => "Bgra",
-                Uncompressed::Rgb(_) => "Rgb",
-                Uncompressed::Rgba(_) => "Rgba",
-            }
-        }
-
-        /// Returns the number of bits of a whole pixel
-        pub fn bits(&self) -> u32 {
-            match self {
-                Uncompressed::Depth(bits) => *bits,
-                Uncompressed::Gray(bits) => *bits,
-                Uncompressed::Bgr(bits) => *bits,
-                Uncompressed::Bgra(bits) => *bits,
-                Uncompressed::Rgb(bits) => *bits,
-                Uncompressed::Rgba(bits) => *bits,
-            }
-        }
-
-        /// Returns the number of channels
-        pub fn channels(&self) -> u32 {
-            match self {
-                Uncompressed::Depth(_) | Uncompressed::Gray(_) => 1,
-                Uncompressed::Bgr(_) | Uncompressed::Rgb(_) => 3,
-                Uncompressed::Bgra(_) | Uncompressed::Rgba(_) => 4,
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 /// Pixel format type used to describe image pixels.
 ///
@@ -80,27 +9,46 @@ pub enum PixelFormat {
     /// Special type for application defined formats
     Custom(String),
 
-    /// Compressed formats
-    Compressed(pix::Compressed),
+    /// Z buffers
+    Depth(u32),
+    /// Grayscale
+    Gray(u32),
 
-    /// Uncompressed formats
-    Uncompressed(pix::Uncompressed),
+    /// Blue, Green, Red
+    Bgr(u32),
+    /// Blue, Green, Red, Alpha
+    Bgra(u32),
+    /// Red, Green, Blue
+    Rgb(u32),
+    /// Red, Green, Blue, Alpha
+    Rgba(u32),
+
+    /// JPEG compression
+    Jpeg,
 }
 
 impl PixelFormat {
-    /// Returns the name
-    pub fn name(&self) -> &str {
+    /// Returns the number of bits of a whole pixel
+    pub fn bits(&self) -> Option<u32> {
         match self {
-            PixelFormat::Custom(desc) => desc,
-            PixelFormat::Compressed(variant) => variant.name(),
-            PixelFormat::Uncompressed(variant) => variant.name(),
+            // Custom
+            PixelFormat::Custom(_) => None,
+            // Uncompressed
+            PixelFormat::Depth(bits) => Some(*bits),
+            PixelFormat::Gray(bits) => Some(*bits),
+            PixelFormat::Bgr(bits) => Some(*bits),
+            PixelFormat::Bgra(bits) => Some(*bits),
+            PixelFormat::Rgb(bits) => Some(*bits),
+            PixelFormat::Rgba(bits) => Some(*bits),
+            // Compressed
+            PixelFormat::Jpeg => None,
         }
     }
 }
 
 impl fmt::Display for PixelFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self.name())
+        write!(f, "{:?}", self)
     }
 }
 
@@ -129,12 +77,12 @@ impl ImageFormat {
     /// # Example
     ///
     /// ```
-    /// use eye::format::{pix, ImageFormat, PixelFormat};
-    /// let format = ImageFormat::new(1280, 720, PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)));
+    /// use eye::format::{ImageFormat, PixelFormat};
+    /// let format = ImageFormat::new(1280, 720, PixelFormat::Rgb(24));
     /// ```
     pub fn new(width: u32, height: u32, pixfmt: PixelFormat) -> Self {
-        let stride = if let PixelFormat::Uncompressed(variant) = &pixfmt {
-            Some((width * (variant.bits() / 8)) as usize)
+        let stride = if let Some(bits) = pixfmt.bits() {
+            Some((width * (bits / 8)) as usize)
         } else {
             None
         };
@@ -174,13 +122,7 @@ mod tests {
 
     #[test]
     fn pixelformat_eq() {
-        assert_eq!(
-            PixelFormat::Compressed(pix::Compressed::Jpeg),
-            PixelFormat::Compressed(pix::Compressed::Jpeg)
-        );
-        assert_ne!(
-            PixelFormat::Uncompressed(pix::Uncompressed::Bgr(24)),
-            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24))
-        );
+        assert_eq!(PixelFormat::Jpeg, PixelFormat::Jpeg);
+        assert_ne!(PixelFormat::Bgr(24), PixelFormat::Rgb(24));
     }
 }

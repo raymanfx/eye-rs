@@ -12,7 +12,7 @@ use std::{convert::TryInto, str};
 
 use v4l::context;
 
-use crate::format::{pix, PixelFormat};
+use crate::format::PixelFormat;
 
 pub fn devices() -> Vec<String> {
     context::enum_devices()
@@ -53,22 +53,28 @@ impl From<&[u8; 4]> for PixelFormat {
 
         // Mono (single-component) formats
         if fourcc == b"GREY" {
-            PixelFormat::Uncompressed(pix::Uncompressed::Gray(8))
+            PixelFormat::Gray(8)
         } else if fourcc == b"Y16 " {
-            PixelFormat::Uncompressed(pix::Uncompressed::Gray(16))
+            PixelFormat::Gray(16)
         } else if fourcc == b"Z16 " {
-            PixelFormat::Uncompressed(pix::Uncompressed::Depth(16))
+            PixelFormat::Depth(16)
         }
         // RGB formats
         else if fourcc == b"BGR3" {
-            PixelFormat::Uncompressed(pix::Uncompressed::Bgr(24))
+            PixelFormat::Bgr(24)
         } else if fourcc == b"AR24" {
-            PixelFormat::Uncompressed(pix::Uncompressed::Bgra(32))
+            PixelFormat::Bgra(32)
         } else if fourcc == b"RGB3" {
-            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24))
+            PixelFormat::Rgb(24)
         } else if fourcc == b"AB24" {
-            PixelFormat::Uncompressed(pix::Uncompressed::Rgba(32))
-        } else {
+            PixelFormat::Rgba(32)
+        }
+        // Compressed formats
+        else if fourcc == b"MJPG" {
+            PixelFormat::Jpeg
+        }
+        // Misc
+        else {
             PixelFormat::Custom(String::from(str::from_utf8(fourcc).unwrap()))
         }
     }
@@ -83,19 +89,15 @@ impl TryInto<&[u8; 4]> for PixelFormat {
 
         match self {
             PixelFormat::Custom(_) => Err(()),
-            PixelFormat::Compressed(variant) => match variant {
-                pix::Compressed::Jpeg => Ok(b"MJPG"),
-            },
-            PixelFormat::Uncompressed(variant) => match variant {
-                pix::Uncompressed::Gray(8) => Ok(b"GREY"),
-                pix::Uncompressed::Gray(16) => Ok(b"Y16 "),
-                pix::Uncompressed::Depth(16) => Ok(b"Z16 "),
-                pix::Uncompressed::Bgr(24) => Ok(b"BGR3"),
-                pix::Uncompressed::Bgra(32) => Ok(b"AR24"),
-                pix::Uncompressed::Rgb(24) => Ok(b"RGB3"),
-                pix::Uncompressed::Rgb(32) => Ok(b"AB24"),
-                _ => Err(()),
-            },
+            PixelFormat::Gray(8) => Ok(b"GREY"),
+            PixelFormat::Gray(16) => Ok(b"Y16 "),
+            PixelFormat::Depth(16) => Ok(b"Z16 "),
+            PixelFormat::Bgr(24) => Ok(b"BGR3"),
+            PixelFormat::Bgra(32) => Ok(b"AR24"),
+            PixelFormat::Rgb(24) => Ok(b"RGB3"),
+            PixelFormat::Rgb(32) => Ok(b"AB24"),
+            PixelFormat::Jpeg => Ok(b"MJPG"),
+            _ => Err(()),
         }
     }
 }

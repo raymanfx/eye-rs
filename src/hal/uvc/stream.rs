@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time;
 
-use crate::format::{pix, ImageFormat, PixelFormat};
+use crate::format::{ImageFormat, PixelFormat};
 use crate::image::CowImage;
 use crate::traits::Stream;
 
@@ -97,11 +97,7 @@ impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
             return None;
         };
 
-        let format = ImageFormat::new(
-            self.format.width,
-            self.format.height,
-            PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)),
-        );
+        let format = ImageFormat::new(self.format.width, self.format.height, PixelFormat::Rgb(24));
 
         buffer.state = BufferState::Empty;
         Some(Ok(CowImage::from_bytes(

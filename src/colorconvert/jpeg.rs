@@ -1,7 +1,7 @@
 use jpeg_decoder::{Decoder, PixelFormat as JpegFormat};
 
 use crate::colorconvert::rgb;
-use crate::format::{pix, ImageFormat, PixelFormat};
+use crate::format::{ImageFormat, PixelFormat};
 
 pub fn convert_to_rgb(
     src: &[u8],
@@ -55,13 +55,9 @@ pub fn convert(
     dst_fmt: &PixelFormat,
 ) -> Result<(), &'static str> {
     match dst_fmt {
-        PixelFormat::Uncompressed(pix::Uncompressed::Bgra(32)) => {
-            convert_to_bgra(src, src_fmt, dst)
-        }
-        PixelFormat::Uncompressed(pix::Uncompressed::Rgb(24)) => convert_to_rgb(src, src_fmt, dst),
-        PixelFormat::Uncompressed(pix::Uncompressed::Rgba(32)) => {
-            convert_to_rgba(src, src_fmt, dst)
-        }
+        PixelFormat::Bgra(32) => convert_to_bgra(src, src_fmt, dst),
+        PixelFormat::Rgb(24) => convert_to_rgb(src, src_fmt, dst),
+        PixelFormat::Rgba(32) => convert_to_rgba(src, src_fmt, dst),
         _ => Err("cannot handle target format"),
     }
 }
