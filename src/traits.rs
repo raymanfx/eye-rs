@@ -2,10 +2,10 @@ use std::io;
 
 use crate::control::{Control, Value as ControlValue};
 use crate::format::ImageFormat;
-use crate::image::CowImage;
+use crate::stream::ImageStream;
 
 /// Platform device abstraction
-pub trait Device<'a>: Send {
+pub trait Device<'a> {
     /// Returns the supported formats
     fn query_formats(&self) -> io::Result<Vec<ImageFormat>>;
 
@@ -26,20 +26,17 @@ pub trait Device<'a>: Send {
     fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<ImageFormat>;
 
     /// Returns a zero-copy stream for direct frame access
-    fn stream(&self) -> io::Result<Box<ImageStream<'a>>>;
+    fn stream(&self) -> io::Result<ImageStream<'a>>;
 }
 
 /// Stream abstraction
 ///
 /// A stream is a construct which offers one item at a time. Once the next item is available, the
 /// previous one is discarded and thus not accessible any longer.
-pub trait Stream<'a>: Send {
+pub trait Stream<'a> {
     /// Type of the stream elements
     type Item;
 
     /// Advances the stream and returns the next item
     fn next(&'a mut self) -> Option<Self::Item>;
 }
-
-/// A stream producing images
-pub type ImageStream<'a> = dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>> + Send;

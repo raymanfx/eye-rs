@@ -2,7 +2,8 @@ use std::io;
 
 use crate::control;
 use crate::format::ImageFormat;
-use crate::traits::{Device as DeviceTrait, ImageStream};
+use crate::stream::ImageStream;
+use crate::traits::Device as DeviceTrait;
 
 /// A transparent wrapper type for native platform devices.
 pub struct Device<'a> {
@@ -89,7 +90,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.set_format(&fmt)
     }
 
-    fn stream(&self) -> io::Result<Box<ImageStream<'a>>> {
+    fn stream(&self) -> io::Result<ImageStream<'a>> {
         let stream = self.inner.stream()?;
         Ok(stream)
     }

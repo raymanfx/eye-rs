@@ -5,7 +5,8 @@ use std::sync::Arc;
 use crate::control;
 use crate::format::{pix, ImageFormat, PixelFormat};
 use crate::hal::uvc::stream::PlatformStream;
-use crate::traits::{Device, ImageStream};
+use crate::stream::ImageStream;
+use crate::traits::Device;
 
 pub struct PlatformDevice<'a> {
     handle: Arc<uvc::DeviceHandle<'a>>,
@@ -146,7 +147,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         ))
     }
 
-    fn stream(&self) -> io::Result<Box<ImageStream<'a>>> {
+    fn stream(&self) -> io::Result<ImageStream<'a>> {
         let handle_ptr = &*self.handle as *const uvc::DeviceHandle;
         let handle_ref = unsafe { &*handle_ptr as &uvc::DeviceHandle };
 
@@ -156,6 +157,6 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         };
 
         let stream = PlatformStream::new(uvc_stream, self.stream_fmt);
-        Ok(Box::new(stream))
+        Ok(ImageStream::new(Box::new(stream)))
     }
 }

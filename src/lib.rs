@@ -63,6 +63,7 @@ pub mod context;
 pub mod control;
 pub mod format;
 pub mod image;
+pub mod stream;
 pub mod traits;
 
 pub mod hal;

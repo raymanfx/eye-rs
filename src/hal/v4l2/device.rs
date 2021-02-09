@@ -9,7 +9,8 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::v4l2::stream::PlatformStream;
-use crate::traits::{Device as DeviceTrait, ImageStream};
+use crate::stream::ImageStream;
+use crate::traits::Device as DeviceTrait;
 
 pub struct PlatformDevice {
     inner: Device,
@@ -186,8 +187,8 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
         self.format()
     }
 
-    fn stream(&self) -> io::Result<Box<ImageStream<'a>>> {
+    fn stream(&self) -> io::Result<ImageStream<'a>> {
         let stream = PlatformStream::new(self)?;
-        Ok(Box::new(stream))
+        Ok(ImageStream::new(Box::new(stream)))
     }
 }
