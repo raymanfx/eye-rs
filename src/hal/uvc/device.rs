@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use crate::control;
 use crate::format::{ImageFormat, PixelFormat};
+use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::PlatformStream;
 use crate::stream::ImageStream;
 use crate::traits::Device;
@@ -79,11 +80,18 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {
-        Err(io::Error::new(io::ErrorKind::Other, "not supported"))
+        let controls = Control::all()
+            .into_iter()
+            .map(|ctrl| <control::Control>::from(&ctrl))
+            .collect();
+        Ok(controls)
     }
 
-    fn control(&self, _id: u32) -> io::Result<control::Value> {
-        Err(io::Error::new(io::ErrorKind::Other, "not supported"))
+    fn control(&self, id: u32) -> io::Result<control::Value> {
+        match Control::from_id(id) {
+            Some(ctrl) => ctrl.get(&self.handle),
+            None => Err(io::Error::new(io::ErrorKind::Other, "unknown control ID")),
+        }
     }
 
     fn set_control(&mut self, _id: u32, _val: &control::Value) -> io::Result<()> {

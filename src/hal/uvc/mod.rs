@@ -3,6 +3,7 @@
 //! # Related Links
 //! * <https://de.wikipedia.org/wiki/USB_Video_Class> - UVC Wikipedia page
 
+pub mod control;
 pub mod device;
 pub mod stream;
 
