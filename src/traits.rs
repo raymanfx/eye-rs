@@ -4,6 +4,12 @@ use crate::control::{Control, Value as ControlValue};
 use crate::format::ImageFormat;
 use crate::stream::ImageStream;
 
+/// Platform context abstraction
+pub trait Context {
+    /// Returns all devices currently available
+    fn enumerate_devices() -> Vec<String>;
+}
+
 /// Platform device abstraction
 pub trait Device<'a> {
     /// Returns the supported formats

@@ -1,3 +1,5 @@
+use crate::traits::Context as _;
+
 /// Runtime context
 pub struct Context {}
 
@@ -8,7 +10,7 @@ impl Context {
 
         #[cfg(target_os = "linux")]
         {
-            let _list: Vec<String> = crate::hal::v4l2::devices()
+            let _list: Vec<String> = crate::hal::v4l2::context::Context::enumerate_devices()
                 .into_iter()
                 .map(|uri| format!("v4l://{}", uri))
                 .collect();
@@ -17,7 +19,7 @@ impl Context {
 
         #[cfg(feature = "hal-uvc")]
         {
-            let _list: Vec<String> = crate::hal::uvc::devices()
+            let _list: Vec<String> = crate::hal::uvc::context::Context::enumerate_devices()
                 .into_iter()
                 .map(|uri| format!("uvc://{}", uri))
                 .collect();
