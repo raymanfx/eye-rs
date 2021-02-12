@@ -17,7 +17,7 @@ impl<'a> Device<'a> {
         #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
             let path = _uri[6..].to_string();
-            let inner = crate::hal::v4l2::device::PlatformDevice::with_path(path)?;
+            let inner = crate::hal::v4l2::device::Handle::with_path(path)?;
             return Ok(Device {
                 inner: Box::new(inner),
             });
@@ -44,7 +44,7 @@ impl<'a> Device<'a> {
                 return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI"));
             };
 
-            let inner = crate::hal::uvc::device::PlatformDevice::new(bus_number, device_address);
+            let inner = crate::hal::uvc::device::Handle::new(bus_number, device_address);
             let inner = if let Ok(inner) = inner {
                 inner
             } else {

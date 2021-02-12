@@ -1,6 +1,6 @@
 use v4l::context;
 
-use crate::hal::v4l2::device::PlatformDevice;
+use crate::hal::v4l2::device::Handle;
 use crate::traits::Context as ContextTrait;
 
 /// Runtime context
@@ -12,7 +12,7 @@ impl ContextTrait for Context {
             .into_iter()
             .filter_map(|dev| {
                 let index = dev.index();
-                let dev = match PlatformDevice::new(index) {
+                let dev = match Handle::new(index) {
                     Ok(dev) => dev,
                     Err(_) => return None,
                 };

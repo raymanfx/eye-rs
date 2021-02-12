@@ -2,23 +2,23 @@ use std::{io, mem};
 
 use v4l::buffer::Type as BufType;
 use v4l::io::mmap::Stream as MmapStream;
-use v4l::io::traits::{CaptureStream, Stream};
+use v4l::io::traits::{CaptureStream, Stream as _};
 use v4l::video::Capture;
 
 use crate::format::{ImageFormat, PixelFormat};
-use crate::hal::v4l2::device::PlatformDevice;
+use crate::hal::v4l2::device::Handle as DeviceHandle;
 use crate::image::CowImage;
-use crate::traits::Stream as StreamTrait;
+use crate::traits::Stream;
 
-pub struct PlatformStream<'a> {
+pub struct Handle<'a> {
     format: ImageFormat,
     stream: MmapStream<'a>,
     stream_buf_index: usize,
     active: bool,
 }
 
-impl<'a> PlatformStream<'a> {
-    pub fn new(dev: &PlatformDevice) -> io::Result<Self> {
+impl<'a> Handle<'a> {
+    pub fn new(dev: &DeviceHandle) -> io::Result<Self> {
         let format_ = dev.inner().format()?;
         let format = ImageFormat::new(
             format_.width,
@@ -28,7 +28,7 @@ impl<'a> PlatformStream<'a> {
         .stride(format_.stride as usize);
 
         let stream = MmapStream::new(dev.inner(), BufType::VideoCapture)?;
-        Ok(PlatformStream {
+        Ok(Handle {
             format,
             stream,
             stream_buf_index: 0,
@@ -79,7 +79,7 @@ impl<'a> PlatformStream<'a> {
     }
 }
 
-impl<'a> Drop for PlatformStream<'a> {
+impl<'a> Drop for Handle<'a> {
     fn drop(&mut self) {
         if self.active {
             // ignore the result
@@ -88,7 +88,7 @@ impl<'a> Drop for PlatformStream<'a> {
     }
 }
 
-impl<'a, 'b> StreamTrait<'b> for PlatformStream<'a> {
+impl<'a, 'b> Stream<'b> for Handle<'a> {
     type Item = io::Result<CowImage<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {

@@ -6,6 +6,7 @@
 //! * <https://linuxtv.org/downloads/v4l-dvb-apis-new/userspace-api/v4l/v4l2.html> - Video for Linux API
 
 pub mod context;
+pub use context::Context;
 pub mod device;
 pub mod stream;
 

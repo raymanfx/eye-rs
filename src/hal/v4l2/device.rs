@@ -2,41 +2,41 @@ use std::{convert::TryInto, io, path::Path};
 
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::video::Capture;
-use v4l::Device;
+use v4l::Device as CaptureDevice;
 use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
 
 use crate::control;
 use crate::format::{ImageFormat, PixelFormat};
-use crate::hal::v4l2::stream::PlatformStream;
+use crate::hal::v4l2::stream::Handle as StreamHandle;
 use crate::stream::ImageStream;
-use crate::traits::Device as DeviceTrait;
+use crate::traits::Device;
 
-pub struct PlatformDevice {
-    inner: Device,
+pub struct Handle {
+    inner: CaptureDevice,
 }
 
-impl PlatformDevice {
+impl Handle {
     pub fn new(index: usize) -> io::Result<Self> {
-        let dev = PlatformDevice {
-            inner: Device::new(index)?,
+        let dev = Handle {
+            inner: CaptureDevice::new(index)?,
         };
         Ok(dev)
     }
 
     pub fn with_path<P: AsRef<Path>>(path: P) -> io::Result<Self> {
-        let dev = PlatformDevice {
-            inner: Device::with_path(path)?,
+        let dev = Handle {
+            inner: CaptureDevice::with_path(path)?,
         };
         Ok(dev)
     }
 
-    pub fn inner(&self) -> &Device {
+    pub fn inner(&self) -> &CaptureDevice {
         &self.inner
     }
 }
 
-impl<'a> DeviceTrait<'a> for PlatformDevice {
+impl<'a> Device<'a> for Handle {
     fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
         let mut formats = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
@@ -189,7 +189,7 @@ impl<'a> DeviceTrait<'a> for PlatformDevice {
 
     fn stream(&self) -> io::Result<ImageStream<'a>> {
         let format = self.format()?;
-        let stream = PlatformStream::new(self)?;
+        let stream = StreamHandle::new(self)?;
         Ok(ImageStream::new(Box::new(stream), format))
     }
 }

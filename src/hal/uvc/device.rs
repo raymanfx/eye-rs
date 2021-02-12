@@ -5,11 +5,11 @@ use std::sync::Arc;
 use crate::control;
 use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::uvc::control::Control;
-use crate::hal::uvc::stream::PlatformStream;
+use crate::hal::uvc::stream::Handle as StreamHandle;
 use crate::stream::ImageStream;
 use crate::traits::Device;
 
-pub struct PlatformDevice<'a> {
+pub struct Handle<'a> {
     handle: Arc<uvc::DeviceHandle<'a>>,
     _dev: Arc<uvc::Device<'a>>,
     _ctx: Arc<uvc::Context<'a>>,
@@ -17,7 +17,7 @@ pub struct PlatformDevice<'a> {
     stream_fmt: uvc::StreamFormat,
 }
 
-impl<'a> PlatformDevice<'a> {
+impl<'a> Handle<'a> {
     pub fn new(bus_number: u8, device_address: u8) -> uvc::Result<Self> {
         let ctx = Arc::new(uvc::Context::new()?);
         let ctx_ptr = &*ctx as *const uvc::Context;
@@ -36,7 +36,7 @@ impl<'a> PlatformDevice<'a> {
 
         let handle = Arc::new(dev_ref.open()?);
 
-        Ok(PlatformDevice {
+        Ok(Handle {
             handle,
             _dev: dev,
             _ctx: ctx,
@@ -50,7 +50,7 @@ impl<'a> PlatformDevice<'a> {
     }
 }
 
-impl<'a> Device<'a> for PlatformDevice<'a> {
+impl<'a> Device<'a> for Handle<'a> {
     fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
         let mut formats = Vec::new();
 
@@ -159,7 +159,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         };
 
         let format = self.format()?;
-        let stream = PlatformStream::new(uvc_stream, self.stream_fmt);
+        let stream = StreamHandle::new(uvc_stream, self.stream_fmt);
         Ok(ImageStream::new(Box::new(stream), format))
     }
 }

@@ -18,14 +18,14 @@ enum BufferState {
     Error,
 }
 
-pub struct PlatformStream<'a> {
+pub struct Handle<'a> {
     _stream: uvc::ActiveStream<'a, Arc<RwLock<Buffer>>>,
     _handle: Box<uvc::StreamHandle<'a>>,
     buffer: Arc<RwLock<Buffer>>,
     format: uvc::StreamFormat,
 }
 
-impl<'a> PlatformStream<'a> {
+impl<'a> Handle<'a> {
     pub fn new(handle: uvc::StreamHandle<'a>, format: uvc::StreamFormat) -> Self {
         let mut handle = Box::new(handle);
         let handle_ptr = &mut *handle as *mut uvc::StreamHandle;
@@ -36,10 +36,10 @@ impl<'a> PlatformStream<'a> {
             state: BufferState::Empty,
         }));
         let stream = handle_ref
-            .start_stream(PlatformStream::on_frame, buffer.clone())
+            .start_stream(Handle::on_frame, buffer.clone())
             .unwrap();
 
-        PlatformStream {
+        Handle {
             _stream: stream,
             _handle: handle,
             buffer,
@@ -77,7 +77,7 @@ impl<'a> PlatformStream<'a> {
     }
 }
 
-impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
+impl<'a, 'b> Stream<'b> for Handle<'a> {
     type Item = io::Result<CowImage<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
