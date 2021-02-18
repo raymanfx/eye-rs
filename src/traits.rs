@@ -2,7 +2,7 @@ use std::io;
 
 use crate::control::{Control, Value as ControlValue};
 use crate::format::ImageFormat;
-use crate::stream::ImageStream;
+use crate::stream::{ImageStream, Map};
 
 /// Platform context abstraction
 pub trait Context {
@@ -47,4 +47,13 @@ pub trait Stream<'a> {
 
     /// Advances the stream and returns the next item
     fn next(&'a mut self) -> Option<Self::Item>;
+
+    /// Maps the stream output items
+    fn map<B, F>(self, f: F) -> Map<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> B,
+    {
+        Map::new(self, f)
+    }
 }

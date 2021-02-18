@@ -51,14 +51,6 @@ impl<'a> ImageStream<'a> {
     pub fn format(&self) -> &ImageFormat {
         &self.format
     }
-
-    /// Maps the stream output items
-    pub fn map<F>(self, f: F) -> Map<Self, F>
-    where
-        F: Fn(io::Result<CowImage>) -> io::Result<CowImage>,
-    {
-        Map::new(self, f)
-    }
 }
 
 impl<'a, 'b> Stream<'b> for ImageStream<'a> {
