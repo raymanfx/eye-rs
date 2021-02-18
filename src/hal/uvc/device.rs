@@ -6,7 +6,9 @@ use crate::control;
 use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
-use crate::stream::ImageStream;
+use crate::stream::{
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
+};
 use crate::traits::Device;
 
 pub struct Handle<'a> {
@@ -31,8 +33,8 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a> Device<'a> for Handle<'a> {
-    fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
-        let mut formats = Vec::new();
+    fn query_streams(&self) -> io::Result<StreamDescriptors> {
+        let mut streams = Vec::new();
 
         self.inner
             .handle
@@ -49,15 +51,18 @@ impl<'a> Device<'a> for Handle<'a> {
                             _ => PixelFormat::Rgb(24),
                         };
 
-                        formats.push(ImageFormat::new(
-                            frame_desc.width() as u32,
-                            frame_desc.height() as u32,
-                            pixfmt,
-                        ));
+                        for interval in frame_desc.intervals_duration() {
+                            streams.push(StreamDescriptor {
+                                width: frame_desc.width() as u32,
+                                height: frame_desc.height() as u32,
+                                pixfmt: pixfmt.clone(),
+                                interval,
+                            });
+                        }
                     });
             });
 
-        Ok(formats)
+        Ok(StreamDescriptors { streams })
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {

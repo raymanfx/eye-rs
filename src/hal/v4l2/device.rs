@@ -1,4 +1,4 @@
-use std::{convert::TryInto, io, path::Path};
+use std::{convert::TryInto, io, path::Path, time::Duration};
 
 use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
 use v4l::video::Capture;
@@ -9,7 +9,9 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::format::{ImageFormat, PixelFormat};
 use crate::hal::v4l2::stream::Handle as StreamHandle;
-use crate::stream::ImageStream;
+use crate::stream::{
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
+};
 use crate::traits::Device;
 
 pub struct Handle {
@@ -37,24 +39,37 @@ impl Handle {
 }
 
 impl<'a> Device<'a> for Handle {
-    fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
-        let mut formats = Vec::new();
+    fn query_streams(&self) -> io::Result<StreamDescriptors> {
+        let mut streams = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
         for format in plat_formats {
             for framesize in self.inner.enum_framesizes(format.fourcc)? {
                 // TODO: consider stepwise formats
                 if let v4l::framesize::FrameSizeEnum::Discrete(size) = framesize.size {
-                    formats.push(ImageFormat::new(
-                        size.width,
-                        size.height,
-                        PixelFormat::from(&format.fourcc.repr),
-                    ));
+                    for frameinterval in
+                        self.inner
+                            .enum_frameintervals(format.fourcc, size.width, size.height)?
+                    {
+                        // TODO: consider stepwise intervals
+                        if let v4l::frameinterval::FrameIntervalEnum::Discrete(fraction) =
+                            frameinterval.interval
+                        {
+                            streams.push(StreamDescriptor {
+                                width: size.width,
+                                height: size.height,
+                                pixfmt: PixelFormat::from(&format.fourcc.repr),
+                                interval: Duration::from_secs_f64(
+                                    fraction.numerator as f64 / fraction.denominator as f64,
+                                ),
+                            });
+                        }
+                    }
                 }
             }
         }
 
-        Ok(formats)
+        Ok(StreamDescriptors { streams })
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {

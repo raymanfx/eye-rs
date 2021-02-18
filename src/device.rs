@@ -2,7 +2,7 @@ use std::io;
 
 use crate::control;
 use crate::format::ImageFormat;
-use crate::stream::ImageStream;
+use crate::stream::{Descriptors as StreamDescriptors, ImageStream};
 use crate::traits::Device as DeviceTrait;
 
 /// A transparent wrapper type for native platform devices.
@@ -66,8 +66,8 @@ impl<'a> Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
-    fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
-        self.inner.query_formats()
+    fn query_streams(&self) -> io::Result<StreamDescriptors> {
+        self.inner.query_streams()
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {

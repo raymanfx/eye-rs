@@ -2,7 +2,7 @@ use std::io;
 
 use crate::control::{Control, Value as ControlValue};
 use crate::format::ImageFormat;
-use crate::stream::{ImageStream, Map};
+use crate::stream::{Descriptors as StreamDescriptors, ImageStream, Map};
 
 /// Platform context abstraction
 pub trait Context {
@@ -12,8 +12,8 @@ pub trait Context {
 
 /// Platform device abstraction
 pub trait Device<'a> {
-    /// Returns the supported formats
-    fn query_formats(&self) -> io::Result<Vec<ImageFormat>>;
+    /// Returns the supported streams
+    fn query_streams(&self) -> io::Result<StreamDescriptors>;
 
     /// Returns the supported controls
     fn query_controls(&self) -> io::Result<Vec<Control>>;

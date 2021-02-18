@@ -52,7 +52,7 @@ impl fmt::Display for PixelFormat {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 /// Image buffer format description
 pub struct ImageFormat {
     /// Width in pixels

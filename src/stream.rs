@@ -1,6 +1,6 @@
-use std::io;
+use std::{cmp, io, time};
 
-use crate::format::ImageFormat;
+use crate::format::{ImageFormat, PixelFormat};
 use crate::image::CowImage;
 use crate::traits::Stream;
 
@@ -59,4 +59,97 @@ impl<'a, 'b> Stream<'b> for ImageStream<'a> {
     fn next(&'b mut self) -> Option<Self::Item> {
         self.inner.next()
     }
+}
+
+#[derive(Clone, Debug)]
+/// Image stream description collection
+pub struct Descriptors {
+    /// Streams
+    pub(crate) streams: Vec<Descriptor>,
+}
+
+impl Descriptors {
+    /// Returns the streams sorted by the caller
+    pub fn sort_by<F>(&mut self, f: F)
+    where
+        F: FnMut(&Descriptor, &Descriptor) -> cmp::Ordering,
+    {
+        self.streams.sort_by(f);
+    }
+
+    /// Returns the streams grouped by their resolutions
+    pub fn group_by_resolution(self) -> impl IntoIterator<Item = ((u32, u32), Self)> {
+        let mut groups: Vec<((u32, u32), Self)> = Vec::new();
+        for stream in self.streams {
+            let mut inserted = false;
+
+            for group in &mut groups {
+                if group.0 == (stream.width, stream.height) {
+                    group.1.streams.push(stream.clone());
+                    inserted = true;
+                }
+            }
+
+            if !inserted {
+                // create a new group
+                groups.push((
+                    (stream.width, stream.height),
+                    Descriptors {
+                        streams: Vec::new(),
+                    },
+                ))
+            }
+        }
+
+        groups
+    }
+
+    /// Returns the streams grouped by their pixelformats
+    pub fn group_by_pixfmt(self) -> impl IntoIterator<Item = (PixelFormat, Self)> {
+        let mut groups: Vec<(PixelFormat, Self)> = Vec::new();
+        for stream in self.streams {
+            let mut inserted = false;
+
+            for group in &mut groups {
+                if group.0 == stream.pixfmt {
+                    group.1.streams.push(stream.clone());
+                    inserted = true;
+                }
+            }
+
+            if !inserted {
+                // create a new group
+                groups.push((
+                    stream.pixfmt,
+                    Descriptors {
+                        streams: Vec::new(),
+                    },
+                ))
+            }
+        }
+
+        groups
+    }
+}
+
+impl IntoIterator for Descriptors {
+    type Item = Descriptor;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.streams.into_iter()
+    }
+}
+
+#[derive(Clone, Debug)]
+/// Image stream description
+pub struct Descriptor {
+    /// Width in pixels
+    pub width: u32,
+    /// Height in pixels
+    pub height: u32,
+    /// PixelFormat
+    pub pixfmt: PixelFormat,
+    /// Frame timing as duration
+    pub interval: time::Duration,
 }
