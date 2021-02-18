@@ -10,36 +10,16 @@ use crate::stream::ImageStream;
 use crate::traits::Device;
 
 pub struct Handle<'a> {
-    handle: Arc<uvc::DeviceHandle<'a>>,
-    _dev: Arc<uvc::Device<'a>>,
-    _ctx: Arc<uvc::Context<'a>>,
-
+    inner: Arc<UvcHandle<'a>>,
     stream_fmt: uvc::StreamFormat,
 }
 
 impl<'a> Handle<'a> {
     pub fn new(bus_number: u8, device_address: u8) -> uvc::Result<Self> {
-        let ctx = Arc::new(uvc::Context::new()?);
-        let ctx_ptr = &*ctx as *const uvc::Context;
-        let ctx_ref = unsafe { &*ctx_ptr as &uvc::Context };
-
-        let dev =
-            if let Some(dev) = ctx_ref.devices()?.into_iter().find(|dev| {
-                dev.bus_number() == bus_number && dev.device_address() == device_address
-            }) {
-                Arc::new(dev)
-            } else {
-                return Err(uvc::Error::NotFound);
-            };
-        let dev_ptr = &*dev as *const uvc::Device;
-        let dev_ref = unsafe { &*dev_ptr as &uvc::Device };
-
-        let handle = Arc::new(dev_ref.open()?);
+        let inner = UvcHandle::new(bus_number, device_address)?;
 
         Ok(Handle {
-            handle,
-            _dev: dev,
-            _ctx: ctx,
+            inner: Arc::new(inner),
             stream_fmt: uvc::StreamFormat {
                 width: 1280,
                 height: 720,
@@ -54,7 +34,8 @@ impl<'a> Device<'a> for Handle<'a> {
     fn query_formats(&self) -> io::Result<Vec<ImageFormat>> {
         let mut formats = Vec::new();
 
-        self.handle
+        self.inner
+            .handle
             .supported_formats()
             .into_iter()
             .for_each(|fmt_desc| {
@@ -89,7 +70,7 @@ impl<'a> Device<'a> for Handle<'a> {
 
     fn control(&self, id: u32) -> io::Result<control::Value> {
         match Control::from_id(id) {
-            Some(ctrl) => ctrl.get(&self.handle),
+            Some(ctrl) => ctrl.get(&self.inner.handle),
             None => Err(io::Error::new(io::ErrorKind::Other, "unknown control ID")),
         }
     }
@@ -123,7 +104,7 @@ impl<'a> Device<'a> for Handle<'a> {
             }
         }
 
-        if let Some(fmt) = self.handle.get_preferred_format(|x, y| {
+        if let Some(fmt) = self.inner.handle.get_preferred_format(|x, y| {
             // match against the resolution
             let error_x = ((absdiff(fmt.width, x.width)) as f64).sqrt()
                 + ((absdiff(fmt.height, x.height)) as f64).sqrt();
@@ -150,16 +131,53 @@ impl<'a> Device<'a> for Handle<'a> {
     }
 
     fn stream(&self) -> io::Result<ImageStream<'a>> {
-        let handle_ptr = &*self.handle as *const uvc::DeviceHandle;
-        let handle_ref = unsafe { &*handle_ptr as &uvc::DeviceHandle };
+        let dev_handle = self.inner.clone();
+        let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
+        let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
 
-        let uvc_stream = match handle_ref.get_stream_handle_with_format(self.stream_fmt) {
+        let stream_handle = match dev_handle_ref.get_stream_handle_with_format(self.stream_fmt) {
             Ok(handle) => handle,
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
         let format = self.format()?;
-        let stream = StreamHandle::new(uvc_stream, self.stream_fmt);
+        let stream = match StreamHandle::new(dev_handle, stream_handle, self.stream_fmt) {
+            Ok(stream) => stream,
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
+        };
         Ok(ImageStream::new(Box::new(stream), format))
+    }
+}
+
+pub struct UvcHandle<'a> {
+    handle: Box<uvc::DeviceHandle<'a>>,
+    _dev: Box<uvc::Device<'a>>,
+    _ctx: Box<uvc::Context<'a>>,
+}
+
+impl<'a> UvcHandle<'a> {
+    pub fn new(bus_number: u8, device_address: u8) -> uvc::Result<Self> {
+        let ctx = Box::new(uvc::Context::new()?);
+        let ctx_ptr = &*ctx as *const uvc::Context;
+        let ctx_ref = unsafe { &*ctx_ptr as &uvc::Context };
+
+        let dev =
+            if let Some(dev) = ctx_ref.devices()?.into_iter().find(|dev| {
+                dev.bus_number() == bus_number && dev.device_address() == device_address
+            }) {
+                Box::new(dev)
+            } else {
+                return Err(uvc::Error::NotFound);
+            };
+        let dev_ptr = &*dev as *const uvc::Device;
+        let dev_ref = unsafe { &*dev_ptr as &uvc::Device };
+
+        let handle = Box::new(dev_ref.open()?);
+
+        Ok(UvcHandle {
+            handle,
+            _dev: dev,
+            _ctx: ctx,
+        })
     }
 }
