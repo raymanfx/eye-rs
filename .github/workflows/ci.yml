@@ -90,7 +90,7 @@ jobs:
           rust: stable
           features: ""
         - build: uvc-macos
-          os: macos-11.0
+          os: macos-10.15
           rust: stable
           features: "--features hal-uvc"
     steps:
