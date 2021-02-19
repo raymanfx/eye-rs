@@ -105,24 +105,3 @@ impl ImageFormat {
         self
     }
 }
-
-impl fmt::Display for ImageFormat {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "width      : {}", self.width)?;
-        writeln!(f, "height     : {}", self.height)?;
-        writeln!(f, "pixfmt     : {}", self.pixfmt)?;
-        writeln!(f, "stride     : {}", self.stride.unwrap_or(0))?;
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn pixelformat_eq() {
-        assert_eq!(PixelFormat::Jpeg, PixelFormat::Jpeg);
-        assert_ne!(PixelFormat::Bgr(24), PixelFormat::Rgb(24));
-    }
-}

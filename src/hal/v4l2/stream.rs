@@ -6,8 +6,8 @@ use v4l::io::traits::{CaptureStream, Stream as _};
 use v4l::video::Capture;
 
 use crate::format::{ImageFormat, PixelFormat};
+use crate::frame::Frame;
 use crate::hal::v4l2::device::Handle as DeviceHandle;
-use crate::image::CowImage;
 use crate::traits::Stream;
 
 pub struct Handle<'a> {
@@ -65,11 +65,11 @@ impl<'a> Handle<'a> {
         Ok(())
     }
 
-    fn dequeue<'b>(&'b mut self) -> io::Result<CowImage<'b>> {
+    fn dequeue<'b>(&'b mut self) -> io::Result<Frame<'b>> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buf = self.stream.get(self.stream_buf_index).unwrap();
-        let image = CowImage::from_slice(buf, self.format.clone());
+        let image = Frame::from_slice(buf, self.format.clone());
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is
@@ -89,7 +89,7 @@ impl<'a> Drop for Handle<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for Handle<'a> {
-    type Item = io::Result<CowImage<'b>>;
+    type Item = io::Result<Frame<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         if let Err(e) = self.queue() {

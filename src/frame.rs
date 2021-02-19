@@ -4,15 +4,15 @@ use crate::colorconvert::Converter;
 use crate::format::{ImageFormat, PixelFormat};
 
 #[derive(Clone)]
-pub struct CowImage<'a> {
+pub struct Frame<'a> {
     data: Cow<'a, [u8]>,
     fmt: ImageFormat,
 }
 
-impl<'a> CowImage<'a> {
+impl<'a> Frame<'a> {
     /// Converts an image view into a cow image
     pub(crate) fn from_slice(slice: &'a [u8], fmt: ImageFormat) -> Self {
-        CowImage {
+        Frame {
             data: Cow::Borrowed(slice),
             fmt,
         }
@@ -23,7 +23,7 @@ impl<'a> CowImage<'a> {
     where
         I: Iterator<Item = u8>,
     {
-        CowImage {
+        Frame {
             data: Cow::Owned(bytes.collect()),
             fmt,
         }
@@ -69,8 +69,8 @@ impl<'a> CowImage<'a> {
     ///
     /// If the instance currently borrows the data, it is cloned and transferred. Otherwise, no
     /// allocation is needed and the owned data is reused.
-    pub fn own<'b>(self) -> CowImage<'b> {
-        CowImage {
+    pub fn own<'b>(self) -> Frame<'b> {
+        Frame {
             data: Cow::Owned(self.data.into_owned()),
             fmt: self.fmt,
         }
@@ -81,7 +81,7 @@ impl<'a> CowImage<'a> {
     /// # Arguments
     ///
     /// * `pixfmt` - Target pixelFormat
-    pub fn convert(self, pixfmt: &PixelFormat) -> Result<CowImage<'a>, &'static str> {
+    pub fn convert(self, pixfmt: &PixelFormat) -> Result<Frame<'a>, &'static str> {
         if pixfmt == self.pixfmt() {
             Ok(self)
         } else {
@@ -90,7 +90,7 @@ impl<'a> CowImage<'a> {
             let dst_fmt = ImageFormat::new(self.width(), self.height(), pixfmt.clone());
             Converter::convert(self.as_bytes(), &src_fmt, &mut buf, &dst_fmt.pixfmt)?;
 
-            Ok(CowImage {
+            Ok(Frame {
                 data: Cow::Owned(buf),
                 fmt: dst_fmt,
             })

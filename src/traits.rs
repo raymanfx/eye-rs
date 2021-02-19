@@ -2,7 +2,7 @@ use std::io;
 
 use crate::control::{Control, Value as ControlValue};
 use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream, Map,
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream, Map,
 };
 
 /// Platform context abstraction
@@ -32,7 +32,7 @@ pub trait Device<'a> {
     ) -> io::Result<StreamDescriptor>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>>;
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>>;
 }
 
 /// Stream abstraction

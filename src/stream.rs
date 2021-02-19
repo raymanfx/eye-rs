@@ -1,7 +1,7 @@
 use std::{cmp, io, time};
 
 use crate::format::PixelFormat;
-use crate::image::CowImage;
+use crate::frame::Frame;
 use crate::traits::Stream;
 
 pub struct Map<S, F> {
@@ -30,24 +30,22 @@ where
     }
 }
 
-/// A stream producing images
-///
-/// The output type is COW, meaning it will accept existing memory or allocate its own.
-pub struct ImageStream<'a> {
-    inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>> + Send>,
+/// A stream producing frames
+pub struct FrameStream<'a> {
+    inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<Frame<'b>>> + Send>,
 }
 
-impl<'a> ImageStream<'a> {
+impl<'a> FrameStream<'a> {
     /// Creates a new stream
     pub fn new(
-        inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>> + Send>,
+        inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<Frame<'b>>> + Send>,
     ) -> Self {
-        ImageStream { inner }
+        FrameStream { inner }
     }
 }
 
-impl<'a, 'b> Stream<'b> for ImageStream<'a> {
-    type Item = io::Result<CowImage<'b>>;
+impl<'a, 'b> Stream<'b> for FrameStream<'a> {
+    type Item = io::Result<Frame<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         self.inner.next()

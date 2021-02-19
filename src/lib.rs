@@ -72,7 +72,7 @@ pub mod colorconvert;
 pub mod context;
 pub mod control;
 pub mod format;
-pub mod image;
+pub mod frame;
 pub mod stream;
 pub mod traits;
 

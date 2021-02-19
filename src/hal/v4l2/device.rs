@@ -10,7 +10,7 @@ use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
 use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream,
 };
 use crate::traits::Device;
 
@@ -204,7 +204,7 @@ impl<'a> Device<'a> for Handle {
         }
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
         // TODO: set frame interval
         let fourcc: &[u8; 4] = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
@@ -219,6 +219,6 @@ impl<'a> Device<'a> for Handle {
         self.inner.set_format(&format)?;
 
         let stream = StreamHandle::new(self)?;
-        Ok(ImageStream::new(Box::new(stream)))
+        Ok(FrameStream::new(Box::new(stream)))
     }
 }

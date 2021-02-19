@@ -6,7 +6,7 @@ use crate::format::PixelFormat;
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
 use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream,
 };
 use crate::traits::Device;
 
@@ -120,7 +120,7 @@ impl<'a> Device<'a> for Handle<'a> {
         })
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
@@ -156,7 +156,7 @@ impl<'a> Device<'a> for Handle<'a> {
             Ok(stream) => stream,
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
-        Ok(ImageStream::new(Box::new(stream)))
+        Ok(FrameStream::new(Box::new(stream)))
     }
 }
 

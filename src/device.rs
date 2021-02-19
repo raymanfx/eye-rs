@@ -2,7 +2,7 @@ use std::io;
 
 use crate::control;
 use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream,
 };
 use crate::traits::Device as DeviceTrait;
 
@@ -90,7 +90,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.preferred_stream(f)
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
         self.inner.start_stream(desc)
     }
 }

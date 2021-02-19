@@ -2,8 +2,8 @@ use std::io;
 use std::sync::{mpsc, Arc};
 
 use crate::format::{ImageFormat, PixelFormat};
+use crate::frame::Frame;
 use crate::hal::uvc::device::UvcHandle;
-use crate::image::CowImage;
 use crate::traits::Stream;
 
 pub struct Handle<'a> {
@@ -39,7 +39,7 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for Handle<'a> {
-    type Item = io::Result<CowImage<'b>>;
+    type Item = io::Result<Frame<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         let frame = self.rx.recv().unwrap();
@@ -52,6 +52,6 @@ impl<'a, 'b> Stream<'b> for Handle<'a> {
 
         let format = ImageFormat::new(self.format.width, self.format.height, PixelFormat::Rgb(24));
 
-        Some(Ok(CowImage::from_bytes(pixels.iter().cloned(), format)))
+        Some(Ok(Frame::from_bytes(pixels.iter().cloned(), format)))
     }
 }
