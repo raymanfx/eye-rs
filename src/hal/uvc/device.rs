@@ -125,20 +125,29 @@ impl<'a> Device<'a> for Handle<'a> {
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
 
+        let desc_fps = (1.0 / desc.interval.as_secs_f64()) as u64;
+        println!("desc_fps: {}", desc_fps);
         let stream_format = self.inner.handle.get_preferred_format(|x, y| {
-            if x.width == desc.width && y.width == desc.width {
-                if x.fps > y.fps {
-                    x
-                } else {
-                    y
-                }
-            } else {
+            if x.width == desc.width && x.height == desc.height && x.fps as u64 >= desc_fps {
                 x
+            } else if x.width == desc.width && x.height == desc.height {
+                x
+            } else {
+                y
             }
         });
 
         let stream_format = match stream_format {
-            Some(fmt) => fmt,
+            Some(fmt) => {
+                if fmt.width != desc.width || fmt.height != desc.height {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "invalid stream descriptor",
+                    ));
+                }
+
+                fmt
+            }
             None => {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
