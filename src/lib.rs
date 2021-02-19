@@ -43,10 +43,20 @@
 //! // whatever device is first in the list.
 //! let dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
 //!
+//! // Negotiate streaming parameters.
+//! let desc = dev.preferred_stream(&|x, y| {
+//!     // choose the maximum resolution
+//!     if x.width + x.height > y.width + y.height {
+//!         x
+//!     } else {
+//!         y
+//!     }
+//! }).expect("Failed to negotiate streaming parameters");
+//!
 //! // Since we want to capture images, we need to access the native image stream of the device.
 //! // The backend will internally select a suitable implementation for the platform stream. On
 //! // Linux for example, most devices support memory-mapped buffers.
-//! let mut stream = dev.stream().expect("Failed to setup capture stream");
+//! let mut stream = dev.start_stream(&desc).expect("Failed to setup capture stream");
 //!
 //! // Now we are all set to start capturing some frames!
 //! let _frame = stream

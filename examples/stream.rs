@@ -16,8 +16,10 @@ fn main() {
 
     // Now fetch the current device format. The format contains parameters such as frame width,
     // height and the buffer format (RGB, JPEG, etc).
-    let format = dev.format().expect("Failed to read native format");
-    println!("Format:\n{}", format);
+    let format = dev
+        .preferred_stream(&|x, _y| x)
+        .expect("Failed to read native format");
+    println!("Format: {:?}", format);
 
     // Since we want to capture images, we need to access the native image stream of the device.
     // The backend will internally select a suitable implementation for the platform stream. On
@@ -26,7 +28,9 @@ fn main() {
     // Keep in mind that no format conversion is performed by default, so the frames you get in
     // this stream are directly handed to you without any copy. If you need a common frame format
     // such as raw RGB, you will have to create a seperate stream to perform the conversion.
-    let mut stream = dev.stream().expect("Failed to setup capture stream");
+    let mut stream = dev
+        .start_stream(&format)
+        .expect("Failed to setup capture stream");
 
     // Here we create a loop and just capture images as long as the device produces them. Normally,
     // this loop will run forever unless we unplug the camera or exit the program.

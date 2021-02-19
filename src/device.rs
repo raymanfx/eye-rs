@@ -1,8 +1,9 @@
 use std::io;
 
 use crate::control;
-use crate::format::ImageFormat;
-use crate::stream::{Descriptors as StreamDescriptors, ImageStream};
+use crate::stream::{
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
+};
 use crate::traits::Device as DeviceTrait;
 
 /// A transparent wrapper type for native platform devices.
@@ -82,16 +83,14 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.set_control(id, val)
     }
 
-    fn format(&self) -> io::Result<ImageFormat> {
-        self.inner.format()
+    fn preferred_stream(
+        &self,
+        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
+    ) -> io::Result<StreamDescriptor> {
+        self.inner.preferred_stream(f)
     }
 
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()> {
-        self.inner.set_format(&fmt)
-    }
-
-    fn stream(&self) -> io::Result<ImageStream<'a>> {
-        let stream = self.inner.stream()?;
-        Ok(stream)
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>> {
+        self.inner.start_stream(desc)
     }
 }

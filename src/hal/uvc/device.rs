@@ -1,9 +1,8 @@
-use std::io;
-use std::ops::Sub;
 use std::sync::Arc;
+use std::{io, time};
 
 use crate::control;
-use crate::format::{ImageFormat, PixelFormat};
+use crate::format::PixelFormat;
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
 use crate::stream::{
@@ -13,7 +12,6 @@ use crate::traits::Device;
 
 pub struct Handle<'a> {
     inner: Arc<UvcHandle<'a>>,
-    stream_fmt: uvc::StreamFormat,
 }
 
 impl<'a> Handle<'a> {
@@ -22,12 +20,6 @@ impl<'a> Handle<'a> {
 
         Ok(Handle {
             inner: Arc::new(inner),
-            stream_fmt: uvc::StreamFormat {
-                width: 1280,
-                height: 720,
-                fps: 30,
-                format: uvc::FrameFormat::Any,
-            },
         })
     }
 }
@@ -84,73 +76,87 @@ impl<'a> Device<'a> for Handle<'a> {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
     }
 
-    fn format(&self) -> io::Result<ImageFormat> {
-        Ok(ImageFormat::new(
-            self.stream_fmt.width,
-            self.stream_fmt.height,
-            PixelFormat::Rgb(24),
-        ))
-    }
+    fn preferred_stream(
+        &self,
+        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
+    ) -> io::Result<StreamDescriptor> {
+        let preferred = self.inner.handle.get_preferred_format(|x, y| {
+            let _x = StreamDescriptor {
+                width: x.width,
+                height: x.height,
+                pixfmt: PixelFormat::Rgb(24),
+                interval: time::Duration::from_secs_f64(1.0 / x.fps as f64),
+            };
+            let _y = StreamDescriptor {
+                width: y.width,
+                height: y.height,
+                pixfmt: PixelFormat::Rgb(24),
+                interval: time::Duration::from_secs_f64(1.0 / y.fps as f64),
+            };
+            let _preferred = f(_x, _y);
 
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()> {
-        if fmt.pixfmt != PixelFormat::Rgb(24) {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "only RGB24 is supported",
-            ));
-        }
-
-        // helper - should really be in the standard library..
-        fn absdiff<T: Sub<Output = T> + Ord>(x: T, y: T) -> T {
-            if y > x {
-                y - x
-            } else {
-                x - y
-            }
-        }
-
-        if let Some(fmt) = self.inner.handle.get_preferred_format(|x, y| {
-            // match against the resolution
-            let error_x = ((absdiff(fmt.width, x.width)) as f64).sqrt()
-                + ((absdiff(fmt.height, x.height)) as f64).sqrt();
-            let error_y = ((absdiff(fmt.width, y.width)) as f64).sqrt()
-                + ((absdiff(fmt.height, y.height)) as f64).sqrt();
-
-            if error_x == error_y {
-                // prefer lower frame times
-                if x.fps >= y.fps {
-                    x
-                } else {
-                    y
-                }
-            } else if error_x <= error_y {
+            if _preferred.width == x.width && _preferred.height == x.height {
                 x
             } else {
                 y
             }
-        }) {
-            self.stream_fmt = fmt;
-        }
+        });
 
-        Ok(())
+        let preferred = match preferred {
+            Some(fmt) => fmt,
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "failed to query formats",
+                ))
+            }
+        };
+
+        Ok(StreamDescriptor {
+            width: preferred.width,
+            height: preferred.height,
+            pixfmt: PixelFormat::Rgb(24),
+            interval: time::Duration::from_secs_f64(1.0 / preferred.fps as f64),
+        })
     }
 
-    fn stream(&self) -> io::Result<ImageStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>> {
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
 
-        let stream_handle = match dev_handle_ref.get_stream_handle_with_format(self.stream_fmt) {
+        let stream_format = self.inner.handle.get_preferred_format(|x, y| {
+            if x.width == desc.width && y.width == desc.width {
+                if x.fps > y.fps {
+                    x
+                } else {
+                    y
+                }
+            } else {
+                x
+            }
+        });
+
+        let stream_format = match stream_format {
+            Some(fmt) => fmt,
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "failed to query formats",
+                ))
+            }
+        };
+
+        let stream_handle = match dev_handle_ref.get_stream_handle_with_format(stream_format) {
             Ok(handle) => handle,
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
-        let format = self.format()?;
-        let stream = match StreamHandle::new(dev_handle, stream_handle, self.stream_fmt) {
+        let stream = match StreamHandle::new(dev_handle, stream_handle, stream_format) {
             Ok(stream) => stream,
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
-        Ok(ImageStream::new(Box::new(stream), format))
+        Ok(ImageStream::new(Box::new(stream)))
     }
 }
 

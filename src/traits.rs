@@ -1,8 +1,9 @@
 use std::io;
 
 use crate::control::{Control, Value as ControlValue};
-use crate::format::ImageFormat;
-use crate::stream::{Descriptors as StreamDescriptors, ImageStream, Map};
+use crate::stream::{
+    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream, Map,
+};
 
 /// Platform context abstraction
 pub trait Context {
@@ -25,16 +26,13 @@ pub trait Device<'a> {
     fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
 
     /// Returns the current format in use by the device
-    fn format(&self) -> io::Result<ImageFormat>;
+    fn preferred_stream(
+        &self,
+        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
+    ) -> io::Result<StreamDescriptor>;
 
-    /// Sets the active format
-    ///
-    /// The actual behavior is HAL specific: some may try to match the requested format on a
-    /// best-effort basis while others may return an error if the exact format is not available.
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()>;
-
-    /// Returns a zero-copy stream for direct frame access
-    fn stream(&self) -> io::Result<ImageStream<'a>>;
+    /// Returns a stream which produces images
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>>;
 }
 
 /// Stream abstraction

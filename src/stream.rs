@@ -1,6 +1,6 @@
 use std::{cmp, io, time};
 
-use crate::format::{ImageFormat, PixelFormat};
+use crate::format::PixelFormat;
 use crate::image::CowImage;
 use crate::traits::Stream;
 
@@ -35,21 +35,14 @@ where
 /// The output type is COW, meaning it will accept existing memory or allocate its own.
 pub struct ImageStream<'a> {
     inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>> + Send>,
-    format: ImageFormat,
 }
 
 impl<'a> ImageStream<'a> {
     /// Creates a new stream
     pub fn new(
         inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<CowImage<'b>>> + Send>,
-        format: ImageFormat,
     ) -> Self {
-        ImageStream { inner, format }
-    }
-
-    /// Returns the format of the images produced by the stream
-    pub fn format(&self) -> &ImageFormat {
-        &self.format
+        ImageStream { inner }
     }
 }
 

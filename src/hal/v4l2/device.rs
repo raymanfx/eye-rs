@@ -7,7 +7,7 @@ use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
 
 use crate::control;
-use crate::format::{ImageFormat, PixelFormat};
+use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
 use crate::stream::{
     Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, ImageStream,
@@ -179,16 +179,34 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn format(&self) -> io::Result<ImageFormat> {
-        let fmt = self.inner.format()?;
-        Ok(
-            ImageFormat::new(fmt.width, fmt.height, PixelFormat::from(&fmt.fourcc.repr))
-                .stride(fmt.stride as usize),
-        )
+    fn preferred_stream(
+        &self,
+        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
+    ) -> io::Result<StreamDescriptor> {
+        let mut preferred = None;
+        let streams = self.query_streams()?.streams;
+        if streams.len() == 1 {
+            preferred = Some(streams[0].clone());
+        } else if streams.len() > 1 {
+            for i in 0..streams.len() - 2 {
+                preferred = Some(f(streams[i].clone(), streams[i + 1].clone()));
+            }
+        }
+
+        match preferred {
+            Some(desc) => Ok(desc),
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "no stream desciptors available",
+                ))
+            }
+        }
     }
 
-    fn set_format(&mut self, fmt: &ImageFormat) -> io::Result<()> {
-        let fourcc: &[u8; 4] = if let Ok(fourcc) = fmt.pixfmt.clone().try_into() {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<ImageStream<'a>> {
+        // TODO: set frame interval
+        let fourcc: &[u8; 4] = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
             return Err(io::Error::new(
@@ -197,14 +215,10 @@ impl<'a> Device<'a> for Handle {
             ));
         };
 
-        let fmt = CaptureFormat::new(fmt.width, fmt.height, FourCC_::new(fourcc));
-        self.inner.set_format(&fmt)?;
-        Ok(())
-    }
+        let format = CaptureFormat::new(desc.width, desc.height, FourCC_::new(fourcc));
+        self.inner.set_format(&format)?;
 
-    fn stream(&self) -> io::Result<ImageStream<'a>> {
-        let format = self.format()?;
         let stream = StreamHandle::new(self)?;
-        Ok(ImageStream::new(Box::new(stream), format))
+        Ok(ImageStream::new(Box::new(stream)))
     }
 }
