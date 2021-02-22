@@ -206,7 +206,7 @@ impl<'a> Device<'a> for Handle {
 
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
         // TODO: set frame interval
-        let fourcc: &[u8; 4] = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
+        let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
             return Err(io::Error::new(
@@ -215,7 +215,7 @@ impl<'a> Device<'a> for Handle {
             ));
         };
 
-        let format = CaptureFormat::new(desc.width, desc.height, FourCC_::new(fourcc));
+        let format = CaptureFormat::new(desc.width, desc.height, FourCC_::new(&fourcc));
         self.inner.set_format(&format)?;
 
         let stream = StreamHandle::new(self)?;
