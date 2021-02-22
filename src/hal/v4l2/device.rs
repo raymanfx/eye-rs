@@ -205,7 +205,6 @@ impl<'a> Device<'a> for Handle {
     }
 
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
-        // TODO: set frame interval
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
@@ -214,9 +213,15 @@ impl<'a> Device<'a> for Handle {
                 "failed to map pixelformat to fourcc",
             ));
         };
-
+        // configure frame format
         let format = CaptureFormat::new(desc.width, desc.height, FourCC_::new(&fourcc));
         self.inner.set_format(&format)?;
+
+        // configure frame timing
+        let fps = (1.0 / desc.interval.as_secs_f32()) as u32;
+        let mut params = self.inner.params()?;
+        params.interval = v4l::Fraction::new(1, fps);
+        self.inner.set_params(&params)?;
 
         let stream = StreamHandle::new(self)?;
         Ok(FrameStream::new(Box::new(stream)))
