@@ -13,13 +13,13 @@ fn main() -> io::Result<()> {
         let streams = dev.query_streams()?;
 
         println!("  Streams:");
-        for (pixfmt, mut streams) in streams.group_by_pixfmt() {
+        for (pixfmt, mut streams) in streams.group_by(|desc| desc.pixfmt.clone()) {
             // sort by width, smallest first
             streams.sort_by(|a, b| a.width.cmp(&b.width));
 
             println!("");
             println!("    Pixelformat : {}", pixfmt);
-            for (res, mut streams) in streams.group_by_resolution() {
+            for (res, mut streams) in streams.group_by(|desc| (desc.width, desc.height)) {
                 // sort by frame interval, smallest first
                 streams.sort_by(|a, b| a.interval.cmp(&b.interval));
 

@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::{cmp, io, time};
+
+use itertools::Itertools;
 
 use crate::format::PixelFormat;
 use crate::frame::Frame;
@@ -68,56 +72,25 @@ impl Descriptors {
         self.streams.sort_by(f);
     }
 
-    /// Returns the streams grouped by their resolutions
-    pub fn group_by_resolution(self) -> impl IntoIterator<Item = ((u32, u32), Self)> {
-        let mut groups: Vec<((u32, u32), Self)> = Vec::new();
-        for stream in self.streams {
-            let mut inserted = false;
-
-            for group in &mut groups {
-                if group.0 == (stream.width, stream.height) {
-                    group.1.streams.push(stream.clone());
-                    inserted = true;
-                }
-            }
-
-            if !inserted {
-                // create a new group
-                groups.push((
-                    (stream.width, stream.height),
-                    Descriptors {
+    /// Returns the streams grouped by a field
+    pub fn group_by<K, F>(self, key: F) -> HashMap<K, Self>
+    where
+        F: FnMut(&Descriptor) -> K,
+        K: Eq + Hash + Clone,
+    {
+        let mut groups: HashMap<K, Self> = HashMap::new();
+        self.streams
+            .into_iter()
+            .group_by(key)
+            .into_iter()
+            .for_each(|(key, group)| {
+                for member in group {
+                    let group = groups.entry(key.clone()).or_insert(Descriptors {
                         streams: Vec::new(),
-                    },
-                ))
-            }
-        }
-
-        groups
-    }
-
-    /// Returns the streams grouped by their pixelformats
-    pub fn group_by_pixfmt(self) -> impl IntoIterator<Item = (PixelFormat, Self)> {
-        let mut groups: Vec<(PixelFormat, Self)> = Vec::new();
-        for stream in self.streams {
-            let mut inserted = false;
-
-            for group in &mut groups {
-                if group.0 == stream.pixfmt {
-                    group.1.streams.push(stream.clone());
-                    inserted = true;
+                    });
+                    group.streams.push(member);
                 }
-            }
-
-            if !inserted {
-                // create a new group
-                groups.push((
-                    stream.pixfmt,
-                    Descriptors {
-                        streams: Vec::new(),
-                    },
-                ))
-            }
-        }
+            });
 
         groups
     }

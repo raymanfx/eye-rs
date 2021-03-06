@@ -1,6 +1,8 @@
-use std::{cmp::PartialEq, fmt};
+use std::cmp::{Eq, PartialEq};
+use std::fmt;
+use std::hash::Hash;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 /// Pixel format type used to describe image pixels.
 ///
 /// Arbitrary formats can be wrapped in the Custom variant.
