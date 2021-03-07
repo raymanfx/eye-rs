@@ -30,12 +30,8 @@ impl From<&[u8; 4]> for PixelFormat {
         // RGB formats
         else if fourcc == b"BGR3" {
             PixelFormat::Bgr(24)
-        } else if fourcc == b"AR24" {
-            PixelFormat::Bgra(32)
         } else if fourcc == b"RGB3" {
             PixelFormat::Rgb(24)
-        } else if fourcc == b"AB24" {
-            PixelFormat::Rgba(32)
         }
         // Compressed formats
         else if fourcc == b"MJPG" {
@@ -74,7 +70,6 @@ impl TryInto<[u8; 4]> for PixelFormat {
             PixelFormat::Gray(16) => Ok(*b"Y16 "),
             PixelFormat::Depth(16) => Ok(*b"Z16 "),
             PixelFormat::Bgr(24) => Ok(*b"BGR3"),
-            PixelFormat::Bgra(32) => Ok(*b"AR24"),
             PixelFormat::Rgb(24) => Ok(*b"RGB3"),
             PixelFormat::Rgb(32) => Ok(*b"AB24"),
             PixelFormat::Jpeg => Ok(*b"MJPG"),

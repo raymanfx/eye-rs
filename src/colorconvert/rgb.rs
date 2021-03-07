@@ -1,4 +1,4 @@
-use ffimage::color::{Bgra, Rgb, Rgba};
+use ffimage::color::{Bgr, Rgb};
 use ffimage::core::{Pixel, TryConvert};
 use ffimage::packed::generic::{ImageBuffer, ImageView};
 
@@ -20,30 +20,15 @@ fn _convert<DP: Pixel + From<Rgb<u8>>>(
     }
 }
 
-pub fn convert_to_rgba(
+pub fn convert_to_bgr(
     src: &[u8],
     src_fmt: &ImageFormat,
     dst: &mut Vec<u8>,
 ) -> Result<(), &'static str> {
-    let mut rgba = ImageBuffer::<Rgba<u8>>::new(src_fmt.width, src_fmt.height);
-    match _convert(src, src_fmt, &mut rgba) {
+    let mut bgr = ImageBuffer::<Bgr<u8>>::new(src_fmt.width, src_fmt.height);
+    match _convert(src, src_fmt, &mut bgr) {
         Ok(()) => {
-            *dst = rgba.into_vec();
-            Ok(())
-        }
-        Err(e) => Err(e),
-    }
-}
-
-pub fn convert_to_bgra(
-    src: &[u8],
-    src_fmt: &ImageFormat,
-    dst: &mut Vec<u8>,
-) -> Result<(), &'static str> {
-    let mut bgra = ImageBuffer::<Bgra<u8>>::new(src_fmt.width, src_fmt.height);
-    match _convert(src, src_fmt, &mut bgra) {
-        Ok(()) => {
-            *dst = bgra.into_vec();
+            *dst = bgr.into_vec();
             Ok(())
         }
         Err(e) => Err(e),
@@ -57,8 +42,7 @@ pub fn convert(
     dst_fmt: &PixelFormat,
 ) -> Result<(), &'static str> {
     match dst_fmt {
-        PixelFormat::Bgra(32) => convert_to_bgra(src, src_fmt, dst),
-        PixelFormat::Rgba(32) => convert_to_rgba(src, src_fmt, dst),
+        PixelFormat::Bgr(32) => convert_to_bgr(src, src_fmt, dst),
         _ => Err("cannot handle target format"),
     }
 }

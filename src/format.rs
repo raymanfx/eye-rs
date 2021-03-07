@@ -18,12 +18,8 @@ pub enum PixelFormat {
 
     /// Blue, Green, Red
     Bgr(u32),
-    /// Blue, Green, Red, Alpha
-    Bgra(u32),
     /// Red, Green, Blue
     Rgb(u32),
-    /// Red, Green, Blue, Alpha
-    Rgba(u32),
 
     /// JPEG compression
     Jpeg,
@@ -39,9 +35,7 @@ impl PixelFormat {
             PixelFormat::Depth(bits) => Some(*bits),
             PixelFormat::Gray(bits) => Some(*bits),
             PixelFormat::Bgr(bits) => Some(*bits),
-            PixelFormat::Bgra(bits) => Some(*bits),
             PixelFormat::Rgb(bits) => Some(*bits),
-            PixelFormat::Rgba(bits) => Some(*bits),
             // Compressed
             PixelFormat::Jpeg => None,
         }

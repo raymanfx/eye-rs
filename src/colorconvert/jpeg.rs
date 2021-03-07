@@ -28,24 +28,14 @@ pub fn convert_to_rgb(
     }
 }
 
-pub fn convert_to_rgba(
+pub fn convert_to_bgr(
     src: &[u8],
     src_fmt: &ImageFormat,
     dst: &mut Vec<u8>,
 ) -> Result<(), &'static str> {
     let mut rgb = Vec::new();
     convert_to_rgb(src, src_fmt, &mut rgb)?;
-    rgb::convert_to_rgba(&rgb, src_fmt, dst)
-}
-
-pub fn convert_to_bgra(
-    src: &[u8],
-    src_fmt: &ImageFormat,
-    dst: &mut Vec<u8>,
-) -> Result<(), &'static str> {
-    let mut rgb = Vec::new();
-    convert_to_rgb(src, src_fmt, &mut rgb)?;
-    rgb::convert_to_bgra(&rgb, src_fmt, dst)
+    rgb::convert_to_bgr(&rgb, src_fmt, dst)
 }
 
 pub fn convert(
@@ -55,9 +45,8 @@ pub fn convert(
     dst_fmt: &PixelFormat,
 ) -> Result<(), &'static str> {
     match dst_fmt {
-        PixelFormat::Bgra(32) => convert_to_bgra(src, src_fmt, dst),
+        PixelFormat::Bgr(24) => convert_to_bgr(src, src_fmt, dst),
         PixelFormat::Rgb(24) => convert_to_rgb(src, src_fmt, dst),
-        PixelFormat::Rgba(32) => convert_to_rgba(src, src_fmt, dst),
         _ => Err("cannot handle target format"),
     }
 }
