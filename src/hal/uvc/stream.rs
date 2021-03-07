@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::io;
 use std::sync::{mpsc, Arc};
 
@@ -50,8 +51,9 @@ impl<'a, 'b> Stream<'b> for Handle<'a> {
             }
         };
 
+        let buffer = Cow::Owned(pixels.to_vec());
         let format = ImageFormat::new(self.format.width, self.format.height, PixelFormat::Rgb(24));
 
-        Some(Ok(Frame::from_bytes(pixels.iter().cloned(), format)))
+        Some(Ok(Frame { buffer, format }))
     }
 }

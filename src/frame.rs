@@ -5,33 +5,14 @@ use crate::format::{ImageFormat, PixelFormat};
 
 #[derive(Clone)]
 pub struct Frame<'a> {
-    data: Cow<'a, [u8]>,
-    fmt: ImageFormat,
+    pub(crate) buffer: Cow<'a, [u8]>,
+    pub(crate) format: ImageFormat,
 }
 
 impl<'a> Frame<'a> {
-    /// Converts an image view into a cow image
-    pub(crate) fn from_slice(slice: &'a [u8], fmt: ImageFormat) -> Self {
-        Frame {
-            data: Cow::Borrowed(slice),
-            fmt,
-        }
-    }
-
-    /// Converts an image buffer into a cow image
-    pub(crate) fn from_bytes<I>(bytes: I, fmt: ImageFormat) -> Self
-    where
-        I: Iterator<Item = u8>,
-    {
-        Frame {
-            data: Cow::Owned(bytes.collect()),
-            fmt,
-        }
-    }
-
     /// Returns the raw pixel bytes
     pub fn as_bytes(&self) -> &[u8] {
-        match &self.data {
+        match &self.buffer {
             Cow::Borrowed(slice) => slice,
             Cow::Owned(buf) => &buf,
         }
@@ -39,7 +20,7 @@ impl<'a> Frame<'a> {
 
     /// Returns the raw pixel bytes
     pub fn into_bytes(self) -> impl Iterator<Item = u8> {
-        match self.data {
+        match self.buffer {
             Cow::Borrowed(slice) => slice.to_vec().into_iter(),
             Cow::Owned(buf) => buf.into_iter(),
         }
@@ -47,22 +28,22 @@ impl<'a> Frame<'a> {
 
     /// Returns the width in pixels
     pub fn width(&self) -> u32 {
-        self.fmt.width
+        self.format.width
     }
 
     /// Returns the height in pixels
     pub fn height(&self) -> u32 {
-        self.fmt.height
+        self.format.height
     }
 
     /// Returns the amount of bytes per pixel row
     pub fn stride(&self) -> Option<usize> {
-        self.fmt.stride
+        self.format.stride
     }
 
     /// Returns the format of the image pixels
     pub fn pixfmt(&self) -> &PixelFormat {
-        &self.fmt.pixfmt
+        &self.format.pixfmt
     }
 
     /// Returns an instance that is guaranteed to own its data
@@ -71,8 +52,8 @@ impl<'a> Frame<'a> {
     /// allocation is needed and the owned data is reused.
     pub fn own<'b>(self) -> Frame<'b> {
         Frame {
-            data: Cow::Owned(self.data.into_owned()),
-            fmt: self.fmt,
+            buffer: Cow::Owned(self.buffer.into_owned()),
+            format: self.format,
         }
     }
 
@@ -91,8 +72,8 @@ impl<'a> Frame<'a> {
             Converter::convert(self.as_bytes(), &src_fmt, &mut buf, &dst_fmt.pixfmt)?;
 
             Ok(Frame {
-                data: Cow::Owned(buf),
-                fmt: dst_fmt,
+                buffer: Cow::Owned(buf),
+                format: dst_fmt,
             })
         }
     }

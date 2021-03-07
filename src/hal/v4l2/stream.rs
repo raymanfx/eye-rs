@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::{io, mem};
 
 use v4l::buffer::Type as BufType;
@@ -68,8 +69,11 @@ impl<'a> Handle<'a> {
     fn dequeue<'b>(&'b mut self) -> io::Result<Frame<'b>> {
         self.stream_buf_index = self.stream.dequeue()?;
 
-        let buf = self.stream.get(self.stream_buf_index).unwrap();
-        let image = Frame::from_slice(buf, self.format.clone());
+        let buffer = self.stream.get(self.stream_buf_index).unwrap();
+        let image = Frame {
+            buffer: Cow::Borrowed(buffer),
+            format: self.format.clone(),
+        };
 
         // The Rust compiler thinks we're returning a value (view) which references data owned by
         // the local function (frame). This is actually not the case since the data slice is
