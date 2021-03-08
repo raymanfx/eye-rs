@@ -5,9 +5,7 @@ use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
-use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream,
-};
+use crate::stream::{Descriptor as StreamDescriptor, FrameStream};
 use crate::traits::Device;
 
 pub struct Handle<'a> {
@@ -25,7 +23,7 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a> Device<'a> for Handle<'a> {
-    fn query_streams(&self) -> io::Result<StreamDescriptors> {
+    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
         let mut streams = Vec::new();
 
         self.inner
@@ -54,7 +52,7 @@ impl<'a> Device<'a> for Handle<'a> {
                     });
             });
 
-        Ok(StreamDescriptors { streams })
+        Ok(streams)
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {

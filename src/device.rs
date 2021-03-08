@@ -1,9 +1,7 @@
 use std::io;
 
 use crate::control;
-use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream,
-};
+use crate::stream::{Descriptor as StreamDescriptor, FrameStream};
 use crate::traits::Device as DeviceTrait;
 
 /// A transparent wrapper type for native platform devices.
@@ -67,7 +65,7 @@ impl<'a> Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
-    fn query_streams(&self) -> io::Result<StreamDescriptors> {
+    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
         self.inner.query_streams()
     }
 

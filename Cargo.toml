@@ -18,10 +18,12 @@ hal-uvc = ["uvc"]
 [dependencies]
 bitflags = "^1.2"
 ffimage = "0.8.2"
-itertools = "0.10.0"
 
 jpeg-decoder = { version = "^0.1", optional = true }
 uvc = { version = "0.2", features = ["vendor"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 v4l = { version = "0.12" }
+
+[dev-dependencies]
+itertools = "0.10.0"

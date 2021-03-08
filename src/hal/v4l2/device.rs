@@ -9,9 +9,7 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
-use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream,
-};
+use crate::stream::{Descriptor as StreamDescriptor, FrameStream};
 use crate::traits::Device;
 
 pub struct Handle {
@@ -39,7 +37,7 @@ impl Handle {
 }
 
 impl<'a> Device<'a> for Handle {
-    fn query_streams(&self) -> io::Result<StreamDescriptors> {
+    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
         let mut streams = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
@@ -69,7 +67,7 @@ impl<'a> Device<'a> for Handle {
             }
         }
 
-        Ok(StreamDescriptors { streams })
+        Ok(streams)
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {
@@ -187,7 +185,7 @@ impl<'a> Device<'a> for Handle {
         f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
     ) -> io::Result<StreamDescriptor> {
         let mut preferred = None;
-        let streams = self.query_streams()?.streams;
+        let streams = self.query_streams()?;
         if streams.len() == 1 {
             preferred = Some(streams[0].clone());
         } else if streams.len() > 1 {

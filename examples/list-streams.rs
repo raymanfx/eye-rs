@@ -1,5 +1,7 @@
 use std::io;
 
+use itertools::Itertools;
+
 use eye::prelude::*;
 
 fn main() -> io::Result<()> {
@@ -13,22 +15,25 @@ fn main() -> io::Result<()> {
         let streams = dev.query_streams()?;
 
         println!("  Streams:");
-        for (pixfmt, mut streams) in streams.group_by(|desc| desc.pixfmt.clone()) {
-            // sort by width, smallest first
-            streams.sort_by(|a, b| a.width.cmp(&b.width));
-
+        for (pixfmt, streams) in &streams.into_iter().group_by(|desc| desc.pixfmt.clone()) {
             println!("");
             println!("    Pixelformat : {}", pixfmt);
-            for (res, mut streams) in streams.group_by(|desc| (desc.width, desc.height)) {
-                // sort by frame interval, smallest first
-                streams.sort_by(|a, b| a.interval.cmp(&b.interval));
 
-                println!("      Resolution : {}x{}", res.0, res.1);
-                print!("        Intervals  : ");
+            // sort by resolution, smallest first
+            let streams = streams.into_iter().sorted_by(|a, b| a.width.cmp(&b.width));
+
+            for (res, streams) in &streams.group_by(|desc| (desc.width, desc.height)) {
+                // sort by frame interval, smallest first
+                let streams = streams
+                    .into_iter()
+                    .sorted_by(|a, b| a.interval.cmp(&b.interval));
+
+                print!("      {}x{}", res.0, res.1);
+                print!(" : [");
                 for stream in streams {
                     print!("{:?}, ", stream.interval);
                 }
-                println!("");
+                println!("]");
             }
         }
     }

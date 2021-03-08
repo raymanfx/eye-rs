@@ -1,9 +1,7 @@
 use std::io;
 
 use crate::control::{Control, Value as ControlValue};
-use crate::stream::{
-    Descriptor as StreamDescriptor, Descriptors as StreamDescriptors, FrameStream, Map,
-};
+use crate::stream::{Descriptor as StreamDescriptor, FrameStream, Map};
 
 /// Platform context abstraction
 pub trait Context {
@@ -14,7 +12,7 @@ pub trait Context {
 /// Platform device abstraction
 pub trait Device<'a> {
     /// Returns the supported streams
-    fn query_streams(&self) -> io::Result<StreamDescriptors>;
+    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>>;
 
     /// Returns the supported controls
     fn query_controls(&self) -> io::Result<Vec<Control>>;
