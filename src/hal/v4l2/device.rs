@@ -124,16 +124,19 @@ impl<'a> Device<'a> for Handle {
 
             let mut flags = control::Flags::NONE;
             if control.flags & v4l::control::Flags::READ_ONLY == v4l::control::Flags::READ_ONLY {
-                flags |= control::Flags::READ_ONLY;
+                flags.remove(control::Flags::WRITE);
+                flags.insert(control::Flags::READ);
             }
             if control.flags & v4l::control::Flags::WRITE_ONLY == v4l::control::Flags::WRITE_ONLY {
-                flags |= control::Flags::WRITE_ONLY;
+                flags.remove(control::Flags::READ);
+                flags.insert(control::Flags::WRITE);
             }
             if control.flags & v4l::control::Flags::GRABBED == v4l::control::Flags::GRABBED {
-                flags |= control::Flags::GRABBED;
+                flags.remove(control::Flags::WRITE);
             }
             if control.flags & v4l::control::Flags::INACTIVE == v4l::control::Flags::INACTIVE {
-                flags |= control::Flags::INACTIVE;
+                flags.remove(control::Flags::READ);
+                flags.remove(control::Flags::WRITE);
             }
 
             controls.push(control::Control {

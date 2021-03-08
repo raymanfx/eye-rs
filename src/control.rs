@@ -16,14 +16,12 @@ pub struct Control {
 impl Control {
     /// Returns true if the control value can be read
     pub fn readable(&self) -> bool {
-        !(self.flags & Flags::WRITE_ONLY == Flags::WRITE_ONLY
-            || self.flags & Flags::INACTIVE == Flags::INACTIVE)
+        !(self.flags & Flags::READ == Flags::READ)
     }
 
     /// Returns true if the control value can be written
     pub fn writable(&self) -> bool {
-        !(self.flags & Flags::READ_ONLY == Flags::READ_ONLY
-            || self.flags & Flags::GRABBED == Flags::GRABBED)
+        !(self.flags & Flags::WRITE == Flags::WRITE)
     }
 }
 
@@ -67,14 +65,10 @@ bitflags! {
     pub struct Flags: u32 {
         /// No flags are set
         const NONE                  = 0x000;
-        /// Permanently read-only
-        const READ_ONLY             = 0x001;
-        /// Permanently write-only
-        const WRITE_ONLY            = 0x002;
-        /// Grabbed by another process, temporarily read-only
-        const GRABBED               = 0x004;
-        /// Not applicable in the current context
-        const INACTIVE              = 0x008;
+        /// Value can be read
+        const READ                  = 0x001;
+        /// Value can be written
+        const WRITE                 = 0x002;
     }
 }
 

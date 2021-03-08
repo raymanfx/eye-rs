@@ -99,7 +99,7 @@ impl From<&Control> for EyeControl::Control {
             Control::ScanningMode => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Menu(vec![
                     EyeControl::MenuItem::String(String::from("Interlaced")),
                     EyeControl::MenuItem::String(String::from("Progressive")),
@@ -108,7 +108,7 @@ impl From<&Control> for EyeControl::Control {
             Control::AutoExposureMode => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Menu(vec![
                     EyeControl::MenuItem::String(String::from("Manual")),
                     EyeControl::MenuItem::String(String::from("Auto")),
@@ -119,7 +119,7 @@ impl From<&Control> for EyeControl::Control {
             Control::AutoExposurePriority => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Menu(vec![
                     EyeControl::MenuItem::String(String::from("Constant")),
                     EyeControl::MenuItem::String(String::from("Variable")),
@@ -128,7 +128,7 @@ impl From<&Control> for EyeControl::Control {
             Control::ExposureAbsolute => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Integer {
                     range: (u32::MIN as i64, u32::MAX as i64),
                     step: 1,
@@ -138,7 +138,7 @@ impl From<&Control> for EyeControl::Control {
             Control::ExposureRelative => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Integer {
                     range: (i8::MIN as i64, i8::MAX as i64),
                     step: 1,
@@ -148,7 +148,7 @@ impl From<&Control> for EyeControl::Control {
             Control::FocusAbsolute => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Integer {
                     range: (u16::MIN as i64, u16::MAX as i64),
                     step: 1,
@@ -158,7 +158,7 @@ impl From<&Control> for EyeControl::Control {
             Control::FocusRelative => EyeControl::Control {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ_ONLY,
+                flags: EyeControl::Flags::READ,
                 repr: EyeControl::Representation::Integer {
                     range: (i8::MIN as i64, i8::MAX as i64),
                     step: 1,
