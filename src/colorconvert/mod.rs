@@ -29,7 +29,7 @@ impl Converter {
     pub fn formats() -> Vec<(PixelFormat, Vec<PixelFormat>)> {
         let mut formats = Vec::new();
 
-        formats.push((PixelFormat::Rgb(24), vec![PixelFormat::Bgr(32)]));
+        formats.push((PixelFormat::Rgb(24), vec![PixelFormat::Bgr(24)]));
 
         #[cfg(feature = "jpeg")]
         formats.push((PixelFormat::Jpeg, vec![PixelFormat::Rgb(24)]));

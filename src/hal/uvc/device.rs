@@ -5,7 +5,7 @@ use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
-use crate::stream::{Descriptor as StreamDescriptor, FrameStream};
+use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags, FrameStream};
 use crate::traits::Device;
 
 pub struct Handle<'a> {
@@ -47,6 +47,7 @@ impl<'a> Device<'a> for Handle<'a> {
                                 height: frame_desc.height() as u32,
                                 pixfmt: pixfmt.clone(),
                                 interval,
+                                flags: StreamFlags::NONE,
                             });
                         }
                     });
@@ -84,12 +85,14 @@ impl<'a> Device<'a> for Handle<'a> {
                 height: x.height,
                 pixfmt: PixelFormat::Rgb(24),
                 interval: time::Duration::from_secs_f64(1.0 / x.fps as f64),
+                flags: StreamFlags::NONE,
             };
             let _y = StreamDescriptor {
                 width: y.width,
                 height: y.height,
                 pixfmt: PixelFormat::Rgb(24),
                 interval: time::Duration::from_secs_f64(1.0 / y.fps as f64),
+                flags: StreamFlags::NONE,
             };
             let _preferred = f(_x, _y);
 
@@ -115,6 +118,7 @@ impl<'a> Device<'a> for Handle<'a> {
             height: preferred.height,
             pixfmt: PixelFormat::Rgb(24),
             interval: time::Duration::from_secs_f64(1.0 / preferred.fps as f64),
+            flags: StreamFlags::NONE,
         })
     }
 

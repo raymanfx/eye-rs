@@ -1,6 +1,10 @@
+use std::borrow::Cow;
 use std::{io, time};
 
-use crate::format::PixelFormat;
+use bitflags::bitflags;
+
+use crate::colorconvert::Converter;
+use crate::format::{ImageFormat, PixelFormat};
 use crate::frame::Frame;
 use crate::traits::Stream;
 
@@ -52,6 +56,47 @@ impl<'a, 'b> Stream<'b> for FrameStream<'a> {
     }
 }
 
+/// A stream converting frames
+pub struct ConvertStream<S> {
+    pub inner: S,
+    pub map: (PixelFormat, PixelFormat),
+}
+
+impl<'a, S> Stream<'a> for ConvertStream<S>
+where
+    S: Stream<'a, Item = io::Result<Frame<'a>>>,
+{
+    type Item = io::Result<Frame<'a>>;
+
+    fn next(&'a mut self) -> Option<Self::Item> {
+        let item = self.inner.next()?;
+        let frame = if let Ok(frame) = item {
+            frame
+        } else {
+            return Some(item);
+        };
+
+        let mut buf = Vec::new();
+        let src_fmt = ImageFormat::new(frame.width(), frame.height(), frame.pixfmt().clone());
+        let dst_fmt = ImageFormat::new(frame.width(), frame.height(), self.map.1.clone());
+        let res = if let Err(msg) =
+            Converter::convert(frame.as_bytes(), &src_fmt, &mut buf, &dst_fmt.pixfmt)
+        {
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("failed to convert stream item: {}", msg),
+            ))
+        } else {
+            Ok(Frame {
+                buffer: Cow::Owned(buf),
+                format: dst_fmt,
+            })
+        };
+
+        Some(res)
+    }
+}
+
 #[derive(Clone, Debug)]
 /// Image stream description
 pub struct Descriptor {
@@ -63,4 +108,23 @@ pub struct Descriptor {
     pub pixfmt: PixelFormat,
     /// Frame timing as duration
     pub interval: time::Duration,
+    /// Miscellaneous flags
+    pub flags: Flags,
+}
+
+impl Descriptor {
+    /// Whether the stream is emulated
+    pub fn is_emulated(&self) -> bool {
+        self.flags & Flags::EMULATED == Flags::EMULATED
+    }
+}
+
+bitflags! {
+    /// Control state flags
+    pub struct Flags: u32 {
+        /// No flags are set
+        const NONE                  = 0x000;
+        /// Stream is emulated by converting items
+        const EMULATED              = 0x001;
+    }
 }

@@ -1,25 +1,31 @@
+use std::collections::HashMap;
 use std::io;
 
+use crate::colorconvert::Converter;
 use crate::control;
-use crate::stream::{Descriptor as StreamDescriptor, FrameStream};
+use crate::format::PixelFormat;
+use crate::stream::{
+    ConvertStream, Descriptor as StreamDescriptor, Flags as StreamFlags, FrameStream,
+};
 use crate::traits::Device as DeviceTrait;
 
 /// A transparent wrapper type for native platform devices.
 pub struct Device<'a> {
+    // actual platform device implementation
     inner: Box<dyn 'a + DeviceTrait<'a>>,
+    // pixelformat emulation
+    emulated_formats: HashMap<PixelFormat, PixelFormat>,
 }
 
 impl<'a> Device<'a> {
     pub fn with_uri<S: AsRef<str>>(_uri: S) -> io::Result<Self> {
         let _uri = _uri.as_ref();
+        let mut inner: Option<Box<dyn 'a + DeviceTrait<'a>>> = None;
 
         #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
             let path = _uri[6..].to_string();
-            let inner = crate::hal::v4l2::device::Handle::with_path(path)?;
-            return Ok(Device {
-                inner: Box::new(inner),
-            });
+            inner = Some(Box::new(crate::hal::v4l2::device::Handle::with_path(path)?));
         }
 
         #[cfg(feature = "hal-uvc")]
@@ -43,30 +49,90 @@ impl<'a> Device<'a> {
                 return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI"));
             };
 
-            let inner = crate::hal::uvc::device::Handle::new(bus_number, device_address);
-            let inner = if let Ok(inner) = inner {
-                inner
+            inner = if let Ok(inner) =
+                crate::hal::uvc::device::Handle::new(bus_number, device_address)
+            {
+                Some(Box::new(inner))
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
                     "failed to create UVC context",
                 ));
             };
-            return Ok(Device {
-                inner: Box::new(inner),
-            });
         }
 
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "No suitable backend available",
-        ))
+        let inner = if let Some(dev) = inner {
+            dev
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "No suitable backend available",
+            ));
+        };
+
+        let native_streams = inner.query_streams()?;
+        let converter_formats = Converter::formats();
+        let mut emulated_formats = HashMap::new();
+
+        converter_formats.into_iter().for_each(|mappings| {
+            if let Some(stream) = native_streams
+                .iter()
+                .find(|stream| stream.pixfmt == mappings.0)
+            {
+                mappings.1.iter().for_each(|pixfmt| {
+                    // check whether there is already a native stream with this format
+                    if let Some(_) = native_streams
+                        .iter()
+                        .find(|stream| &stream.pixfmt == pixfmt)
+                    {
+                        return;
+                    }
+
+                    if !emulated_formats.contains_key(pixfmt) {
+                        emulated_formats
+                            .entry(pixfmt.clone())
+                            .or_insert(stream.pixfmt.clone());
+                    }
+                })
+            }
+        });
+
+        Ok(Device {
+            inner,
+            emulated_formats,
+        })
     }
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
     fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
-        self.inner.query_streams()
+        // get all the native streams
+        let native = self.inner.query_streams()?;
+
+        // now check which formats we can emulate
+        let mut emulated: Vec<StreamDescriptor> = Vec::new();
+        self.emulated_formats.iter().for_each(|mapping| {
+            let streams = native.iter().filter_map(|stream| {
+                if &stream.pixfmt == mapping.1 {
+                    Some(stream)
+                } else {
+                    None
+                }
+            });
+
+            streams.for_each(|stream| {
+                emulated.push(StreamDescriptor {
+                    width: stream.width,
+                    height: stream.height,
+                    pixfmt: mapping.0.clone(),
+                    interval: stream.interval,
+                    flags: stream.flags | StreamFlags::EMULATED,
+                });
+            });
+        });
+
+        let streams = native.into_iter().chain(emulated.into_iter()).collect();
+        Ok(streams)
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Control>> {
@@ -89,6 +155,20 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
     }
 
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
-        self.inner.start_stream(desc)
+        if let Some(source_fmt) = self.emulated_formats.get(&desc.pixfmt) {
+            // start the native stream with the base pixfmt
+            let mut desc = desc.clone();
+            desc.pixfmt = source_fmt.clone();
+            let native_stream = self.inner.start_stream(&desc)?;
+
+            // create the instance that converts the frames for us
+            Ok(FrameStream::new(Box::new(ConvertStream {
+                inner: native_stream,
+                map: (desc.pixfmt.clone(), source_fmt.clone()),
+            })))
+        } else {
+            // no emulation required
+            self.inner.start_stream(desc)
+        }
     }
 }

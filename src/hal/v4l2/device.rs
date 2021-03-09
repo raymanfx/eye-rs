@@ -9,7 +9,7 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
-use crate::stream::{Descriptor as StreamDescriptor, FrameStream};
+use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags, FrameStream};
 use crate::traits::Device;
 
 pub struct Handle {
@@ -60,6 +60,7 @@ impl<'a> Device<'a> for Handle {
                                 interval: Duration::from_secs_f64(
                                     fraction.numerator as f64 / fraction.denominator as f64,
                                 ),
+                                flags: StreamFlags::NONE,
                             });
                         }
                     }

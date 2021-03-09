@@ -42,7 +42,7 @@ pub fn convert(
     dst_fmt: &PixelFormat,
 ) -> Result<(), &'static str> {
     match dst_fmt {
-        PixelFormat::Bgr(32) => convert_to_bgr(src, src_fmt, dst),
+        PixelFormat::Bgr(24) => convert_to_bgr(src, src_fmt, dst),
         _ => Err("cannot handle target format"),
     }
 }
