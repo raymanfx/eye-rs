@@ -1,23 +1,25 @@
 use ffimage::color::{Bgr, Rgb};
-use ffimage::core::{Pixel, TryConvert};
-use ffimage::packed::generic::{ImageBuffer, ImageView};
+use ffimage::packed::{ImageBuffer, ImageView};
+use ffimage::traits::{Convert, Pixel};
 
 use crate::format::{ImageFormat, PixelFormat};
 
-fn _convert<DP: Pixel + From<Rgb<u8>>>(
+fn _convert<DP>(
     src: &[u8],
     src_fmt: &ImageFormat,
     dst: &mut ImageBuffer<DP>,
-) -> Result<(), &'static str> {
-    let rgb = match ImageView::<Rgb<u8>>::new(src, src_fmt.width, src_fmt.height) {
+) -> Result<(), &'static str>
+where
+    DP: Pixel + From<Rgb<u8>> + Copy + Send,
+    DP::T: Default + Clone + Send,
+{
+    let rgb = match ImageView::<Rgb<u8>>::from_buf(src, src_fmt.width, src_fmt.height) {
         Some(view) => view,
         None => return Err("failed to create RGB view"),
     };
 
-    match rgb.try_convert(dst) {
-        Ok(()) => Ok(()),
-        Err(_) => Err("failed to convert RGB"),
-    }
+    rgb.convert(dst);
+    Ok(())
 }
 
 pub fn convert_to_bgr(
@@ -25,10 +27,10 @@ pub fn convert_to_bgr(
     src_fmt: &ImageFormat,
     dst: &mut Vec<u8>,
 ) -> Result<(), &'static str> {
-    let mut bgr = ImageBuffer::<Bgr<u8>>::new(src_fmt.width, src_fmt.height);
+    let mut bgr = ImageBuffer::<Bgr<u8>>::new(src_fmt.width, src_fmt.height, 0u8);
     match _convert(src, src_fmt, &mut bgr) {
         Ok(()) => {
-            *dst = bgr.into_vec();
+            *dst = bgr.into_buf();
             Ok(())
         }
         Err(e) => Err(e),
