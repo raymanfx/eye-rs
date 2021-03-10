@@ -128,7 +128,6 @@ impl<'a> Device<'a> for Handle<'a> {
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
 
         let desc_fps = (1.0 / desc.interval.as_secs_f64()) as u64;
-        println!("desc_fps: {}", desc_fps);
         let stream_format = self.inner.handle.get_preferred_format(|x, y| {
             if x.width == desc.width && x.height == desc.height && x.fps as u64 >= desc_fps {
                 x
