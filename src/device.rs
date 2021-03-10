@@ -12,7 +12,7 @@ use crate::traits::Device as DeviceTrait;
 /// A transparent wrapper type for native platform devices.
 pub struct Device<'a> {
     // actual platform device implementation
-    inner: Box<dyn 'a + DeviceTrait<'a>>,
+    inner: Box<dyn 'a + DeviceTrait<'a> + Send>,
     // pixelformat emulation
     emulated_formats: HashMap<PixelFormat, PixelFormat>,
 }
@@ -20,7 +20,7 @@ pub struct Device<'a> {
 impl<'a> Device<'a> {
     pub fn with_uri<S: AsRef<str>>(_uri: S) -> io::Result<Self> {
         let _uri = _uri.as_ref();
-        let mut inner: Option<Box<dyn 'a + DeviceTrait<'a>>> = None;
+        let mut inner: Option<Box<dyn 'a + DeviceTrait<'a> + Send>> = None;
 
         #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
