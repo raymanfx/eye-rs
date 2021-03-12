@@ -16,12 +16,12 @@ pub struct Control {
 impl Control {
     /// Returns true if the control value can be read
     pub fn readable(&self) -> bool {
-        !(self.flags & Flags::READ == Flags::READ)
+        self.flags & Flags::READ == Flags::READ
     }
 
     /// Returns true if the control value can be written
     pub fn writable(&self) -> bool {
-        !(self.flags & Flags::WRITE == Flags::WRITE)
+        self.flags & Flags::WRITE == Flags::WRITE
     }
 }
 
