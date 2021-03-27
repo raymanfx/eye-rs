@@ -1,5 +1,5 @@
+use std::io;
 use std::sync::Arc;
-use std::{io, time};
 
 use crate::control;
 use crate::format::PixelFormat;
@@ -73,53 +73,6 @@ impl<'a> Device<'a> for Handle<'a> {
 
     fn set_control(&mut self, _id: u32, _val: &control::Value) -> io::Result<()> {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
-    }
-
-    fn preferred_stream(
-        &self,
-        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
-    ) -> io::Result<StreamDescriptor> {
-        let preferred = self.inner.handle.get_preferred_format(|x, y| {
-            let _x = StreamDescriptor {
-                width: x.width,
-                height: x.height,
-                pixfmt: PixelFormat::Rgb(24),
-                interval: time::Duration::from_secs_f64(1.0 / x.fps as f64),
-                flags: StreamFlags::NONE,
-            };
-            let _y = StreamDescriptor {
-                width: y.width,
-                height: y.height,
-                pixfmt: PixelFormat::Rgb(24),
-                interval: time::Duration::from_secs_f64(1.0 / y.fps as f64),
-                flags: StreamFlags::NONE,
-            };
-            let _preferred = f(_x, _y);
-
-            if _preferred.width == x.width && _preferred.height == x.height {
-                x
-            } else {
-                y
-            }
-        });
-
-        let preferred = match preferred {
-            Some(fmt) => fmt,
-            None => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "failed to query formats",
-                ))
-            }
-        };
-
-        Ok(StreamDescriptor {
-            width: preferred.width,
-            height: preferred.height,
-            pixfmt: PixelFormat::Rgb(24),
-            interval: time::Duration::from_secs_f64(1.0 / preferred.fps as f64),
-            flags: StreamFlags::NONE,
-        })
     }
 
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {

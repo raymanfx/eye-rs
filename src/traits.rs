@@ -23,12 +23,6 @@ pub trait Device<'a> {
     /// Sets the control value, returns error for incompatible value types
     fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
 
-    /// Returns the current format in use by the device
-    fn preferred_stream(
-        &self,
-        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
-    ) -> io::Result<StreamDescriptor>;
-
     /// Returns a stream which produces images
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>>;
 }

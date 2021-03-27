@@ -147,24 +147,17 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.set_control(id, val)
     }
 
-    fn preferred_stream(
-        &self,
-        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
-    ) -> io::Result<StreamDescriptor> {
-        self.inner.preferred_stream(f)
-    }
-
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
-        if let Some(source_fmt) = self.emulated_formats.get(&desc.pixfmt) {
+        if let Some(source_pixfmt) = self.emulated_formats.get(&desc.pixfmt) {
             // start the native stream with the base pixfmt
-            let mut desc = desc.clone();
-            desc.pixfmt = source_fmt.clone();
-            let native_stream = self.inner.start_stream(&desc)?;
+            let mut source_fmt = desc.clone();
+            source_fmt.pixfmt = source_pixfmt.clone();
+            let native_stream = self.inner.start_stream(&source_fmt)?;
 
             // create the instance that converts the frames for us
             Ok(FrameStream::new(Box::new(ConvertStream {
                 inner: native_stream,
-                map: (desc.pixfmt.clone(), source_fmt.clone()),
+                map: (source_pixfmt.clone(), desc.pixfmt.clone()),
             })))
         } else {
             // no emulation required

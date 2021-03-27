@@ -40,30 +40,26 @@ Below you can find a quick example usage of this crate. It introduces the basics
 ```rust
 use eye::prelude::*;
 
-fn main() {
+fn main() -> io::Result<()> {
     // Query for available devices.
     let devices = Context::enumerate_devices();
     if devices.is_empty() {
-        println!("No devices available");
-        return;
+        return Err(io::Error::new(io::ErrorKind::NotFound, "No devices available"));
     }
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let dev = Device::with_uri(&devices[0]).expect("Failed to open video device");
+    let dev = Device::with_uri(&devices[0])?;
 
-    // Now fetch the current device format. The format contains parameters such as frame width,
-    // height and the buffer format (RGB, JPEG, etc).
-    let format = dev.get_format().expect("Failed to read native format");
+    // Query for available streams and just choose the first one.
+    let streams = dev.query_streams()?;
+    let stream_desc = streams[0].clone();
+    println!("Stream: {:?}", stream_desc);
 
     // Since we want to capture images, we need to access the native image stream of the device.
     // The backend will internally select a suitable implementation for the platform stream. On
     // Linux for example, most devices support memory-mapped buffers.
-    //
-    // Keep in mind that no format conversion is performed by default, so the frames you get in
-    // this stream are directly handed to you without any copy. If you need a common frame format
-    // such as raw RGB, you will have to create a seperate stream to perform the conversion.
-    let mut stream = dev.stream().expect("Failed to setup capture stream");
+    let mut stream = dev.start_stream(&stream_desc)?;
 
     // Here we create a loop and just capture images as long as the device produces them. Normally,
     // this loop will run forever unless we unplug the camera or exit the program.

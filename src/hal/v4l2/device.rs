@@ -181,31 +181,6 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn preferred_stream(
-        &self,
-        f: &dyn Fn(StreamDescriptor, StreamDescriptor) -> StreamDescriptor,
-    ) -> io::Result<StreamDescriptor> {
-        let mut preferred = None;
-        let streams = self.query_streams()?;
-        if streams.len() == 1 {
-            preferred = Some(streams[0].clone());
-        } else if streams.len() > 1 {
-            for i in 0..streams.len() - 2 {
-                preferred = Some(f(streams[i].clone(), streams[i + 1].clone()));
-            }
-        }
-
-        match preferred {
-            Some(desc) => Ok(desc),
-            None => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "no stream desciptors available",
-                ))
-            }
-        }
-    }
-
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
