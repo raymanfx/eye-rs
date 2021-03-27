@@ -8,11 +8,13 @@ use crate::hal::uvc::device::UvcHandle;
 use crate::traits::Stream;
 
 pub struct Handle<'a> {
+    rx: mpsc::Receiver<uvc::Result<uvc::Frame>>,
+    format: uvc::StreamFormat,
+
+    // these are required to keep the frame callback alive
     _stream: uvc::ActiveStream<'a, mpsc::SyncSender<uvc::Result<uvc::Frame>>>,
     _stream_handle: uvc::StreamHandle<'a>,
     _dev_handle: Arc<UvcHandle<'a>>,
-    format: uvc::StreamFormat,
-    rx: mpsc::Receiver<uvc::Result<uvc::Frame>>,
 }
 
 impl<'a> Handle<'a> {
@@ -26,15 +28,25 @@ impl<'a> Handle<'a> {
 
         // establish a rendezvous channel
         let (tx, rx) = mpsc::sync_channel(0);
-        let stream =
-            stream_handle_ref.start_stream(|frame, tx| tx.send(frame.to_rgb()).unwrap(), tx)?;
+        let stream = stream_handle_ref.start_stream(
+            |frame, tx| {
+                match tx.send(frame.to_rgb()) {
+                    Ok(()) => {}
+                    Err(_) => {
+                        // The receiving end hung up.
+                        // This should only ever happen once (when self.rx is dropped).
+                    }
+                }
+            },
+            tx,
+        )?;
 
         Ok(Handle {
+            rx,
+            format,
             _stream: stream,
             _stream_handle: stream_handle,
             _dev_handle: dev_handle,
-            format,
-            rx,
         })
     }
 }
@@ -47,6 +59,7 @@ impl<'a, 'b> Stream<'b> for Handle<'a> {
         let pixels = match &frame {
             Ok(frame) => frame.to_bytes(),
             Err(_) => {
+                // The format conversion failed. Pretend the stream died.
                 return None;
             }
         };
