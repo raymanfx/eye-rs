@@ -121,7 +121,9 @@ impl<'a> Device<'a> for Handle {
                 _ => {}
             }
 
-            let mut flags = control::Flags::NONE;
+            // assume controls to be readable and writable by default
+            let mut flags = control::Flags::READ | control::Flags::WRITE;
+
             if control.flags & v4l::control::Flags::READ_ONLY == v4l::control::Flags::READ_ONLY {
                 flags.remove(control::Flags::WRITE);
                 flags.insert(control::Flags::READ);
