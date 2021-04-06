@@ -1,3 +1,5 @@
+use std::io;
+
 use v4l::context;
 
 use crate::hal::v4l2::device::Handle;
@@ -7,8 +9,8 @@ use crate::traits::Context as ContextTrait;
 pub struct Context {}
 
 impl ContextTrait for Context {
-    fn enumerate_devices() -> Vec<String> {
-        context::enum_devices()
+    fn query_devices(&self) -> io::Result<Vec<String>> {
+        let nodes = context::enum_devices()
             .into_iter()
             .filter_map(|dev| {
                 let index = dev.index();
@@ -36,6 +38,8 @@ impl ContextTrait for Context {
 
                 Some(format!("/dev/video{}", index))
             })
-            .collect()
+            .collect();
+
+        Ok(nodes)
     }
 }

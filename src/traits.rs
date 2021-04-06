@@ -6,7 +6,7 @@ use crate::stream::{Descriptor as StreamDescriptor, FrameStream, Map};
 /// Platform context abstraction
 pub trait Context {
     /// Returns all devices currently available
-    fn enumerate_devices() -> Vec<String>;
+    fn query_devices(&self) -> io::Result<Vec<String>>;
 }
 
 /// Platform device abstraction

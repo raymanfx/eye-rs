@@ -4,13 +4,13 @@ use std::time::Instant;
 use eye::prelude::*;
 
 fn main() -> io::Result<()> {
+    // Create a context
+    let ctx = Context::new();
+
     // Query for available devices.
-    let devices = Context::enumerate_devices();
+    let devices = ctx.query_devices()?;
     if devices.is_empty() {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "No devices available",
-        ));
+        return Err(io::Error::new(io::ErrorKind::Other, "No devices available"));
     }
 
     // First, we need a capture device to read images from. For this example, let's just choose

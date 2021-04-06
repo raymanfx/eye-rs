@@ -1,25 +1,25 @@
+use std::io;
+
 use crate::traits::Context as ContextTrait;
 
 /// Runtime context
 pub struct Context {}
 
 impl ContextTrait for Context {
-    fn enumerate_devices() -> Vec<String> {
-        let ctx = if let Ok(ctx) = uvc::Context::new() {
-            ctx
-        } else {
-            return Vec::new();
+    fn query_devices(&self) -> io::Result<Vec<String>> {
+        let ctx = match uvc::Context::new() {
+            Ok(ctx) => ctx,
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
-        let devices = if let Ok(devices) = ctx.devices() {
-            devices
+        let devices = match ctx.devices() {
+            Ok(devices) => devices
                 .into_iter()
                 .map(|dev| format!("{}:{}", dev.bus_number(), dev.device_address()))
-                .collect()
-        } else {
-            Vec::new()
+                .collect(),
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
-        devices
+        Ok(devices)
     }
 }

@@ -7,3 +7,5 @@ pub mod context;
 pub mod control;
 pub mod device;
 pub mod stream;
+
+pub use context::Context;

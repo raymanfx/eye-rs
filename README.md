@@ -38,13 +38,17 @@ There are various HAL specific properties. For example, the v4l2 HAL on Linux su
 Below you can find a quick example usage of this crate. It introduces the basics necessary for image capturing.
 
 ```rust
+use std::io;
 use eye::prelude::*;
 
 fn main() -> io::Result<()> {
+    // Create a context
+    let ctx = Context::new();
+
     // Query for available devices.
-    let devices = Context::enumerate_devices();
+    let devices = ctx.query_devices()?;
     if devices.is_empty() {
-        return Err(io::Error::new(io::ErrorKind::NotFound, "No devices available"));
+        return Err(io::Error::new(io::ErrorKind::Other, "No devices available"));
     }
 
     // First, we need a capture device to read images from. For this example, let's just choose

@@ -30,13 +30,16 @@
 //! Here is a very brief example of streaming I/O:
 //!
 //! ```no_run
+//! use std::io;
 //! use eye::prelude::*;
 //!
+//! // Create a context
+//! let ctx = Context::new();
+//!
 //! // Query for available devices.
-//! let devices = Context::enumerate_devices();
+//! let devices = ctx.query_devices().expect("Failed to query devices");
 //! if devices.is_empty() {
-//!     println!("No devices available");
-//!     return;
+//!     panic!("No devices available");
 //! }
 //!
 //! // First, we need a capture device to read images from. For this example, let's just choose
@@ -80,6 +83,6 @@ pub mod prelude {
         context::Context,
         device::Device,
         format::{ImageFormat, PixelFormat},
-        traits::{Device as DeviceTrait, Stream as StreamTrait},
+        traits::{Context as ContextTrait, Device as DeviceTrait, Stream as StreamTrait},
     };
 }
