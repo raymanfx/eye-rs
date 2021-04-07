@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::{io, mem};
+use std::io;
 
 use v4l::buffer::Type as BufType;
 use v4l::io::mmap::Stream as MmapStream;
@@ -70,16 +70,12 @@ impl<'a> Handle<'a> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buffer = self.stream.get(self.stream_buf_index).unwrap();
-        let image = Frame {
+        let frame = Frame {
             buffer: Cow::Borrowed(buffer),
             format: self.format.clone(),
         };
 
-        // The Rust compiler thinks we're returning a value (view) which references data owned by
-        // the local function (frame). This is actually not the case since the data slice is
-        // memory mapped and thus the actual backing memory resides somewhere else
-        // (kernel, on-chip, etc).
-        unsafe { Ok(mem::transmute(image)) }
+        Ok(frame)
     }
 }
 
