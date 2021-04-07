@@ -1,7 +1,8 @@
 use std::io;
 
 use crate::control::{Control, Value as ControlValue};
-use crate::stream::{Descriptor as StreamDescriptor, FrameStream, Map};
+use crate::hal::Stream as StreamHAL;
+use crate::stream::{Descriptor as StreamDescriptor, Map};
 
 /// Platform context abstraction
 pub trait Context {
@@ -24,7 +25,7 @@ pub trait Device<'a> {
     fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>>;
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<StreamHAL<'a>>;
 }
 
 /// Stream abstraction

@@ -9,7 +9,8 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
-use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags, FrameStream};
+use crate::hal::Stream;
+use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags};
 use crate::traits::Device;
 
 pub struct Handle {
@@ -183,7 +184,7 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<Stream<'a>> {
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
@@ -202,7 +203,7 @@ impl<'a> Device<'a> for Handle {
         params.interval = v4l::Fraction::new(1, fps);
         self.inner.set_params(&params)?;
 
-        let stream = StreamHandle::new(self)?;
-        Ok(FrameStream::new(Box::new(stream)))
+        let handle = StreamHandle::new(self)?;
+        Ok(Stream::V4l2(handle))
     }
 }

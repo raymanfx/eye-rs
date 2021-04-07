@@ -5,7 +5,8 @@ use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
-use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags, FrameStream};
+use crate::hal::Stream;
+use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags};
 use crate::traits::Device;
 
 pub struct Handle<'a> {
@@ -75,7 +76,7 @@ impl<'a> Device<'a> for Handle<'a> {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<FrameStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<Stream<'a>> {
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
@@ -115,11 +116,10 @@ impl<'a> Device<'a> for Handle<'a> {
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };
 
-        let stream = match StreamHandle::new(dev_handle, stream_handle, stream_format) {
-            Ok(stream) => stream,
-            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
-        };
-        Ok(FrameStream::new(Box::new(stream)))
+        match StreamHandle::new(dev_handle, stream_handle, stream_format) {
+            Ok(handle) => Ok(Stream::Uvc(handle)),
+            Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+        }
     }
 }
 

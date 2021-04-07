@@ -34,28 +34,6 @@ where
     }
 }
 
-/// A stream producing frames
-pub struct FrameStream<'a> {
-    inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<Frame<'b>>> + Send>,
-}
-
-impl<'a> FrameStream<'a> {
-    /// Creates a new stream
-    pub fn new(
-        inner: Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<Frame<'b>>> + Send>,
-    ) -> Self {
-        FrameStream { inner }
-    }
-}
-
-impl<'a, 'b> Stream<'b> for FrameStream<'a> {
-    type Item = io::Result<Frame<'b>>;
-
-    fn next(&'b mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
-
 /// A stream converting frames
 pub struct ConvertStream<S> {
     pub inner: S,
