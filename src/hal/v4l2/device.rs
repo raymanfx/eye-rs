@@ -152,7 +152,7 @@ impl<'a> Device<'a> for Handle {
         Ok(controls)
     }
 
-    fn control(&self, id: u32) -> io::Result<control::Value> {
+    fn read_control(&self, id: u32) -> io::Result<control::Value> {
         let ctrl = self.inner.control(id)?;
         match ctrl {
             Control::Value(val) => Ok(control::Value::Integer(val as i64)),
@@ -163,7 +163,7 @@ impl<'a> Device<'a> for Handle {
         }
     }
 
-    fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
         match val {
             control::Value::Integer(val) => {
                 let ctrl = Control::Value(*val as i32);

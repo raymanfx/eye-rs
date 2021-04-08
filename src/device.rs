@@ -140,12 +140,12 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.query_controls()
     }
 
-    fn control(&self, id: u32) -> io::Result<control::Value> {
-        self.inner.control(id)
+    fn read_control(&self, id: u32) -> io::Result<control::Value> {
+        self.inner.read_control(id)
     }
 
-    fn set_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
-        self.inner.set_control(id, val)
+    fn write_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
+        self.inner.write_control(id, val)
     }
 
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<StreamHAL<'a>> {

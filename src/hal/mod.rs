@@ -72,23 +72,23 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         }
     }
 
-    fn control(&self, id: u32) -> io::Result<ControlValue> {
+    fn read_control(&self, id: u32) -> io::Result<ControlValue> {
         match self {
-            Device::Custom(dev) => dev.control(id),
+            Device::Custom(dev) => dev.read_control(id),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.control(id),
+            Device::V4l2(dev) => dev.read_control(id),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.control(id),
+            Device::Uvc(dev) => dev.read_control(id),
         }
     }
 
-    fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()> {
         match self {
-            Device::Custom(dev) => dev.set_control(id, val),
+            Device::Custom(dev) => dev.write_control(id, val),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.set_control(id, val),
+            Device::V4l2(dev) => dev.write_control(id, val),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.set_control(id, val),
+            Device::Uvc(dev) => dev.write_control(id, val),
         }
     }
 

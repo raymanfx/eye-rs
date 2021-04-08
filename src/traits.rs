@@ -19,10 +19,10 @@ pub trait Device<'a> {
     fn query_controls(&self) -> io::Result<Vec<Control>>;
 
     /// Returns the current control value for an ID
-    fn control(&self, id: u32) -> io::Result<ControlValue>;
+    fn read_control(&self, id: u32) -> io::Result<ControlValue>;
 
     /// Sets the control value, returns error for incompatible value types
-    fn set_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
+    fn write_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
 
     /// Returns a stream which produces images
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<StreamHAL<'a>>;
