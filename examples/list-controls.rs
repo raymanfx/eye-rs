@@ -1,6 +1,6 @@
 use std::io;
 
-use eye::control::{MenuItem, Representation};
+use eye::control::{MenuItem, Type};
 use eye::prelude::*;
 
 fn main() -> io::Result<()> {
@@ -20,40 +20,32 @@ fn main() -> io::Result<()> {
         for ctrl in &controls {
             println!("    * {}", ctrl.name);
             #[allow(unreachable_patterns)]
-            match &ctrl.repr {
-                Representation::Unknown => {
-                    println!("      Type    : Unknown");
-                }
-                Representation::Button => {
+            match &ctrl.typ {
+                Type::Stateless => {
                     println!("      Type    : Button");
                 }
-                Representation::Boolean => {
+                Type::Boolean => {
                     println!("      Type    : Boolean");
                 }
-                Representation::Integer {
-                    range,
-                    step,
-                    default,
-                } => {
-                    println!("      Type    : Integer");
+                Type::Number { range, step } => {
+                    println!("      Type    : Number");
                     println!("      Range   : ({}, {})", range.0, range.1);
                     println!("      Step    : {}", step);
-                    println!("      Default : {}", default);
                 }
-                Representation::String => {
+                Type::String => {
                     println!("      Type    : String");
                 }
-                Representation::Bitmask => {
+                Type::Bitmask => {
                     println!("      Type    : Bitmask");
                 }
-                Representation::Menu(items) => {
+                Type::Menu(items) => {
                     println!("      Type    : Menu ==>");
                     for item in items {
                         match item {
                             MenuItem::String(str) => {
                                 println!("       - {}", str);
                             }
-                            MenuItem::Integer(val) => {
+                            MenuItem::Number(val) => {
                                 println!("       - {}", val);
                             }
                         }

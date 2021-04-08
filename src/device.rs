@@ -136,15 +136,15 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Control>> {
+    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
         self.inner.query_controls()
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::Value> {
+    fn read_control(&self, id: u32) -> io::Result<control::State> {
         self.inner.read_control(id)
     }
 
-    fn write_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
         self.inner.write_control(id, val)
     }
 

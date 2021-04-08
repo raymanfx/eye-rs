@@ -2,18 +2,18 @@ use bitflags::bitflags;
 
 #[derive(Debug, Clone)]
 /// Device control
-pub struct Control {
+pub struct Descriptor {
     /// Unique identifier
     pub id: u32,
     /// Name
     pub name: String,
-    /// Representation for UIs
-    pub repr: Representation,
+    /// State type
+    pub typ: Type,
     /// State flags
     pub flags: Flags,
 }
 
-impl Control {
+impl Descriptor {
     /// Returns true if the control value can be read
     pub fn readable(&self) -> bool {
         self.flags & Flags::READ == Flags::READ
@@ -26,22 +26,18 @@ impl Control {
 }
 
 #[derive(Debug, Clone)]
-/// Device control representation
-pub enum Representation {
-    /// Unknown
-    Unknown,
+/// Device control type
+pub enum Type {
     /// Stateless controls
-    Button,
+    Stateless,
     /// On/Off switch
     Boolean,
-    /// Integer control
-    Integer {
+    /// Numerical control
+    Number {
         /// Valid value range (inclusive on both ends)
-        range: (i64, i64),
+        range: (f64, f64),
         /// Valid range step size
-        step: u64,
-        /// Default value
-        default: i64,
+        step: f32,
     },
     /// String control
     String,
@@ -54,10 +50,10 @@ pub enum Representation {
 #[derive(Debug, Clone)]
 /// Device control menu item
 pub enum MenuItem {
-    /// String representation, use this as fallback
+    /// String value
     String(String),
-    /// Integer representation
-    Integer(i64),
+    /// Numerical value
+    Number(f64),
 }
 
 bitflags! {
@@ -73,13 +69,13 @@ bitflags! {
 }
 
 #[derive(Debug, Clone)]
-/// Device control value representation
-pub enum Value {
+/// Device control state
+pub enum State {
     /* Stateless controls */
     None,
 
     /* Single value controls */
     String(String),
     Boolean(bool),
-    Integer(i64),
+    Number(f64),
 }

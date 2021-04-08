@@ -57,22 +57,22 @@ impl<'a> Device<'a> for Handle<'a> {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Control>> {
+    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
         let controls = Control::all()
             .into_iter()
-            .map(|ctrl| <control::Control>::from(&ctrl))
+            .map(|ctrl| <control::Descriptor>::from(&ctrl))
             .collect();
         Ok(controls)
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::Value> {
+    fn read_control(&self, id: u32) -> io::Result<control::State> {
         match Control::from_id(id) {
             Some(ctrl) => ctrl.get(&self.inner.handle),
             None => Err(io::Error::new(io::ErrorKind::Other, "unknown control ID")),
         }
     }
 
-    fn write_control(&mut self, _id: u32, _val: &control::Value) -> io::Result<()> {
+    fn write_control(&mut self, _id: u32, _val: &control::State) -> io::Result<()> {
         Err(io::Error::new(io::ErrorKind::Other, "not supported"))
     }
 

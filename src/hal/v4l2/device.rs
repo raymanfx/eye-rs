@@ -72,7 +72,7 @@ impl<'a> Device<'a> for Handle {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Control>> {
+    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
         let mut controls = Vec::new();
         let plat_controls = self.inner.query_controls()?;
 
@@ -82,18 +82,12 @@ impl<'a> Device<'a> for Handle {
                 continue;
             }
 
-            let mut repr = control::Representation::Unknown;
-            match control.typ {
-                ControlType::Integer | ControlType::Integer64 => {
-                    repr = control::Representation::Integer {
-                        range: (control.minimum as i64, control.maximum as i64),
-                        step: control.step as u64,
-                        default: control.default as i64,
-                    };
-                }
-                ControlType::Boolean => {
-                    repr = control::Representation::Boolean;
-                }
+            let state_type = match control.typ {
+                ControlType::Integer | ControlType::Integer64 => control::Type::Number {
+                    range: (control.minimum as f64, control.maximum as f64),
+                    step: control.step as f32,
+                },
+                ControlType::Boolean => control::Type::Boolean,
                 ControlType::Menu => {
                     let mut items = Vec::new();
                     if let Some(plat_items) = control.items {
@@ -103,24 +97,18 @@ impl<'a> Device<'a> for Handle {
                                     items.push(control::MenuItem::String(name));
                                 }
                                 ControlMenuItem::Value(value) => {
-                                    items.push(control::MenuItem::Integer(value));
+                                    items.push(control::MenuItem::Number(value as f64));
                                 }
                             }
                         }
                     }
-                    repr = control::Representation::Menu(items);
+                    control::Type::Menu(items)
                 }
-                ControlType::Button => {
-                    repr = control::Representation::Button;
-                }
-                ControlType::String => {
-                    repr = control::Representation::String;
-                }
-                ControlType::Bitmask => {
-                    repr = control::Representation::Bitmask;
-                }
-                _ => {}
-            }
+                ControlType::Button => control::Type::Stateless,
+                ControlType::String => control::Type::String,
+                ControlType::Bitmask => control::Type::Bitmask,
+                _ => continue,
+            };
 
             // assume controls to be readable and writable by default
             let mut flags = control::Flags::READ | control::Flags::WRITE;
@@ -141,10 +129,10 @@ impl<'a> Device<'a> for Handle {
                 flags.remove(control::Flags::WRITE);
             }
 
-            controls.push(control::Control {
+            controls.push(control::Descriptor {
                 id: control.id,
                 name: control.name,
-                repr,
+                typ: state_type,
                 flags,
             })
         }
@@ -152,10 +140,10 @@ impl<'a> Device<'a> for Handle {
         Ok(controls)
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::Value> {
+    fn read_control(&self, id: u32) -> io::Result<control::State> {
         let ctrl = self.inner.control(id)?;
         match ctrl {
-            Control::Value(val) => Ok(control::Value::Integer(val as i64)),
+            Control::Value(val) => Ok(control::State::Number(val as f64)),
             _ => Err(io::Error::new(
                 io::ErrorKind::Other,
                 "control type cannot be mapped",
@@ -163,13 +151,13 @@ impl<'a> Device<'a> for Handle {
         }
     }
 
-    fn write_control(&mut self, id: u32, val: &control::Value) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
         match val {
-            control::Value::Integer(val) => {
+            control::State::Number(val) => {
                 let ctrl = Control::Value(*val as i32);
                 self.inner.set_control(id, ctrl)?;
             }
-            control::Value::Boolean(val) => {
+            control::State::Boolean(val) => {
                 let ctrl = Control::Value(*val as i32);
                 self.inner.set_control(id, ctrl)?;
             }

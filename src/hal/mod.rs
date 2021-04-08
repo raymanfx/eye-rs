@@ -4,7 +4,7 @@
 
 use std::io;
 
-use crate::control::{Control, Value as ControlValue};
+use crate::control;
 use crate::frame::Frame;
 use crate::stream::Descriptor as StreamDescriptor;
 use crate::traits::{Context as ContextTrait, Device as DeviceTrait, Stream as StreamTrait};
@@ -62,7 +62,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         }
     }
 
-    fn query_controls(&self) -> io::Result<Vec<Control>> {
+    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
         match self {
             Device::Custom(dev) => dev.query_controls(),
             #[cfg(target_os = "linux")]
@@ -72,7 +72,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         }
     }
 
-    fn read_control(&self, id: u32) -> io::Result<ControlValue> {
+    fn read_control(&self, id: u32) -> io::Result<control::State> {
         match self {
             Device::Custom(dev) => dev.read_control(id),
             #[cfg(target_os = "linux")]
@@ -82,7 +82,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         }
     }
 
-    fn write_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
         match self {
             Device::Custom(dev) => dev.write_control(id, val),
             #[cfg(target_os = "linux")]

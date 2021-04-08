@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::control as EyeControl;
+use crate::control;
 
 pub(crate) enum Control {
     ScanningMode,
@@ -59,110 +59,106 @@ impl Control {
         }
     }
 
-    pub fn get(&self, handle: &uvc::DeviceHandle) -> io::Result<EyeControl::Value> {
+    pub fn get(&self, handle: &uvc::DeviceHandle) -> io::Result<control::State> {
         match self {
             Control::ScanningMode => match handle.scanning_mode() {
-                Ok(mode) => Ok(EyeControl::Value::String(format!("{:?}", mode))),
+                Ok(mode) => Ok(control::State::String(format!("{:?}", mode))),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
             Control::AutoExposureMode => match handle.ae_mode() {
-                Ok(mode) => Ok(EyeControl::Value::String(format!("{:?}", mode))),
+                Ok(mode) => Ok(control::State::String(format!("{:?}", mode))),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
             Control::AutoExposurePriority => match handle.ae_priority() {
-                Ok(mode) => Ok(EyeControl::Value::String(format!("{:?}", mode))),
+                Ok(mode) => Ok(control::State::String(format!("{:?}", mode))),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
             Control::ExposureAbsolute => match handle.exposure_abs() {
-                Ok(val) => Ok(EyeControl::Value::Integer(val as i64)),
+                Ok(val) => Ok(control::State::Number(val as f64)),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
             Control::ExposureRelative => match handle.exposure_rel() {
-                Ok(val) => Ok(EyeControl::Value::Integer(val as i64)),
+                Ok(val) => Ok(control::State::Number(val as f64)),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
             Control::FocusAbsolute => match handle.focus_abs() {
-                Ok(val) => Ok(EyeControl::Value::Integer(val as i64)),
+                Ok(val) => Ok(control::State::Number(val as f64)),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
             Control::FocusRelative => match handle.focus_rel() {
-                Ok((val, _speed)) => Ok(EyeControl::Value::Integer(val as i64)),
+                Ok((val, _speed)) => Ok(control::State::Number(val as f64)),
                 Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
             },
         }
     }
 }
 
-impl From<&Control> for EyeControl::Control {
+impl From<&Control> for control::Descriptor {
     fn from(ctrl: &Control) -> Self {
         match ctrl {
-            Control::ScanningMode => EyeControl::Control {
+            Control::ScanningMode => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Menu(vec![
-                    EyeControl::MenuItem::String(String::from("Interlaced")),
-                    EyeControl::MenuItem::String(String::from("Progressive")),
+                flags: control::Flags::READ,
+                typ: control::Type::Menu(vec![
+                    control::MenuItem::String(String::from("Interlaced")),
+                    control::MenuItem::String(String::from("Progressive")),
                 ]),
             },
-            Control::AutoExposureMode => EyeControl::Control {
+            Control::AutoExposureMode => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Menu(vec![
-                    EyeControl::MenuItem::String(String::from("Manual")),
-                    EyeControl::MenuItem::String(String::from("Auto")),
-                    EyeControl::MenuItem::String(String::from("ShutterPriority")),
-                    EyeControl::MenuItem::String(String::from("AperturePriority")),
+                flags: control::Flags::READ,
+                typ: control::Type::Menu(vec![
+                    control::MenuItem::String(String::from("Manual")),
+                    control::MenuItem::String(String::from("Auto")),
+                    control::MenuItem::String(String::from("ShutterPriority")),
+                    control::MenuItem::String(String::from("AperturePriority")),
                 ]),
             },
-            Control::AutoExposurePriority => EyeControl::Control {
+            Control::AutoExposurePriority => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Menu(vec![
-                    EyeControl::MenuItem::String(String::from("Constant")),
-                    EyeControl::MenuItem::String(String::from("Variable")),
+                flags: control::Flags::READ,
+                typ: control::Type::Menu(vec![
+                    control::MenuItem::String(String::from("Constant")),
+                    control::MenuItem::String(String::from("Variable")),
                 ]),
             },
-            Control::ExposureAbsolute => EyeControl::Control {
+            Control::ExposureAbsolute => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Integer {
-                    range: (u32::MIN as i64, u32::MAX as i64),
-                    step: 1,
-                    default: 0,
+                flags: control::Flags::READ,
+                typ: control::Type::Number {
+                    range: (u32::MIN as f64, u32::MAX as f64),
+                    step: 1.0,
                 },
             },
-            Control::ExposureRelative => EyeControl::Control {
+            Control::ExposureRelative => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Integer {
-                    range: (i8::MIN as i64, i8::MAX as i64),
-                    step: 1,
-                    default: 0,
+                flags: control::Flags::READ,
+                typ: control::Type::Number {
+                    range: (i8::MIN as f64, i8::MAX as f64),
+                    step: 1.0,
                 },
             },
-            Control::FocusAbsolute => EyeControl::Control {
+            Control::FocusAbsolute => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Integer {
-                    range: (u16::MIN as i64, u16::MAX as i64),
-                    step: 1,
-                    default: 0,
+                flags: control::Flags::READ,
+                typ: control::Type::Number {
+                    range: (u16::MIN as f64, u16::MAX as f64),
+                    step: 1.0,
                 },
             },
-            Control::FocusRelative => EyeControl::Control {
+            Control::FocusRelative => control::Descriptor {
                 id: ctrl.id(),
                 name: String::from(ctrl.name()),
-                flags: EyeControl::Flags::READ,
-                repr: EyeControl::Representation::Integer {
-                    range: (i8::MIN as i64, i8::MAX as i64),
-                    step: 1,
-                    default: 0,
+                flags: control::Flags::READ,
+                typ: control::Type::Number {
+                    range: (i8::MIN as f64, i8::MAX as f64),
+                    step: 1.0,
                 },
             },
         }

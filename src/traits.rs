@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::control::{Control, Value as ControlValue};
+use crate::control;
 use crate::hal::Stream as StreamHAL;
 use crate::stream::{Descriptor as StreamDescriptor, Map};
 
@@ -16,13 +16,13 @@ pub trait Device<'a> {
     fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>>;
 
     /// Returns the supported controls
-    fn query_controls(&self) -> io::Result<Vec<Control>>;
+    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>>;
 
     /// Returns the current control value for an ID
-    fn read_control(&self, id: u32) -> io::Result<ControlValue>;
+    fn read_control(&self, id: u32) -> io::Result<control::State>;
 
     /// Sets the control value, returns error for incompatible value types
-    fn write_control(&mut self, id: u32, val: &ControlValue) -> io::Result<()>;
+    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()>;
 
     /// Returns a stream which produces images
     fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<StreamHAL<'a>>;
