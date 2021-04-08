@@ -23,40 +23,18 @@ impl<'a> Device<'a> {
 
         #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
-            let path = _uri[6..].to_string();
-            let handle = crate::hal::v4l2::device::Handle::with_path(path)?;
+            let handle = crate::hal::v4l2::device::Handle::with_uri(_uri)?;
             inner = Some(DeviceHAL::V4l2(handle));
         }
 
         #[cfg(feature = "hal-uvc")]
         if _uri.starts_with("uvc://") {
-            let elems: Vec<&str> = _uri[6..].split(':').collect();
-            if elems.len() < 2 {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "failed to open device",
-                ));
-            }
-
-            let bus_number = if let Ok(index) = elems[0].parse::<u8>() {
-                index
-            } else {
-                return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI"));
-            };
-            let device_address = if let Ok(addr) = elems[1].parse::<u8>() {
-                addr
-            } else {
-                return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI"));
-            };
-
-            let handle = if let Ok(handle) =
-                crate::hal::uvc::device::Handle::new(bus_number, device_address)
-            {
+            let handle = if let Ok(handle) = crate::hal::uvc::device::Handle::with_uri(_uri) {
                 handle
             } else {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    "failed to create UVC context",
+                    "failed to open UVC device",
                 ));
             };
             inner = Some(DeviceHAL::Uvc(handle));

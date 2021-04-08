@@ -25,6 +25,16 @@ impl Handle {
         Ok(dev)
     }
 
+    pub fn with_uri<S: Into<String>>(uri: S) -> io::Result<Self> {
+        let uri = uri.into();
+        if uri.starts_with("v4l://") {
+            let path = uri[6..].to_string();
+            Self::with_path(path)
+        } else {
+            Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI"))
+        }
+    }
+
     pub fn with_path<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let dev = Handle {
             inner: CaptureDevice::with_path(path)?,

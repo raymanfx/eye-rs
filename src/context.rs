@@ -18,23 +18,17 @@ impl ContextTrait for Context {
         #[cfg(target_os = "linux")]
         {
             let ctx = crate::hal::v4l2::Context {};
-            let _list: Vec<String> = ctx
-                .query_devices()?
+            ctx.query_devices()?
                 .into_iter()
-                .map(|uri| format!("v4l://{}", uri))
-                .collect();
-            list.extend(_list);
+                .for_each(|uri| list.push(uri));
         }
 
         #[cfg(feature = "hal-uvc")]
         {
             let ctx = crate::hal::uvc::Context {};
-            let _list: Vec<String> = ctx
-                .query_devices()?
+            ctx.query_devices()?
                 .into_iter()
-                .map(|uri| format!("uvc://{}", uri))
-                .collect();
-            list.extend(_list);
+                .for_each(|uri| list.push(uri));
         }
 
         Ok(list)

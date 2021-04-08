@@ -36,7 +36,7 @@ impl ContextTrait for Context {
                     return None;
                 }
 
-                Some(format!("/dev/video{}", index))
+                Some(format!("v4l:///dev/video{}", index))
             })
             .collect();
 

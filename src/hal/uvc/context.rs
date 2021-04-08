@@ -15,7 +15,7 @@ impl ContextTrait for Context {
         let devices = match ctx.devices() {
             Ok(devices) => devices
                 .into_iter()
-                .map(|dev| format!("{}:{}", dev.bus_number(), dev.device_address()))
+                .map(|dev| format!("uvc://{}:{}", dev.bus_number(), dev.device_address()))
                 .collect(),
             Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         };

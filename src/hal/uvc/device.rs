@@ -21,6 +21,31 @@ impl<'a> Handle<'a> {
             inner: Arc::new(inner),
         })
     }
+
+    pub fn with_uri<S: Into<String>>(uri: S) -> uvc::Result<Self> {
+        let uri = uri.into();
+        if uri.starts_with("uvc://") {
+            let elems: Vec<&str> = uri[6..].split(':').collect();
+            if elems.len() < 2 {
+                return Err(uvc::Error::Other);
+            }
+
+            let bus_number = if let Ok(index) = elems[0].parse::<u8>() {
+                index
+            } else {
+                return Err(uvc::Error::Other);
+            };
+            let device_address = if let Ok(addr) = elems[1].parse::<u8>() {
+                addr
+            } else {
+                return Err(uvc::Error::Other);
+            };
+
+            Self::new(bus_number, device_address)
+        } else {
+            Err(uvc::Error::Other)
+        }
+    }
 }
 
 impl<'a> Device<'a> for Handle<'a> {
