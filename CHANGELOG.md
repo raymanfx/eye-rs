@@ -1,6 +1,19 @@
 # Changelog
 
-#### 0.3 (released)
+### 0.4
+> #### Added
+> * Universal Video Class (UVC) HAL
+>   - Tested on macOS and working well
+>   - Can work on Linux and Windows as well in theory
+> #### Changed
+> * HAL is now a leaky abstraction layer
+>   - Implementation details are available by matching the enum type
+> * Less `unsafe` in the HAL implementations
+> #### Removed
+> * openpnp-capture HAL
+>   - Too buggy
+
+### 0.3
 > * Linux/macOS: OpenPnP HAL
 >   - pulls in the Rust bindings for the C++ library
 > * Common: Context struct for device instance creation
@@ -11,7 +24,7 @@
 > * Common: Decouple stream lifetime from device lifetime
 >   - controls can now be changed while capturing
 
-#### 0.2 (released)
+### 0.2
 > * Common: PixelFormat struct
 > * Common: Transparent pixel format conversion for streams
 > * Common: JPEG decoding (feature = "jpeg")
@@ -19,6 +32,6 @@
 > * Linux: device enumeration
 > * Linux: control parameters
 
-#### 0.1 (released)
+### 0.1
 > * Linux: zero-copy capture
 > * Initial release
