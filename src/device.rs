@@ -4,14 +4,14 @@ use std::io;
 use crate::colorconvert::Converter;
 use crate::control;
 use crate::format::PixelFormat;
-use crate::hal::{Device as DeviceHAL, Stream as StreamHAL};
+use crate::hal::{PlatformDevice, PlatformStream};
 use crate::stream::{ConvertStream, Descriptor as StreamDescriptor, Flags as StreamFlags};
 use crate::traits::Device as DeviceTrait;
 
 /// A transparent wrapper type for native platform devices.
 pub struct Device<'a> {
     // actual platform device implementation
-    inner: DeviceHAL<'a>,
+    inner: PlatformDevice<'a>,
     // pixelformat emulation
     emulated_formats: HashMap<PixelFormat, PixelFormat>,
 }
@@ -19,12 +19,12 @@ pub struct Device<'a> {
 impl<'a> Device<'a> {
     pub fn with_uri<S: AsRef<str>>(_uri: S) -> io::Result<Self> {
         let _uri = _uri.as_ref();
-        let mut inner: Option<DeviceHAL<'a>> = None;
+        let mut inner: Option<PlatformDevice<'a>> = None;
 
         #[cfg(target_os = "linux")]
         if _uri.starts_with("v4l://") {
             let handle = crate::hal::v4l2::device::Handle::with_uri(_uri)?;
-            inner = Some(DeviceHAL::V4l2(handle));
+            inner = Some(PlatformDevice::V4l2(handle));
         }
 
         #[cfg(feature = "hal-uvc")]
@@ -37,7 +37,7 @@ impl<'a> Device<'a> {
                     "failed to open UVC device",
                 ));
             };
-            inner = Some(DeviceHAL::Uvc(handle));
+            inner = Some(PlatformDevice::Uvc(handle));
         }
 
         let inner = if let Some(dev) = inner {
@@ -126,7 +126,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         self.inner.write_control(id, val)
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<StreamHAL<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
         if let Some(source_pixfmt) = self.emulated_formats.get(&desc.pixfmt) {
             // start the native stream with the base pixfmt
             let mut source_fmt = desc.clone();
@@ -134,7 +134,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             let native_stream = self.inner.start_stream(&source_fmt)?;
 
             // create the instance that converts the frames for us
-            Ok(StreamHAL::Custom(Box::new(ConvertStream {
+            Ok(PlatformStream::Custom(Box::new(ConvertStream {
                 inner: native_stream,
                 map: (source_pixfmt.clone(), desc.pixfmt.clone()),
             })))

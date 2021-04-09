@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::control;
-use crate::hal::Stream as StreamHAL;
+use crate::hal::PlatformStream;
 use crate::stream::{Descriptor as StreamDescriptor, Map};
 
 /// Platform context abstraction
@@ -25,7 +25,7 @@ pub trait Device<'a> {
     fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<StreamHAL<'a>>;
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>>;
 }
 
 /// Stream abstraction

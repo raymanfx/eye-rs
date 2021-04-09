@@ -7,7 +7,7 @@ use std::io;
 use crate::control;
 use crate::frame::Frame;
 use crate::stream::Descriptor as StreamDescriptor;
-use crate::traits::{Context as ContextTrait, Device as DeviceTrait, Stream as StreamTrait};
+use crate::traits::{Context, Device, Stream};
 
 #[cfg(target_os = "linux")]
 pub(crate) mod v4l2;
@@ -16,9 +16,14 @@ pub(crate) mod v4l2;
 pub(crate) mod uvc;
 
 /// Platform context
-pub enum Context<'a> {
+///
+/// Leaky abstraction: if you require access to platform specific features, match the enum instance
+/// to get the underlying HAL implementation.
+///
+/// A context is used to query platform properties, available devices and more.
+pub enum PlatformContext<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + ContextTrait + Send>),
+    Custom(Box<dyn 'a + Context + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 context
     V4l2(v4l2::context::Context),
@@ -27,22 +32,27 @@ pub enum Context<'a> {
     Uvc(uvc::context::Context),
 }
 
-impl<'a> ContextTrait for Context<'a> {
+impl<'a> Context for PlatformContext<'a> {
     fn query_devices(&self) -> io::Result<Vec<String>> {
         match self {
-            Context::Custom(ctx) => ctx.query_devices(),
+            Self::Custom(ctx) => ctx.query_devices(),
             #[cfg(target_os = "linux")]
-            Context::V4l2(ctx) => ctx.query_devices(),
+            Self::V4l2(ctx) => ctx.query_devices(),
             #[cfg(feature = "hal-uvc")]
-            Context::Uvc(ctx) => ctx.query_devices(),
+            Self::Uvc(ctx) => ctx.query_devices(),
         }
     }
 }
 
 /// Platform device
-pub enum Device<'a> {
+///
+/// Leaky abstraction: if you require access to platform specific features, match the enum instance
+/// to get the underlying HAL implementation.
+///
+/// A device is used to read/write control properties, start video streams and more.
+pub enum PlatformDevice<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + DeviceTrait<'a> + Send>),
+    Custom(Box<dyn 'a + Device<'a> + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 device handle
     V4l2(v4l2::device::Handle),
@@ -51,62 +61,69 @@ pub enum Device<'a> {
     Uvc(uvc::device::Handle<'a>),
 }
 
-impl<'a> DeviceTrait<'a> for Device<'a> {
+impl<'a> Device<'a> for PlatformDevice<'a> {
     fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
         match self {
-            Device::Custom(dev) => dev.query_streams(),
+            Self::Custom(dev) => dev.query_streams(),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.query_streams(),
+            Self::V4l2(dev) => dev.query_streams(),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.query_streams(),
+            Self::Uvc(dev) => dev.query_streams(),
         }
     }
 
     fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
         match self {
-            Device::Custom(dev) => dev.query_controls(),
+            Self::Custom(dev) => dev.query_controls(),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.query_controls(),
+            Self::V4l2(dev) => dev.query_controls(),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.query_controls(),
+            Self::Uvc(dev) => dev.query_controls(),
         }
     }
 
     fn read_control(&self, id: u32) -> io::Result<control::State> {
         match self {
-            Device::Custom(dev) => dev.read_control(id),
+            Self::Custom(dev) => dev.read_control(id),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.read_control(id),
+            Self::V4l2(dev) => dev.read_control(id),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.read_control(id),
+            Self::Uvc(dev) => dev.read_control(id),
         }
     }
 
     fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
         match self {
-            Device::Custom(dev) => dev.write_control(id, val),
+            Self::Custom(dev) => dev.write_control(id, val),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.write_control(id, val),
+            Self::V4l2(dev) => dev.write_control(id, val),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.write_control(id, val),
+            Self::Uvc(dev) => dev.write_control(id, val),
         }
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<Stream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
         match self {
-            Device::Custom(dev) => dev.start_stream(desc),
+            Self::Custom(dev) => dev.start_stream(desc),
             #[cfg(target_os = "linux")]
-            Device::V4l2(dev) => dev.start_stream(desc),
+            Self::V4l2(dev) => dev.start_stream(desc),
             #[cfg(feature = "hal-uvc")]
-            Device::Uvc(dev) => dev.start_stream(desc),
+            Self::Uvc(dev) => dev.start_stream(desc),
         }
     }
 }
 
 /// Platform stream
-pub enum Stream<'a> {
+///
+/// Leaky abstraction: if you require access to platform specific features, match the enum instance
+/// to get the underlying HAL implementation.
+///
+/// A stream is used read frames from a camera device. Many HAL implementations feature advanced
+/// I/O method such as memory mapped streaming, DMA and more. We attempt to automatically select
+/// the best method available.
+pub enum PlatformStream<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + for<'b> StreamTrait<'b, Item = io::Result<Frame<'b>>> + Send>),
+    Custom(Box<dyn 'a + for<'b> Stream<'b, Item = io::Result<Frame<'b>>> + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 stream handle
     V4l2(v4l2::stream::Handle<'a>),
@@ -115,16 +132,16 @@ pub enum Stream<'a> {
     Uvc(uvc::stream::Handle<'a>),
 }
 
-impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
+impl<'a, 'b> Stream<'b> for PlatformStream<'a> {
     type Item = io::Result<Frame<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         match self {
-            Stream::Custom(stream) => stream.next(),
+            Self::Custom(stream) => stream.next(),
             #[cfg(target_os = "linux")]
-            Stream::V4l2(stream) => stream.next(),
+            Self::V4l2(stream) => stream.next(),
             #[cfg(feature = "hal-uvc")]
-            Stream::Uvc(stream) => stream.next(),
+            Self::Uvc(stream) => stream.next(),
         }
     }
 }

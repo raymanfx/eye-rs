@@ -9,7 +9,7 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
-use crate::hal::Stream;
+use crate::hal::PlatformStream;
 use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags};
 use crate::traits::Device;
 
@@ -182,7 +182,7 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<Stream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
@@ -202,6 +202,6 @@ impl<'a> Device<'a> for Handle {
         self.inner.set_params(&params)?;
 
         let handle = StreamHandle::new(self)?;
-        Ok(Stream::V4l2(handle))
+        Ok(PlatformStream::V4l2(handle))
     }
 }
