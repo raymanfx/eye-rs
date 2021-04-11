@@ -60,7 +60,7 @@ jobs:
         override: true
         profile: minimal
     - name: Run tests
-      run: cargo test
+      run: cargo test --manifest-path=eye/Cargo.toml
 
   check:
     name: check
@@ -77,7 +77,7 @@ jobs:
     - name: Check
       run: cargo check --no-default-features
     - name: Check examples
-      run: cargo check --no-default-features --examples
+      run: cargo check --manifest-path=eye/Cargo.toml --no-default-features --examples
 
   check-hals:
     name: check-hals
@@ -103,4 +103,4 @@ jobs:
         profile: minimal
         override: true
     - name: Check
-      run: cargo check --no-default-features ${{ matrix.features }}
+      run: cargo check --manifest-path=eye/Cargo.toml --no-default-features ${{ matrix.features }}
