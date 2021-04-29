@@ -70,6 +70,12 @@ impl<'a> Handle<'a> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buffer = self.stream.get(self.stream_buf_index).unwrap();
+        let meta = self.stream.get_meta(self.stream_buf_index).unwrap();
+
+        // For compressed formats, the buffer length will not actually describe the number of bytes
+        // in a frame. Instead, we have to explicitly query about the amount of used bytes.
+        let buffer = &buffer[0..meta.bytesused as usize];
+
         let frame = Frame {
             buffer: Cow::Borrowed(buffer),
             format: self.format.clone(),
