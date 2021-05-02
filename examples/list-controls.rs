@@ -1,9 +1,8 @@
-use std::io;
-
 use eye::control::{MenuItem, Type};
 use eye::prelude::*;
+use eye::Result;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     // Create a context
     let ctx = Context::new();
 

@@ -1,7 +1,6 @@
-use std::io;
-
 use v4l::context;
 
+use crate::error::Result;
 use crate::hal::v4l2::device::Handle;
 use crate::traits::Context as ContextTrait;
 
@@ -9,7 +8,7 @@ use crate::traits::Context as ContextTrait;
 pub struct Context {}
 
 impl ContextTrait for Context {
-    fn query_devices(&self) -> io::Result<Vec<String>> {
+    fn query_devices(&self) -> Result<Vec<String>> {
         let nodes = context::enum_devices()
             .into_iter()
             .filter_map(|dev| {

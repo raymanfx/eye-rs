@@ -69,6 +69,7 @@
 pub mod colorconvert;
 pub mod context;
 pub mod control;
+pub mod error;
 pub mod format;
 pub mod frame;
 pub mod stream;
@@ -77,6 +78,8 @@ pub mod traits;
 pub mod hal;
 
 pub mod device;
+
+pub use error::{Error, ErrorKind, Result};
 
 pub mod prelude {
     pub use crate::{

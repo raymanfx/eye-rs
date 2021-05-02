@@ -1,5 +1,4 @@
-use std::io;
-
+use crate::error::Result;
 use crate::traits::Context as ContextTrait;
 
 /// Runtime context
@@ -12,7 +11,7 @@ impl Context {
 }
 
 impl ContextTrait for Context {
-    fn query_devices(&self) -> io::Result<Vec<String>> {
+    fn query_devices(&self) -> Result<Vec<String>> {
         let mut list = Vec::new();
 
         #[cfg(target_os = "linux")]

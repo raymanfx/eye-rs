@@ -1,7 +1,7 @@
-use std::io;
 use std::sync::Arc;
 
 use crate::control;
+use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
 use crate::hal::uvc::control::Control;
 use crate::hal::uvc::stream::Handle as StreamHandle;
@@ -49,7 +49,7 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a> Device<'a> for Handle<'a> {
-    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
+    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
         let mut streams = Vec::new();
 
         self.inner
@@ -82,7 +82,7 @@ impl<'a> Device<'a> for Handle<'a> {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
+    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
         let controls = Control::all()
             .into_iter()
             .map(|ctrl| <control::Descriptor>::from(&ctrl))
@@ -90,18 +90,18 @@ impl<'a> Device<'a> for Handle<'a> {
         Ok(controls)
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::State> {
+    fn read_control(&self, id: u32) -> Result<control::State> {
         match Control::from_id(id) {
             Some(ctrl) => ctrl.get(&self.inner.handle),
-            None => Err(io::Error::new(io::ErrorKind::Other, "unknown control ID")),
+            None => Err(Error::new(ErrorKind::Other, "unknown control ID")),
         }
     }
 
-    fn write_control(&mut self, _id: u32, _val: &control::State) -> io::Result<()> {
-        Err(io::Error::new(io::ErrorKind::Other, "not supported"))
+    fn write_control(&mut self, _id: u32, _val: &control::State) -> Result<()> {
+        Err(Error::from(ErrorKind::NotSupported))
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
@@ -120,30 +120,22 @@ impl<'a> Device<'a> for Handle<'a> {
         let stream_format = match stream_format {
             Some(fmt) => {
                 if fmt.width != desc.width || fmt.height != desc.height {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        "invalid stream descriptor",
-                    ));
+                    return Err(Error::new(ErrorKind::Other, "invalid stream descriptor"));
                 }
 
                 fmt
             }
-            None => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "failed to query formats",
-                ))
-            }
+            None => return Err(Error::new(ErrorKind::Other, "failed to query formats")),
         };
 
         let stream_handle = match dev_handle_ref.get_stream_handle_with_format(stream_format) {
             Ok(handle) => handle,
-            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
+            Err(e) => return Err(Error::new(ErrorKind::Other, e)),
         };
 
         match StreamHandle::new(dev_handle, stream_handle, stream_format) {
             Ok(handle) => Ok(PlatformStream::Uvc(handle)),
-            Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+            Err(e) => Err(Error::new(ErrorKind::Other, e)),
         }
     }
 }

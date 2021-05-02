@@ -7,6 +7,7 @@ use v4l::Format as CaptureFormat;
 use v4l::FourCC as FourCC_;
 
 use crate::control;
+use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
 use crate::hal::v4l2::stream::Handle as StreamHandle;
 use crate::hal::PlatformStream;
@@ -48,7 +49,7 @@ impl Handle {
 }
 
 impl<'a> Device<'a> for Handle {
-    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
+    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
         let mut streams = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
@@ -82,7 +83,7 @@ impl<'a> Device<'a> for Handle {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
+    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
         let mut controls = Vec::new();
         let plat_controls = self.inner.query_controls()?;
 
@@ -150,18 +151,18 @@ impl<'a> Device<'a> for Handle {
         Ok(controls)
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::State> {
+    fn read_control(&self, id: u32) -> Result<control::State> {
         let ctrl = self.inner.control(id)?;
         match ctrl {
             Control::Value(val) => Ok(control::State::Number(val as f64)),
-            _ => Err(io::Error::new(
-                io::ErrorKind::Other,
+            _ => Err(Error::new(
+                ErrorKind::Other,
                 "control type cannot be mapped",
             )),
         }
     }
 
-    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()> {
         match val {
             control::State::Number(val) => {
                 let ctrl = Control::Value(*val as i32);
@@ -172,8 +173,8 @@ impl<'a> Device<'a> for Handle {
                 self.inner.set_control(id, ctrl)?;
             }
             _ => {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
+                return Err(Error::new(
+                    ErrorKind::Other,
                     "control type cannot be mapped",
                 ))
             }
@@ -182,12 +183,12 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(Error::new(
+                ErrorKind::Other,
                 "failed to map pixelformat to fourcc",
             ));
         };

@@ -1,6 +1,5 @@
-use std::io;
-
 use crate::control;
+use crate::error::{Error, ErrorKind, Result};
 
 pub(crate) enum Control {
     ScanningMode,
@@ -59,35 +58,35 @@ impl Control {
         }
     }
 
-    pub fn get(&self, handle: &uvc::DeviceHandle) -> io::Result<control::State> {
+    pub fn get(&self, handle: &uvc::DeviceHandle) -> Result<control::State> {
         match self {
             Control::ScanningMode => match handle.scanning_mode() {
                 Ok(mode) => Ok(control::State::String(format!("{:?}", mode))),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
             Control::AutoExposureMode => match handle.ae_mode() {
                 Ok(mode) => Ok(control::State::String(format!("{:?}", mode))),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
             Control::AutoExposurePriority => match handle.ae_priority() {
                 Ok(mode) => Ok(control::State::String(format!("{:?}", mode))),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
             Control::ExposureAbsolute => match handle.exposure_abs() {
                 Ok(val) => Ok(control::State::Number(val as f64)),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
             Control::ExposureRelative => match handle.exposure_rel() {
                 Ok(val) => Ok(control::State::Number(val as f64)),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
             Control::FocusAbsolute => match handle.focus_abs() {
                 Ok(val) => Ok(control::State::Number(val as f64)),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
             Control::FocusRelative => match handle.focus_rel() {
                 Ok((val, _speed)) => Ok(control::State::Number(val as f64)),
-                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e)),
+                Err(e) => Err(Error::new(ErrorKind::Other, e)),
             },
         }
     }

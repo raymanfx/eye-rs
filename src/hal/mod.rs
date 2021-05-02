@@ -5,6 +5,7 @@
 use std::io;
 
 use crate::control;
+use crate::error::Result;
 use crate::frame::Frame;
 use crate::stream::Descriptor as StreamDescriptor;
 use crate::traits::{Context, Device, Stream};
@@ -33,7 +34,7 @@ pub enum PlatformContext<'a> {
 }
 
 impl<'a> Context for PlatformContext<'a> {
-    fn query_devices(&self) -> io::Result<Vec<String>> {
+    fn query_devices(&self) -> Result<Vec<String>> {
         match self {
             Self::Custom(ctx) => ctx.query_devices(),
             #[cfg(target_os = "linux")]
@@ -62,7 +63,7 @@ pub enum PlatformDevice<'a> {
 }
 
 impl<'a> Device<'a> for PlatformDevice<'a> {
-    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
+    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
         match self {
             Self::Custom(dev) => dev.query_streams(),
             #[cfg(target_os = "linux")]
@@ -72,7 +73,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         }
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
+    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
         match self {
             Self::Custom(dev) => dev.query_controls(),
             #[cfg(target_os = "linux")]
@@ -82,7 +83,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         }
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::State> {
+    fn read_control(&self, id: u32) -> Result<control::State> {
         match self {
             Self::Custom(dev) => dev.read_control(id),
             #[cfg(target_os = "linux")]
@@ -92,7 +93,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         }
     }
 
-    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()> {
         match self {
             Self::Custom(dev) => dev.write_control(id, val),
             #[cfg(target_os = "linux")]
@@ -102,7 +103,7 @@ impl<'a> Device<'a> for PlatformDevice<'a> {
         }
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
         match self {
             Self::Custom(dev) => dev.start_stream(desc),
             #[cfg(target_os = "linux")]

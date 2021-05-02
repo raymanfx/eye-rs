@@ -1,8 +1,7 @@
-use std::io;
-
 use eye::prelude::*;
+use eye::Result;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     // Create a context
     let ctx = Context::new();
 

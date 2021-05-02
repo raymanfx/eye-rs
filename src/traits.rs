@@ -1,31 +1,30 @@
-use std::io;
-
 use crate::control;
+use crate::error::Result;
 use crate::hal::PlatformStream;
 use crate::stream::{Descriptor as StreamDescriptor, Map};
 
 /// Platform context abstraction
 pub trait Context {
     /// Returns all devices currently available
-    fn query_devices(&self) -> io::Result<Vec<String>>;
+    fn query_devices(&self) -> Result<Vec<String>>;
 }
 
 /// Platform device abstraction
 pub trait Device<'a> {
     /// Returns the supported streams
-    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>>;
+    fn query_streams(&self) -> Result<Vec<StreamDescriptor>>;
 
     /// Returns the supported controls
-    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>>;
+    fn query_controls(&self) -> Result<Vec<control::Descriptor>>;
 
     /// Returns the current control value for an ID
-    fn read_control(&self, id: u32) -> io::Result<control::State>;
+    fn read_control(&self, id: u32) -> Result<control::State>;
 
     /// Sets the control value, returns error for incompatible value types
-    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()>;
+    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>>;
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>>;
 }
 
 /// Stream abstraction

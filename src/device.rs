@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::io;
 
 use crate::colorconvert::Converter;
 use crate::control;
+use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
 use crate::hal::{PlatformDevice, PlatformStream};
 use crate::stream::{ConvertStream, Descriptor as StreamDescriptor, Flags as StreamFlags};
@@ -17,7 +17,7 @@ pub struct Device<'a> {
 }
 
 impl<'a> Device<'a> {
-    pub fn with_uri<S: AsRef<str>>(_uri: S) -> io::Result<Self> {
+    pub fn with_uri<S: AsRef<str>>(_uri: S) -> Result<Self> {
         let _uri = _uri.as_ref();
         let mut inner: Option<PlatformDevice<'a>> = None;
 
@@ -32,10 +32,7 @@ impl<'a> Device<'a> {
             let handle = if let Ok(handle) = crate::hal::uvc::device::Handle::with_uri(_uri) {
                 handle
             } else {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "failed to open UVC device",
-                ));
+                return Err(Error::new(ErrorKind::Other, "failed to open UVC device"));
             };
             inner = Some(PlatformDevice::Uvc(handle));
         }
@@ -43,8 +40,8 @@ impl<'a> Device<'a> {
         let inner = if let Some(dev) = inner {
             dev
         } else {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(Error::new(
+                ErrorKind::Other,
                 "No suitable backend available",
             ));
         };
@@ -84,7 +81,7 @@ impl<'a> Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
-    fn query_streams(&self) -> io::Result<Vec<StreamDescriptor>> {
+    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
         // get all the native streams
         let native = self.inner.query_streams()?;
 
@@ -114,19 +111,19 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> io::Result<Vec<control::Descriptor>> {
+    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
         self.inner.query_controls()
     }
 
-    fn read_control(&self, id: u32) -> io::Result<control::State> {
+    fn read_control(&self, id: u32) -> Result<control::State> {
         self.inner.read_control(id)
     }
 
-    fn write_control(&mut self, id: u32, val: &control::State) -> io::Result<()> {
+    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()> {
         self.inner.write_control(id, val)
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> io::Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
         if let Some(source_pixfmt) = self.emulated_formats.get(&desc.pixfmt) {
             // start the native stream with the base pixfmt
             let mut source_fmt = desc.clone();

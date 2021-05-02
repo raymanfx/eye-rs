@@ -6,6 +6,7 @@ use v4l::io::mmap::Stream as MmapStream;
 use v4l::io::traits::{CaptureStream, Stream as _};
 use v4l::video::Capture;
 
+use crate::error::Result;
 use crate::format::{ImageFormat, PixelFormat};
 use crate::frame::Frame;
 use crate::hal::v4l2::device::Handle as DeviceHandle;
@@ -19,7 +20,7 @@ pub struct Handle<'a> {
 }
 
 impl<'a> Handle<'a> {
-    pub fn new(dev: &DeviceHandle) -> io::Result<Self> {
+    pub fn new(dev: &DeviceHandle) -> Result<Self> {
         let format_ = dev.inner().format()?;
         let format = ImageFormat::new(
             format_.width,
