@@ -29,10 +29,9 @@ impl<'a> Device<'a> {
 
         #[cfg(feature = "hal-uvc")]
         if _uri.starts_with("uvc://") {
-            let handle = if let Ok(handle) = crate::hal::uvc::device::Handle::with_uri(_uri) {
-                handle
-            } else {
-                return Err(Error::new(ErrorKind::Other, "failed to open UVC device"));
+            let handle = match crate::hal::uvc::device::Handle::with_uri(_uri) {
+                Ok(handle) => handle,
+                Err(e) => return Err(Error::new(ErrorKind::Other, format!("UVC: {}", e))),
             };
             inner = Some(PlatformDevice::Uvc(handle));
         }
