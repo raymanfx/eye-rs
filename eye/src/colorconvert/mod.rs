@@ -1,9 +1,9 @@
+use eye_hal::format::{ImageFormat, PixelFormat};
+
 mod rgb;
 
 #[cfg(feature = "jpeg")]
 mod jpeg;
-
-use crate::format::{ImageFormat, PixelFormat};
 
 pub struct Converter {}
 

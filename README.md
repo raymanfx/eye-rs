@@ -28,9 +28,9 @@ which can be queried at runtime so device parameters can be configured according
 
 | Feature                                       | Linux     | Windows   | macOS     |
 | --------------------------------------------- |:---------:|:---------:|:---------:|
-| Image capture                                 | &check;   | &#10540;  | &check;   |
-| Device enumeration                            | &check;   | &#10540;  | &check;   |
-| Device parameters (Focus, White Balance, ...) | &check;   | &#10540;  | &#10540;  |
+| Image capture                                 | &check;   | &check;   | &check;   |
+| Device enumeration                            | &check;   | &check;   | &check;   |
+| Device parameters (Focus, White Balance, ...) | &check;   | &check;   | &check;   |
 
 There are various HAL specific properties. For example, the v4l2 HAL on Linux supports zero-copy capture (as far as userspace is concerned - the kernel driver may still perform a copy). Those will be enumerated here in the future.
 
@@ -38,19 +38,19 @@ There are various HAL specific properties. For example, the v4l2 HAL on Linux su
 Below you can find a quick example usage of this crate. It introduces the basics necessary for image capturing.
 
 ```rust
-use eye::prelude::*;
-use eye::Result;
+use eye_hal::PlatformContext;
+use eye_hal::traits::{Context, Device, Stream};
 
 fn main() -> Result<()> {
     // Create a context
-    let ctx = Context::new();
+    let ctx = PlatformContext::default();
 
     // Query for available devices.
     let devices = ctx.query_devices()?;
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let dev = Device::with_uri(&devices[0])?;
+    let dev = ctx.open_device(&devices[0])?;
 
     // Query for available streams and just choose the first one.
     let streams = dev.query_streams()?;

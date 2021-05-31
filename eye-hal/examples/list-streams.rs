@@ -1,20 +1,20 @@
 use itertools::Itertools;
 
-use eye::prelude::*;
-use eye::Result;
+use eye_hal::traits::{Context, Device};
+use eye_hal::{PlatformContext, Result};
 
 fn main() -> Result<()> {
     // Create a context
-    let ctx = Context::new();
+    let ctx = PlatformContext::default();
 
     // Create a list of valid capture devices in the system.
-    let list = ctx.query_devices()?;
+    let list = ctx.devices()?;
 
     // Print the supported formats for each device.
     for uri in list {
         println!("{}", uri);
-        let dev = Device::with_uri(&uri)?;
-        let streams = dev.query_streams()?;
+        let dev = ctx.open_device(&uri)?;
+        let streams = dev.streams()?;
 
         println!("  Streams:");
         for (pixfmt, streams) in &streams.into_iter().group_by(|desc| desc.pixfmt.clone()) {

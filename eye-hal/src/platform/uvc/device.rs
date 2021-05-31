@@ -3,10 +3,10 @@ use std::sync::Arc;
 use crate::control;
 use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
-use crate::hal::uvc::control::Control;
-use crate::hal::uvc::stream::Handle as StreamHandle;
-use crate::hal::PlatformStream;
-use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags};
+use crate::platform::uvc::control::Control;
+use crate::platform::uvc::stream::Handle as StreamHandle;
+use crate::platform::Stream as PlatformStream;
+use crate::stream;
 use crate::traits::Device;
 
 pub struct Handle<'a> {
@@ -49,7 +49,7 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a> Device<'a> for Handle<'a> {
-    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
+    fn streams(&self) -> Result<Vec<stream::Descriptor>> {
         let mut streams = Vec::new();
 
         self.inner
@@ -68,12 +68,11 @@ impl<'a> Device<'a> for Handle<'a> {
                         };
 
                         for interval in frame_desc.intervals_duration() {
-                            streams.push(StreamDescriptor {
+                            streams.push(stream::Descriptor {
                                 width: frame_desc.width() as u32,
                                 height: frame_desc.height() as u32,
                                 pixfmt: pixfmt.clone(),
                                 interval,
-                                flags: StreamFlags::NONE,
                             });
                         }
                     });
@@ -82,7 +81,7 @@ impl<'a> Device<'a> for Handle<'a> {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
+    fn controls(&self) -> Result<Vec<control::Descriptor>> {
         let controls = Control::all()
             .into_iter()
             .map(|ctrl| <control::Descriptor>::from(&ctrl))
@@ -90,18 +89,18 @@ impl<'a> Device<'a> for Handle<'a> {
         Ok(controls)
     }
 
-    fn read_control(&self, id: u32) -> Result<control::State> {
+    fn control(&self, id: u32) -> Result<control::State> {
         match Control::from_id(id) {
             Some(ctrl) => ctrl.get(&self.inner.handle),
             None => Err(Error::new(ErrorKind::Other, "unknown control ID")),
         }
     }
 
-    fn write_control(&mut self, _id: u32, _val: &control::State) -> Result<()> {
+    fn set_control(&mut self, _id: u32, _val: &control::State) -> Result<()> {
         Err(Error::from(ErrorKind::NotSupported))
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>> {
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
@@ -133,7 +132,7 @@ impl<'a> Device<'a> for Handle<'a> {
             Err(e) => return Err(Error::new(ErrorKind::Other, e)),
         };
 
-        match StreamHandle::new(dev_handle, stream_handle, stream_format) {
+        match StreamHandle::new(dev_handle, stream_handle) {
             Ok(handle) => Ok(PlatformStream::Uvc(handle)),
             Err(e) => Err(Error::new(ErrorKind::Other, e)),
         }

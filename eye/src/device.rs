@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
+use eye_hal::error::Result;
+use eye_hal::format::PixelFormat;
+use eye_hal::platform::Context as PlatformContext;
+use eye_hal::platform::{Device as PlatformDevice, Stream as PlatformStream};
+use eye_hal::traits::{Context, Device as DeviceTrait};
+use eye_hal::{control, stream};
+
 use crate::colorconvert::Converter;
-use crate::control;
-use crate::error::{Error, ErrorKind, Result};
-use crate::format::PixelFormat;
-use crate::hal::{PlatformDevice, PlatformStream};
-use crate::stream::{ConvertStream, Descriptor as StreamDescriptor, Flags as StreamFlags};
-use crate::traits::Device as DeviceTrait;
+use crate::stream::ConvertStream;
 
 /// A transparent wrapper type for native platform devices.
 pub struct Device<'a> {
@@ -17,35 +19,9 @@ pub struct Device<'a> {
 }
 
 impl<'a> Device<'a> {
-    pub fn with_uri<S: AsRef<str>>(_uri: S) -> Result<Self> {
-        let _uri = _uri.as_ref();
-        let mut inner: Option<PlatformDevice<'a>> = None;
-
-        #[cfg(target_os = "linux")]
-        if _uri.starts_with("v4l://") {
-            let handle = crate::hal::v4l2::device::Handle::with_uri(_uri)?;
-            inner = Some(PlatformDevice::V4l2(handle));
-        }
-
-        #[cfg(feature = "hal-uvc")]
-        if _uri.starts_with("uvc://") {
-            let handle = match crate::hal::uvc::device::Handle::with_uri(_uri) {
-                Ok(handle) => handle,
-                Err(e) => return Err(Error::new(ErrorKind::Other, format!("UVC: {}", e))),
-            };
-            inner = Some(PlatformDevice::Uvc(handle));
-        }
-
-        let inner = if let Some(dev) = inner {
-            dev
-        } else {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "No suitable backend available",
-            ));
-        };
-
-        let native_streams = inner.query_streams()?;
+    pub fn new(dev: PlatformDevice<'a>) -> Result<Self> {
+        let inner = dev;
+        let native_streams = inner.streams()?;
         let converter_formats = Converter::formats();
         let mut emulated_formats = HashMap::new();
 
@@ -77,15 +53,23 @@ impl<'a> Device<'a> {
             emulated_formats,
         })
     }
+
+    pub fn with_uri<S: AsRef<str>>(uri: S) -> Result<Self> {
+        let uri = uri.as_ref();
+        let ctx = PlatformContext::default();
+        let inner = ctx.open_device(uri)?;
+
+        Self::new(inner)
+    }
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
-    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
+    fn streams(&self) -> Result<Vec<stream::Descriptor>> {
         // get all the native streams
-        let native = self.inner.query_streams()?;
+        let native = self.inner.streams()?;
 
         // now check which formats we can emulate
-        let mut emulated: Vec<StreamDescriptor> = Vec::new();
+        let mut emulated: Vec<stream::Descriptor> = Vec::new();
         self.emulated_formats.iter().for_each(|mapping| {
             let streams = native.iter().filter_map(|stream| {
                 if &stream.pixfmt == mapping.1 {
@@ -96,12 +80,11 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             });
 
             streams.for_each(|stream| {
-                emulated.push(StreamDescriptor {
+                emulated.push(stream::Descriptor {
                     width: stream.width,
                     height: stream.height,
                     pixfmt: mapping.0.clone(),
                     interval: stream.interval,
-                    flags: stream.flags | StreamFlags::EMULATED,
                 });
             });
         });
@@ -110,19 +93,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
-        self.inner.query_controls()
-    }
-
-    fn read_control(&self, id: u32) -> Result<control::State> {
-        self.inner.read_control(id)
-    }
-
-    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()> {
-        self.inner.write_control(id, val)
-    }
-
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>> {
         if let Some(source_pixfmt) = self.emulated_formats.get(&desc.pixfmt) {
             // start the native stream with the base pixfmt
             let mut source_fmt = desc.clone();
@@ -132,11 +103,24 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             // create the instance that converts the frames for us
             Ok(PlatformStream::Custom(Box::new(ConvertStream {
                 inner: native_stream,
+                desc: desc.clone(),
                 map: (source_pixfmt.clone(), desc.pixfmt.clone()),
             })))
         } else {
             // no emulation required
             self.inner.start_stream(desc)
         }
+    }
+
+    fn controls(&self) -> Result<Vec<control::Descriptor>> {
+        self.inner.controls()
+    }
+
+    fn control(&self, id: u32) -> Result<control::State> {
+        self.inner.control(id)
+    }
+
+    fn set_control(&mut self, id: u32, val: &control::State) -> Result<()> {
+        self.inner.set_control(id, val)
     }
 }

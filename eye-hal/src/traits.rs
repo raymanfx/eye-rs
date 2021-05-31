@@ -1,30 +1,33 @@
 use crate::control;
 use crate::error::Result;
-use crate::hal::PlatformStream;
-use crate::stream::{Descriptor as StreamDescriptor, Map};
+use crate::platform::{Device as PlatformDevice, Stream as PlatformStream};
+use crate::stream;
 
 /// Platform context abstraction
 pub trait Context {
     /// Returns all devices currently available
-    fn query_devices(&self) -> Result<Vec<String>>;
+    fn devices(&self) -> Result<Vec<String>>;
+
+    /// Opens a device handle
+    fn open_device<'a>(&self, uri: &str) -> Result<PlatformDevice<'a>>;
 }
 
 /// Platform device abstraction
 pub trait Device<'a> {
     /// Returns the supported streams
-    fn query_streams(&self) -> Result<Vec<StreamDescriptor>>;
-
-    /// Returns the supported controls
-    fn query_controls(&self) -> Result<Vec<control::Descriptor>>;
-
-    /// Returns the current control value for an ID
-    fn read_control(&self, id: u32) -> Result<control::State>;
-
-    /// Sets the control value, returns error for incompatible value types
-    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()>;
+    fn streams(&self) -> Result<Vec<stream::Descriptor>>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>>;
+    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>>;
+
+    /// Returns the supported controls
+    fn controls(&self) -> Result<Vec<control::Descriptor>>;
+
+    /// Returns the current control value for an ID
+    fn control(&self, id: u32) -> Result<control::State>;
+
+    /// Sets the control value, returns error for incompatible value types
+    fn set_control(&mut self, id: u32, val: &control::State) -> Result<()>;
 }
 
 /// Stream abstraction
@@ -37,13 +40,4 @@ pub trait Stream<'a> {
 
     /// Advances the stream and returns the next item
     fn next(&'a mut self) -> Option<Self::Item>;
-
-    /// Maps the stream output items
-    fn map<B, F>(self, f: F) -> Map<Self, F>
-    where
-        Self: Sized,
-        F: FnMut(Self::Item) -> B,
-    {
-        Map::new(self, f)
-    }
 }

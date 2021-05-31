@@ -9,9 +9,9 @@ use v4l::FourCC as FourCC_;
 use crate::control;
 use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
-use crate::hal::v4l2::stream::Handle as StreamHandle;
-use crate::hal::PlatformStream;
-use crate::stream::{Descriptor as StreamDescriptor, Flags as StreamFlags};
+use crate::platform::v4l2::stream::Handle as StreamHandle;
+use crate::platform::Stream as PlatformStream;
+use crate::stream::Descriptor as StreamDescriptor;
 use crate::traits::Device;
 
 pub struct Handle {
@@ -49,7 +49,7 @@ impl Handle {
 }
 
 impl<'a> Device<'a> for Handle {
-    fn query_streams(&self) -> Result<Vec<StreamDescriptor>> {
+    fn streams(&self) -> Result<Vec<StreamDescriptor>> {
         let mut streams = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
 
@@ -72,7 +72,6 @@ impl<'a> Device<'a> for Handle {
                                 interval: Duration::from_secs_f64(
                                     fraction.numerator as f64 / fraction.denominator as f64,
                                 ),
-                                flags: StreamFlags::NONE,
                             });
                         }
                     }
@@ -83,7 +82,7 @@ impl<'a> Device<'a> for Handle {
         Ok(streams)
     }
 
-    fn query_controls(&self) -> Result<Vec<control::Descriptor>> {
+    fn controls(&self) -> Result<Vec<control::Descriptor>> {
         let mut controls = Vec::new();
         let plat_controls = self.inner.query_controls()?;
 
@@ -151,7 +150,7 @@ impl<'a> Device<'a> for Handle {
         Ok(controls)
     }
 
-    fn read_control(&self, id: u32) -> Result<control::State> {
+    fn control(&self, id: u32) -> Result<control::State> {
         let ctrl = self.inner.control(id)?;
         match ctrl {
             Control::Value(val) => Ok(control::State::Number(val as f64)),
@@ -162,7 +161,7 @@ impl<'a> Device<'a> for Handle {
         }
     }
 
-    fn write_control(&mut self, id: u32, val: &control::State) -> Result<()> {
+    fn set_control(&mut self, id: u32, val: &control::State) -> Result<()> {
         match val {
             control::State::Number(val) => {
                 let ctrl = Control::Value(*val as i32);

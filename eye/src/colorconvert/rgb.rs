@@ -2,7 +2,7 @@ use ffimage::color::{Bgr, Rgb};
 use ffimage::packed::{ImageBuffer, ImageView};
 use ffimage::traits::{Convert, Pixel};
 
-use crate::format::{ImageFormat, PixelFormat};
+use eye_hal::format::{ImageFormat, PixelFormat};
 
 fn _convert<DP>(
     src: &[u8],

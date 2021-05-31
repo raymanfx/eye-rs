@@ -1,7 +1,8 @@
 use jpeg_decoder::{Decoder, PixelFormat as JpegFormat};
 
+use eye_hal::format::{ImageFormat, PixelFormat};
+
 use crate::colorconvert::rgb;
-use crate::format::{ImageFormat, PixelFormat};
 
 pub fn convert_to_rgb(
     src: &[u8],

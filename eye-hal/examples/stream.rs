@@ -1,21 +1,21 @@
 use std::time::Instant;
 
-use eye::prelude::*;
-use eye::Result;
+use eye_hal::traits::{Context, Device, Stream};
+use eye_hal::{PlatformContext, Result};
 
 fn main() -> Result<()> {
     // Create a context
-    let ctx = Context::new();
+    let ctx = PlatformContext::default();
 
     // Query for available devices.
-    let devices = ctx.query_devices()?;
+    let devices = ctx.devices()?;
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let dev = Device::with_uri(&devices[0])?;
+    let dev = ctx.open_device(&devices[0])?;
 
     // Query for available streams and just choose the first one.
-    let streams = dev.query_streams()?;
+    let streams = dev.streams()?;
     let stream_desc = streams[0].clone();
     println!("Stream: {:?}", stream_desc);
 

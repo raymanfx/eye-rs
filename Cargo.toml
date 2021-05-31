@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "eye",
+    "eye-hal",
 ]
 default-members = [
     "eye",
+    "eye-hal",
 ]

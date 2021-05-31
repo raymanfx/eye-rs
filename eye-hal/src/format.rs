@@ -73,7 +73,7 @@ impl ImageFormat {
     /// # Example
     ///
     /// ```
-    /// use eye::format::{ImageFormat, PixelFormat};
+    /// use eye_hal::format::{ImageFormat, PixelFormat};
     /// let format = ImageFormat::new(1280, 720, PixelFormat::Rgb(24));
     /// ```
     pub fn new(width: u32, height: u32, pixfmt: PixelFormat) -> Self {

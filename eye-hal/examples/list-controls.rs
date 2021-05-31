@@ -1,19 +1,19 @@
-use eye::control::{MenuItem, Type};
-use eye::prelude::*;
-use eye::Result;
+use eye_hal::control::{MenuItem, Type};
+use eye_hal::traits::{Context, Device};
+use eye_hal::{PlatformContext, Result};
 
 fn main() -> Result<()> {
     // Create a context
-    let ctx = Context::new();
+    let ctx = PlatformContext::default();
 
     // Create a list of valid capture devices in the system.
-    let list = ctx.query_devices()?;
+    let list = ctx.devices()?;
 
     // Print the supported controls for each device.
     for uri in list {
         println!("{}", uri);
-        let dev = Device::with_uri(&uri)?;
-        let controls = dev.query_controls()?;
+        let dev = ctx.open_device(&uri)?;
+        let controls = dev.controls()?;
 
         println!("  Controls:");
         for ctrl in &controls {
