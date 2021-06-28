@@ -1,6 +1,5 @@
-use std::io;
-
 use eye_hal::buffer::Buffer;
+use eye_hal::error::{Error, ErrorKind, Result};
 use eye_hal::format::{ImageFormat, PixelFormat};
 use eye_hal::stream::Descriptor;
 use eye_hal::traits::Stream;
@@ -16,9 +15,9 @@ pub struct ConvertStream<S> {
 
 impl<'a, S> Stream<'a> for ConvertStream<S>
 where
-    S: Stream<'a, Item = io::Result<Buffer<'a>>>,
+    S: Stream<'a, Item = Result<Buffer<'a>>>,
 {
-    type Item = io::Result<Buffer<'a>>;
+    type Item = Result<Buffer<'a>>;
 
     fn next(&'a mut self) -> Option<Self::Item> {
         let item = self.inner.next()?;
@@ -34,8 +33,8 @@ where
         let res = if let Err(msg) =
             Converter::convert(frame.as_bytes(), &src_fmt, &mut buf, &dst_fmt.pixfmt)
         {
-            Err(io::Error::new(
-                io::ErrorKind::Other,
+            Err(Error::new(
+                ErrorKind::Other,
                 format!("failed to convert stream item: {}", msg),
             ))
         } else {

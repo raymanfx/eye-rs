@@ -1,5 +1,3 @@
-use std::io;
-
 use v4l::buffer::Type as BufType;
 use v4l::io::mmap::Stream as MmapStream;
 use v4l::io::traits::{CaptureStream, Stream as _};
@@ -25,7 +23,7 @@ impl<'a> Handle<'a> {
         })
     }
 
-    fn start(&mut self) -> io::Result<()> {
+    fn start(&mut self) -> Result<()> {
         if self.active {
             return Ok(());
         }
@@ -35,7 +33,7 @@ impl<'a> Handle<'a> {
         Ok(())
     }
 
-    fn stop(&mut self) -> io::Result<()> {
+    fn stop(&mut self) -> Result<()> {
         if !self.active {
             return Ok(());
         }
@@ -45,7 +43,7 @@ impl<'a> Handle<'a> {
         Ok(())
     }
 
-    fn queue(&mut self) -> io::Result<()> {
+    fn queue(&mut self) -> Result<()> {
         if !self.active {
             self.start()?;
         }
@@ -54,7 +52,7 @@ impl<'a> Handle<'a> {
         Ok(())
     }
 
-    fn dequeue<'b>(&'b mut self) -> io::Result<Buffer<'b>> {
+    fn dequeue<'b>(&'b mut self) -> Result<Buffer<'b>> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buffer = self.stream.get(self.stream_buf_index).unwrap();
@@ -77,7 +75,7 @@ impl<'a> Drop for Handle<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for Handle<'a> {
-    type Item = io::Result<Buffer<'b>>;
+    type Item = Result<Buffer<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         if let Err(e) = self.queue() {

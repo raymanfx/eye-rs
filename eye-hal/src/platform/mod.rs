@@ -3,7 +3,6 @@
 //! Multiple backends can be implemented for a given platform.
 
 use std::array;
-use std::io;
 
 use crate::buffer::Buffer;
 use crate::control;
@@ -156,7 +155,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
 /// the best method available.
 pub enum Stream<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + for<'b> StreamTrait<'b, Item = io::Result<Buffer<'b>>> + Send>),
+    Custom(Box<dyn 'a + for<'b> StreamTrait<'b, Item = Result<Buffer<'b>>> + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 stream handle
     V4l2(v4l2::stream::Handle<'a>),
@@ -166,7 +165,7 @@ pub enum Stream<'a> {
 }
 
 impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
-    type Item = io::Result<Buffer<'b>>;
+    type Item = Result<Buffer<'b>>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         match self {
