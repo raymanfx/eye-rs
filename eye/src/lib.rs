@@ -16,3 +16,5 @@
 pub mod colorconvert;
 pub mod device;
 pub mod stream;
+
+pub use eye_hal as hal;
