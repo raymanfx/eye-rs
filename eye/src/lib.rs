@@ -14,7 +14,5 @@
 //! conversion (e.g. JPEG -> RGB decoding) by leveraging the `colorconvert` module.
 
 pub mod colorconvert;
-pub mod device;
-pub mod stream;
 
 pub use eye_hal as hal;
