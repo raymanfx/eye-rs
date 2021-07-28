@@ -16,7 +16,7 @@ bitflags = "1.2.1"
 uvc = { version = "0.2.0", features = ["vendor"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-v4l = { version = "0.12.1" }
+v4l = { git = "https://github.com/raymanfx/libv4l-rs", rev = "d7ac71" }
 
 [dev-dependencies]
 itertools = "0.10.0"

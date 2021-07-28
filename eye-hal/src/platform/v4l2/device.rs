@@ -1,6 +1,8 @@
 use std::{convert::TryInto, io, path::Path, time::Duration};
 
-use v4l::control::{Control, MenuItem as ControlMenuItem, Type as ControlType};
+use v4l::control::{
+    Control, MenuItem as ControlMenuItem, Type as ControlType, Value as ControlValue,
+};
 use v4l::video::Capture;
 use v4l::Device as CaptureDevice;
 use v4l::Format as CaptureFormat;
@@ -152,32 +154,30 @@ impl<'a> Device<'a> for Handle {
 
     fn control(&self, id: u32) -> Result<control::State> {
         let ctrl = self.inner.control(id)?;
-        match ctrl {
-            Control::Value(val) => Ok(control::State::Number(val as f64)),
+        match ctrl.value {
+            ControlValue::Integer(val) => Ok(control::State::Number(val as f64)),
+            ControlValue::Boolean(val) => Ok(control::State::Boolean(val)),
             _ => Err(Error::new(
                 ErrorKind::Other,
-                "control type cannot be mapped",
+                "control value cannot be mapped",
             )),
         }
     }
 
     fn set_control(&mut self, id: u32, val: &control::State) -> Result<()> {
-        match val {
-            control::State::Number(val) => {
-                let ctrl = Control::Value(*val as i32);
-                self.inner.set_control(id, ctrl)?;
-            }
-            control::State::Boolean(val) => {
-                let ctrl = Control::Value(*val as i32);
-                self.inner.set_control(id, ctrl)?;
-            }
+        let value = match val {
+            control::State::Number(val) => ControlValue::Integer(*val as i64),
+            control::State::Boolean(val) => ControlValue::Boolean(*val),
             _ => {
                 return Err(Error::new(
                     ErrorKind::Other,
-                    "control type cannot be mapped",
+                    "control value cannot be mapped",
                 ))
             }
-        }
+        };
+
+        let ctrl = Control { id, value };
+        self.inner.set_control(ctrl)?;
 
         Ok(())
     }
