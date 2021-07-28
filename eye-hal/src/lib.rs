@@ -68,6 +68,7 @@
 
 pub mod buffer;
 pub mod control;
+pub mod device;
 pub mod error;
 pub mod format;
 pub mod stream;

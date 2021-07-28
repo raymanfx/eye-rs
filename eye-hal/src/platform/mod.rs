@@ -6,6 +6,7 @@ use std::array;
 
 use crate::buffer::Buffer;
 use crate::control;
+use crate::device;
 use crate::error::Result;
 use crate::stream::Descriptor as StreamDescriptor;
 use crate::traits::{Context as ContextTrait, Device as DeviceTrait, Stream as StreamTrait};
@@ -55,7 +56,7 @@ impl<'a> Default for Context<'a> {
 }
 
 impl<'a> ContextTrait for Context<'a> {
-    fn devices(&self) -> Result<Vec<String>> {
+    fn devices(&self) -> Result<Vec<device::Description>> {
         match self {
             Self::Custom(ctx) => ctx.devices(),
             #[cfg(target_os = "linux")]

@@ -12,7 +12,7 @@ fn main() -> Result<()> {
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let dev = ctx.open_device(&devices[0])?;
+    let dev = ctx.open_device(&devices[0].uri)?;
 
     // Query for available streams and just choose the first one.
     let streams = dev.streams()?;

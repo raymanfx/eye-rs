@@ -11,9 +11,9 @@ fn main() -> Result<()> {
     let list = ctx.devices()?;
 
     // Print the supported formats for each device.
-    for uri in list {
-        println!("{}", uri);
-        let dev = ctx.open_device(&uri)?;
+    for desc in list {
+        println!("{}", desc.uri);
+        let dev = ctx.open_device(&desc.uri)?;
         let streams = dev.streams()?;
 
         println!("  Streams:");

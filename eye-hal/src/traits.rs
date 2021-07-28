@@ -1,4 +1,5 @@
 use crate::control;
+use crate::device;
 use crate::error::Result;
 use crate::platform::{Device as PlatformDevice, Stream as PlatformStream};
 use crate::stream;
@@ -6,7 +7,7 @@ use crate::stream;
 /// Platform context abstraction
 pub trait Context {
     /// Returns all devices currently available
-    fn devices(&self) -> Result<Vec<String>>;
+    fn devices(&self) -> Result<Vec<device::Description>>;
 
     /// Opens a device handle
     fn open_device<'a>(&self, uri: &str) -> Result<PlatformDevice<'a>>;

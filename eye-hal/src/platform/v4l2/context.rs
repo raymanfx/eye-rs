@@ -1,5 +1,6 @@
 use v4l::context;
 
+use crate::device;
 use crate::error::{Error, ErrorKind, Result};
 use crate::platform::v4l2::device::Handle;
 use crate::platform::Device as PlatformDevice;
@@ -9,7 +10,7 @@ use crate::traits::Context as ContextTrait;
 pub struct Context {}
 
 impl ContextTrait for Context {
-    fn devices(&self) -> Result<Vec<String>> {
+    fn devices(&self) -> Result<Vec<device::Description>> {
         let nodes = context::enum_devices()
             .into_iter()
             .filter_map(|dev| {
@@ -36,7 +37,10 @@ impl ContextTrait for Context {
                     return None;
                 }
 
-                Some(format!("v4l:///dev/video{}", index))
+                Some(device::Description {
+                    uri: format!("v4l:///dev/video{}", index),
+                    product: caps.card,
+                })
             })
             .collect();
 
