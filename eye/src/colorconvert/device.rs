@@ -28,6 +28,8 @@ impl<'a> Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
+    type Stream = PlatformStream<'a>;
+
     fn streams(&self) -> Result<Vec<stream::Descriptor>> {
         // get all the native streams
         let mut streams = self.inner.streams()?;
@@ -71,7 +73,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         Ok(streams)
     }
 
-    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &stream::Descriptor) -> Result<Self::Stream> {
         let native_streams = self.inner.streams()?;
         if let Some(_) = native_streams
             .iter()

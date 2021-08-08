@@ -12,7 +12,6 @@ use crate::control;
 use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
 use crate::platform::v4l2::stream::Handle as StreamHandle;
-use crate::platform::Stream as PlatformStream;
 use crate::stream::Descriptor as StreamDescriptor;
 use crate::traits::Device;
 
@@ -51,6 +50,8 @@ impl Handle {
 }
 
 impl<'a> Device<'a> for Handle {
+    type Stream = StreamHandle<'a>;
+
     fn streams(&self) -> Result<Vec<StreamDescriptor>> {
         let mut streams = Vec::new();
         let plat_formats = self.inner.enum_formats()?;
@@ -182,7 +183,7 @@ impl<'a> Device<'a> for Handle {
         Ok(())
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<Self::Stream> {
         let fourcc = if let Ok(fourcc) = desc.pixfmt.clone().try_into() {
             fourcc
         } else {
@@ -202,6 +203,6 @@ impl<'a> Device<'a> for Handle {
         self.inner.set_params(&params)?;
 
         let handle = StreamHandle::new(self)?;
-        Ok(PlatformStream::V4l2(handle))
+        Ok(handle)
     }
 }

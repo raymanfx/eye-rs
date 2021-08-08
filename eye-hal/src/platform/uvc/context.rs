@@ -1,12 +1,14 @@
 use crate::device;
 use crate::error::{Error, ErrorKind, Result};
-use crate::platform::Device as PlatformDevice;
+use crate::platform::uvc::device::Handle as DeviceHandle;
 use crate::traits::Context as ContextTrait;
 
 /// Runtime context
 pub struct Context {}
 
-impl ContextTrait for Context {
+impl<'a> ContextTrait<'a> for Context {
+    type Device = DeviceHandle<'a>;
+
     fn devices(&self) -> Result<Vec<device::Description>> {
         let ctx = match uvc::Context::new() {
             Ok(ctx) => ctx,
@@ -43,13 +45,13 @@ impl ContextTrait for Context {
         Ok(devices)
     }
 
-    fn open_device<'a>(&self, uri: &str) -> Result<PlatformDevice<'a>> {
+    fn open_device(&self, uri: &str) -> Result<Self::Device> {
         if uri.starts_with("uvc://") {
-            let handle = match crate::platform::uvc::device::Handle::with_uri(uri) {
+            let handle = match DeviceHandle::with_uri(uri) {
                 Ok(handle) => handle,
                 Err(e) => return Err(Error::new(ErrorKind::Other, format!("UVC: {}", e))),
             };
-            Ok(PlatformDevice::Uvc(handle))
+            Ok(handle)
         } else {
             Err(Error::new(ErrorKind::Other, "invalid URI"))
         }

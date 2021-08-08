@@ -5,7 +5,6 @@ use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
 use crate::platform::uvc::control::Control;
 use crate::platform::uvc::stream::Handle as StreamHandle;
-use crate::platform::Stream as PlatformStream;
 use crate::stream;
 use crate::traits::Device;
 
@@ -49,6 +48,8 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a> Device<'a> for Handle<'a> {
+    type Stream = StreamHandle<'a>;
+
     fn streams(&self) -> Result<Vec<stream::Descriptor>> {
         let mut streams = Vec::new();
 
@@ -100,7 +101,7 @@ impl<'a> Device<'a> for Handle<'a> {
         Err(Error::from(ErrorKind::NotSupported))
     }
 
-    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>> {
+    fn start_stream(&self, desc: &stream::Descriptor) -> Result<Self::Stream> {
         let dev_handle = self.inner.clone();
         let dev_handle_ptr = &*dev_handle.handle as *const uvc::DeviceHandle;
         let dev_handle_ref = unsafe { &*dev_handle_ptr as &uvc::DeviceHandle };
@@ -133,7 +134,7 @@ impl<'a> Device<'a> for Handle<'a> {
         };
 
         match StreamHandle::new(dev_handle, stream_handle) {
-            Ok(handle) => Ok(PlatformStream::Uvc(handle)),
+            Ok(handle) => Ok(handle),
             Err(e) => Err(Error::new(ErrorKind::Other, e)),
         }
     }

@@ -25,7 +25,7 @@ pub(crate) mod uvc;
 /// A context is used to query platform properties, available devices and more.
 pub enum Context<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + ContextTrait + Send>),
+    Custom(Box<dyn 'a + ContextTrait<'a, Device = Device<'a>> + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 context
     V4l2(v4l2::context::Context),
@@ -55,7 +55,9 @@ impl<'a> Default for Context<'a> {
     }
 }
 
-impl<'a> ContextTrait for Context<'a> {
+impl<'a> ContextTrait<'a> for Context<'a> {
+    type Device = Device<'a>;
+
     fn devices(&self) -> Result<Vec<device::Description>> {
         match self {
             Self::Custom(ctx) => ctx.devices(),
@@ -66,13 +68,13 @@ impl<'a> ContextTrait for Context<'a> {
         }
     }
 
-    fn open_device<'b>(&self, uri: &str) -> Result<Device<'b>> {
+    fn open_device(&self, uri: &str) -> Result<Self::Device> {
         match self {
             Self::Custom(ctx) => ctx.open_device(uri),
             #[cfg(target_os = "linux")]
-            Self::V4l2(ctx) => ctx.open_device(uri),
+            Self::V4l2(ctx) => Ok(Device::V4l2(ctx.open_device(uri)?)),
             #[cfg(feature = "plat-uvc")]
-            Self::Uvc(ctx) => ctx.open_device(uri),
+            Self::Uvc(ctx) => Ok(Device::Uvc(ctx.open_device(uri)?)),
         }
     }
 }
@@ -85,7 +87,7 @@ impl<'a> ContextTrait for Context<'a> {
 /// A device is used to read/write control properties, start video streams and more.
 pub enum Device<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + DeviceTrait<'a> + Send>),
+    Custom(Box<dyn 'a + DeviceTrait<'a, Stream = Stream<'a>> + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 device handle
     V4l2(v4l2::device::Handle),
@@ -95,6 +97,8 @@ pub enum Device<'a> {
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
+    type Stream = Stream<'a>;
+
     fn streams(&self) -> Result<Vec<StreamDescriptor>> {
         match self {
             Self::Custom(dev) => dev.streams(),
@@ -135,13 +139,13 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         }
     }
 
-    fn start_stream(&self, desc: &StreamDescriptor) -> Result<Stream<'a>> {
+    fn start_stream(&self, desc: &StreamDescriptor) -> Result<Self::Stream> {
         match self {
             Self::Custom(dev) => dev.start_stream(desc),
             #[cfg(target_os = "linux")]
-            Self::V4l2(dev) => dev.start_stream(desc),
+            Self::V4l2(dev) => Ok(Stream::V4l2(dev.start_stream(desc)?)),
             #[cfg(feature = "plat-uvc")]
-            Self::Uvc(dev) => dev.start_stream(desc),
+            Self::Uvc(dev) => Ok(Stream::Uvc(dev.start_stream(desc)?)),
         }
     }
 }

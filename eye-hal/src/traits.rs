@@ -1,25 +1,30 @@
 use crate::control;
 use crate::device;
 use crate::error::Result;
-use crate::platform::{Device as PlatformDevice, Stream as PlatformStream};
 use crate::stream;
 
 /// Platform context abstraction
-pub trait Context {
+pub trait Context<'a> {
+    /// Device type supported by this platform
+    type Device: Device<'a>;
+
     /// Returns all devices currently available
     fn devices(&self) -> Result<Vec<device::Description>>;
 
     /// Opens a device handle
-    fn open_device<'a>(&self, uri: &str) -> Result<PlatformDevice<'a>>;
+    fn open_device(&self, uri: &str) -> Result<Self::Device>;
 }
 
 /// Platform device abstraction
 pub trait Device<'a> {
+    /// Capture stream type created by this device
+    type Stream: Stream<'a>;
+
     /// Returns the supported streams
     fn streams(&self) -> Result<Vec<stream::Descriptor>>;
 
     /// Returns a stream which produces images
-    fn start_stream(&self, desc: &stream::Descriptor) -> Result<PlatformStream<'a>>;
+    fn start_stream(&self, desc: &stream::Descriptor) -> Result<Self::Stream>;
 
     /// Returns the supported controls
     fn controls(&self) -> Result<Vec<control::Descriptor>>;

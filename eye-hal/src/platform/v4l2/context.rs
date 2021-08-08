@@ -2,20 +2,21 @@ use v4l::context;
 
 use crate::device;
 use crate::error::{Error, ErrorKind, Result};
-use crate::platform::v4l2::device::Handle;
-use crate::platform::Device as PlatformDevice;
+use crate::platform::v4l2::device::Handle as DeviceHandle;
 use crate::traits::Context as ContextTrait;
 
 /// Runtime context
 pub struct Context {}
 
-impl ContextTrait for Context {
+impl<'a> ContextTrait<'a> for Context {
+    type Device = DeviceHandle;
+
     fn devices(&self) -> Result<Vec<device::Description>> {
         let nodes = context::enum_devices()
             .into_iter()
             .filter_map(|dev| {
                 let index = dev.index();
-                let dev = match Handle::new(index) {
+                let dev = match DeviceHandle::new(index) {
                     Ok(dev) => dev,
                     Err(_) => return None,
                 };
@@ -47,10 +48,10 @@ impl ContextTrait for Context {
         Ok(nodes)
     }
 
-    fn open_device<'a>(&self, uri: &str) -> Result<PlatformDevice<'a>> {
+    fn open_device(&self, uri: &str) -> Result<Self::Device> {
         if uri.starts_with("v4l://") {
             let handle = crate::platform::v4l2::device::Handle::with_uri(uri)?;
-            Ok(PlatformDevice::V4l2(handle))
+            Ok(handle)
         } else {
             Err(Error::new(ErrorKind::Other, "invalid URI"))
         }
