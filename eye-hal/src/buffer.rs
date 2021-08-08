@@ -13,7 +13,7 @@ impl<'a> Buffer<'a> {
     pub fn as_bytes(&self) -> &[u8] {
         match &self.inner {
             Cow::Borrowed(slice) => slice,
-            Cow::Owned(buf) => &buf,
+            Cow::Owned(buf) => buf,
         }
     }
 

@@ -29,8 +29,7 @@ impl Handle {
 
     pub fn with_uri<S: Into<String>>(uri: S) -> io::Result<Self> {
         let uri = uri.into();
-        if uri.starts_with("v4l://") {
-            let path = uri[6..].to_string();
+        if let Some(path) = uri.strip_prefix("v4l://") {
             Self::with_path(path)
         } else {
             Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid URI"))

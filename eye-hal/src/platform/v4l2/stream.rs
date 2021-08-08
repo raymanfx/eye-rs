@@ -52,7 +52,7 @@ impl<'a> Handle<'a> {
         Ok(())
     }
 
-    fn dequeue<'b>(&'b mut self) -> Result<Buffer<'b>> {
+    fn dequeue(&mut self) -> Result<Buffer> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buffer = self.stream.get(self.stream_buf_index).unwrap();

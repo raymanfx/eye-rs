@@ -77,11 +77,7 @@ impl ImageFormat {
     /// let format = ImageFormat::new(1280, 720, PixelFormat::Rgb(24));
     /// ```
     pub fn new(width: u32, height: u32, pixfmt: PixelFormat) -> Self {
-        let stride = if let Some(bits) = pixfmt.bits() {
-            Some((width * (bits / 8)) as usize)
-        } else {
-            None
-        };
+        let stride = pixfmt.bits().map(|bits| (width * (bits / 8)) as usize);
 
         ImageFormat {
             width,

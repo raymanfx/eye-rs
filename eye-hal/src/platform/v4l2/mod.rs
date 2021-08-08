@@ -59,9 +59,7 @@ impl TryInto<[u8; 4]> for PixelFormat {
                 let repr_bytes = repr.as_bytes();
                 if repr_bytes.len() <= 4 {
                     let mut bytes = [0u8; 4];
-                    for i in 0..repr_bytes.len() {
-                        bytes[i] = repr_bytes[i];
-                    }
+                    bytes.clone_from_slice(&repr_bytes[..repr_bytes.len()]);
                     Ok(bytes)
                 } else {
                     Err(())
