@@ -18,5 +18,8 @@ uvc = { version = "0.2.0", features = ["vendor"], optional = true }
 [target.'cfg(target_os = "linux")'.dependencies]
 v4l = { git = "https://github.com/raymanfx/libv4l-rs", rev = "d7ac71" }
 
+[target.'cfg(any(target_os="macos", target_os="windows"))'.dependencies]
+uvc = { version = "0.2.0", features = ["vendor"], optional = true }
+
 [dev-dependencies]
 itertools = "0.10.0"

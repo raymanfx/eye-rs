@@ -20,7 +20,10 @@ impl<'a> Device<'a> {
 
     pub fn with_uri<S: AsRef<str>>(uri: S) -> Result<Self> {
         let uri = uri.as_ref();
-        let ctx = PlatformContext::default();
+        let ctx = PlatformContext::all().next().ok_or(Error::new(
+            ErrorKind::Other,
+            "no platform context available",
+        ))?;
         let inner = ctx.open_device(uri)?;
 
         Self::new(inner)

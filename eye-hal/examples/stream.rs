@@ -5,7 +5,7 @@ use eye_hal::{PlatformContext, Result};
 
 fn main() -> Result<()> {
     // Create a context
-    let ctx = PlatformContext::default();
+    let ctx = PlatformContext::all().next().expect("no platform context");
 
     // Query for available devices.
     let devices = ctx.devices()?;

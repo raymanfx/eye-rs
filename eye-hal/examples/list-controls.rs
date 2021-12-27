@@ -4,7 +4,7 @@ use eye_hal::{PlatformContext, Result};
 
 fn main() -> Result<()> {
     // Create a context
-    let ctx = PlatformContext::default();
+    let ctx = PlatformContext::all().next().expect("no platform context");
 
     // Create a list of valid capture devices in the system.
     let list = ctx.devices()?;
