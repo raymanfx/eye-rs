@@ -21,3 +21,6 @@ ffimage = "0.9.0"
 ffimage_yuv = "0.9.0"
 
 jpeg-decoder = { version = "0.2.1", optional = true }
+
+[dev-dependencies]
+glium = "0.31.0"
