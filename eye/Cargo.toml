@@ -18,5 +18,6 @@ hal-uvc = ["eye-hal/plat-uvc"]
 [dependencies]
 eye-hal = { version = "0.1.0", path = "../eye-hal" }
 ffimage = "0.9.0"
+ffimage_yuv = "0.9.0"
 
 jpeg-decoder = { version = "0.2.1", optional = true }

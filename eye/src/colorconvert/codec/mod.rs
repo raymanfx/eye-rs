@@ -3,6 +3,7 @@ use eye_hal::format::PixelFormat;
 
 mod error;
 mod rgb;
+mod yuv;
 
 #[cfg(feature = "jpeg")]
 mod jpeg;
@@ -15,6 +16,7 @@ pub fn blueprints() -> Vec<Box<dyn Blueprint>> {
         Box::new(rgb::blueprint()),
         #[cfg(feature = "jpeg")]
         Box::new(jpeg::blueprint()),
+        Box::new(yuv::blueprint()),
     ]
 }
 
