@@ -12,9 +12,6 @@ repository= "https://github.com/raymanfx/eye-rs"
 default = ["jpeg"]
 jpeg = ["jpeg-decoder"]
 
-# capture backends
-hal-uvc = ["eye-hal/plat-uvc"]
-
 [dependencies]
 eye-hal = { version = "0.1.0", path = "../eye-hal" }
 ffimage = "0.9.0"

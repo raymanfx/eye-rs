@@ -75,9 +75,9 @@ jobs:
         override: true
         profile: minimal
     - name: Check
-      run: cargo check --no-default-features
+      run: cargo check
     - name: Check examples
-      run: cargo check --manifest-path=eye/Cargo.toml --no-default-features --examples
+      run: cargo check --manifest-path=eye/Cargo.toml --examples
 
   check-hals:
     name: check-hals
@@ -89,10 +89,10 @@ jobs:
           os: ubuntu-18.04
           rust: stable
           features: ""
-        - build: uvc-macos
+        - build: openpnp-macos
           os: macos-10.15
           rust: stable
-          features: "--features hal-uvc"
+          features: ""
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -103,4 +103,4 @@ jobs:
         profile: minimal
         override: true
     - name: Check
-      run: cargo check --manifest-path=eye/Cargo.toml --no-default-features ${{ matrix.features }}
+      run: cargo check --manifest-path=eye/Cargo.toml ${{ matrix.features }}

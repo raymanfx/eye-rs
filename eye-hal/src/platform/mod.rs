@@ -14,8 +14,11 @@ use crate::traits::{Context as ContextTrait, Device as DeviceTrait, Stream as St
 #[cfg(target_os = "linux")]
 pub(crate) mod v4l2;
 
-#[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+#[cfg(any(target_os = "windows", feature = "plat-uvc"))]
 pub(crate) mod uvc;
+
+#[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+pub(crate) mod openpnp;
 
 /// Platform context
 ///
@@ -29,9 +32,12 @@ pub enum Context<'a> {
     #[cfg(target_os = "linux")]
     /// Video4Linux2 context
     V4l2(v4l2::context::Context),
-    #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+    #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
     /// Universal Video Class context
     Uvc(uvc::context::Context),
+    #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+    /// Open Pick and Place
+    OpenPnP(openpnp::context::Context),
 }
 
 impl<'a> Context<'a> {
@@ -39,8 +45,10 @@ impl<'a> Context<'a> {
         array::IntoIter::new([
             #[cfg(target_os = "linux")]
             Context::V4l2(v4l2::context::Context {}),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Context::Uvc(uvc::context::Context {}),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Context::OpenPnP(openpnp::context::Context {}),
         ])
     }
 }
@@ -53,8 +61,10 @@ impl<'a> ContextTrait<'a> for Context<'a> {
             Self::Custom(ctx) => ctx.devices(),
             #[cfg(target_os = "linux")]
             Self::V4l2(ctx) => ctx.devices(),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(ctx) => ctx.devices(),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(ctx) => ctx.devices(),
         }
     }
 
@@ -63,8 +73,10 @@ impl<'a> ContextTrait<'a> for Context<'a> {
             Self::Custom(ctx) => ctx.open_device(uri),
             #[cfg(target_os = "linux")]
             Self::V4l2(ctx) => Ok(Device::V4l2(ctx.open_device(uri)?)),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(ctx) => Ok(Device::Uvc(ctx.open_device(uri)?)),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(ctx) => Ok(Device::OpenPnP(ctx.open_device(uri)?)),
         }
     }
 }
@@ -81,9 +93,12 @@ pub enum Device<'a> {
     #[cfg(target_os = "linux")]
     /// Video4Linux2 device handle
     V4l2(v4l2::device::Handle),
-    #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+    #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
     /// Universal Video Class device handle
     Uvc(uvc::device::Handle<'a>),
+    #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+    /// Open Pick and Place
+    OpenPnP(openpnp::device::Handle),
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
@@ -94,8 +109,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Custom(dev) => dev.streams(),
             #[cfg(target_os = "linux")]
             Self::V4l2(dev) => dev.streams(),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(dev) => dev.streams(),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(dev) => dev.streams(),
         }
     }
 
@@ -104,8 +121,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Custom(dev) => dev.controls(),
             #[cfg(target_os = "linux")]
             Self::V4l2(dev) => dev.controls(),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(dev) => dev.controls(),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(dev) => dev.controls(),
         }
     }
 
@@ -114,8 +133,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Custom(dev) => dev.control(id),
             #[cfg(target_os = "linux")]
             Self::V4l2(dev) => dev.control(id),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(dev) => dev.control(id),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(dev) => dev.control(id),
         }
     }
 
@@ -124,8 +145,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Custom(dev) => dev.set_control(id, val),
             #[cfg(target_os = "linux")]
             Self::V4l2(dev) => dev.set_control(id, val),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(dev) => dev.set_control(id, val),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(dev) => dev.set_control(id, val),
         }
     }
 
@@ -134,8 +157,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Custom(dev) => dev.start_stream(desc),
             #[cfg(target_os = "linux")]
             Self::V4l2(dev) => Ok(Stream::V4l2(dev.start_stream(desc)?)),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(dev) => Ok(Stream::Uvc(dev.start_stream(desc)?)),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(dev) => Ok(Stream::OpenPnP(dev.start_stream(desc)?)),
         }
     }
 }
@@ -154,9 +179,12 @@ pub enum Stream<'a> {
     #[cfg(target_os = "linux")]
     /// Video4Linux2 stream handle
     V4l2(v4l2::stream::Handle<'a>),
-    #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+    #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
     /// Universal Video Class stream handle
     Uvc(uvc::stream::Handle<'a>),
+    #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+    /// Open Pick and Place
+    OpenPnP(openpnp::stream::Handle),
 }
 
 impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
@@ -167,8 +195,10 @@ impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
             Self::Custom(stream) => stream.next(),
             #[cfg(target_os = "linux")]
             Self::V4l2(stream) => stream.next(),
-            #[cfg(any(target_os = "macos", target_os = "windows", feature = "plat-uvc"))]
+            #[cfg(any(target_os = "windows", feature = "plat-uvc"))]
             Self::Uvc(stream) => stream.next(),
+            #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
+            Self::OpenPnP(stream) => stream.next(),
         }
     }
 }

@@ -8,18 +8,17 @@ license = "MIT"
 readme = "README.md"
 repository= "https://github.com/raymanfx/eye-rs"
 
-[features]
-plat-uvc = ["uvc"]
-
 [dependencies]
 bitflags = "1.2.1"
-uvc = { version = "0.2.0", features = ["vendor"], optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 v4l = { git = "https://github.com/raymanfx/libv4l-rs", rev = "d7ac71" }
 
-[target.'cfg(any(target_os="macos", target_os="windows"))'.dependencies]
+[target.'cfg(target_os="windows")'.dependencies]
 uvc = { version = "0.2.0", features = ["vendor"] }
+
+[target.'cfg(target_os="macos")'.dependencies]
+openpnp_capture = { version = "0.2.0" }
 
 [dev-dependencies]
 itertools = "0.10.0"
