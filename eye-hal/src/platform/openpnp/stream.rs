@@ -2,7 +2,6 @@ use std::io;
 
 use openpnp_capture as pnp;
 
-use crate::buffer::Buffer;
 use crate::error::Result;
 use crate::traits::Stream;
 use crate::{Error, ErrorKind};
@@ -32,7 +31,7 @@ impl Handle {
 }
 
 impl<'a> Stream<'a> for Handle {
-    type Item = Result<Buffer<'a>>;
+    type Item = Result<&'a [u8]>;
 
     fn next(&'a mut self) -> Option<Self::Item> {
         while !self.inner.poll() { /* busy loop */ }
@@ -41,6 +40,6 @@ impl<'a> Stream<'a> for Handle {
             Err(e) => return Some(Err(Error::new(ErrorKind::Other, e))),
         }
 
-        Some(Ok(Buffer::from(&self.buffer[..])))
+        Some(Ok(&self.buffer))
     }
 }

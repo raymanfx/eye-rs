@@ -2,7 +2,6 @@ use v4l::buffer::Type as BufType;
 use v4l::io::mmap::Stream as MmapStream;
 use v4l::io::traits::{CaptureStream, Stream as _};
 
-use crate::buffer::Buffer;
 use crate::error::Result;
 use crate::platform::v4l2::device::Handle as DeviceHandle;
 use crate::traits::Stream;
@@ -52,7 +51,7 @@ impl<'a> Handle<'a> {
         Ok(())
     }
 
-    fn dequeue(&mut self) -> Result<Buffer> {
+    fn dequeue(&mut self) -> Result<&[u8]> {
         self.stream_buf_index = self.stream.dequeue()?;
 
         let buffer = self.stream.get(self.stream_buf_index).unwrap();
@@ -61,7 +60,7 @@ impl<'a> Handle<'a> {
         // For compressed formats, the buffer length will not actually describe the number of bytes
         // in a frame. Instead, we have to explicitly query about the amount of used bytes.
         let view = &buffer[0..meta.bytesused as usize];
-        Ok(Buffer::from(view))
+        Ok(view)
     }
 }
 
@@ -75,7 +74,7 @@ impl<'a> Drop for Handle<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for Handle<'a> {
-    type Item = Result<Buffer<'b>>;
+    type Item = Result<&'b [u8]>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         if let Err(e) = self.queue() {

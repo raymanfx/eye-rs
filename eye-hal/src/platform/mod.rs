@@ -4,7 +4,6 @@
 
 use std::array;
 
-use crate::buffer::Buffer;
 use crate::control;
 use crate::device;
 use crate::error::Result;
@@ -175,7 +174,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
 /// the best method available.
 pub enum Stream<'a> {
     /// Can be used to wrap your own struct
-    Custom(Box<dyn 'a + for<'b> StreamTrait<'b, Item = Result<Buffer<'b>>> + Send>),
+    Custom(Box<dyn 'a + for<'b> StreamTrait<'b, Item = Result<&'b [u8]>> + Send>),
     #[cfg(target_os = "linux")]
     /// Video4Linux2 stream handle
     V4l2(v4l2::stream::Handle<'a>),
@@ -188,7 +187,7 @@ pub enum Stream<'a> {
 }
 
 impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
-    type Item = Result<Buffer<'b>>;
+    type Item = Result<&'b [u8]>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         match self {

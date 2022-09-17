@@ -66,7 +66,6 @@
 //!
 //! Have a look at the examples to learn more about device and stream management.
 
-pub mod buffer;
 pub mod control;
 pub mod device;
 pub mod error;

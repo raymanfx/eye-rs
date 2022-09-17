@@ -1,4 +1,3 @@
-use eye_hal::buffer::Buffer;
 use eye_hal::format::PixelFormat;
 
 mod error;
@@ -40,7 +39,7 @@ pub trait Blueprint {
 
 pub trait Codec {
     /// Convert the input buffer using the output buffer as destination.
-    fn decode(&self, inbuf: &Buffer, outbuf: &mut Buffer) -> Result<()>;
+    fn decode(&self, inbuf: &[u8], outbuf: &mut Vec<u8>) -> Result<()>;
 }
 
 /// Codec parameters used for instantiation.

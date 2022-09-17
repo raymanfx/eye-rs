@@ -36,7 +36,7 @@ fn main() -> Result<()> {
             .expect("Failed to capture frame");
         let duration_us = t0.elapsed().as_micros();
 
-        let cur = frame.as_bytes().len() as f64 / 1_048_576.0 * 1_000_000.0 / duration_us as f64;
+        let cur = frame.len() as f64 / 1_048_576.0 * 1_000_000.0 / duration_us as f64;
         if i == 0 {
             megabytes_ps = cur;
         } else {

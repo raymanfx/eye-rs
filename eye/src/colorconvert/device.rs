@@ -159,6 +159,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         return Ok(PlatformStream::Custom(Box::new(CodecStream {
             inner: native_stream,
             codec,
+            buf: Vec::new(),
         })));
     }
 

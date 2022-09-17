@@ -135,8 +135,7 @@ fn main() -> Result<()> {
 
     thread::spawn(move || loop {
         let buf = stream.next().unwrap().unwrap();
-        let buf: Vec<u8> = buf.into_bytes().collect();
-        tx.send(buf).unwrap();
+        tx.send(buf.to_vec()).unwrap();
     });
 
     event_loop.run(move |event, _, control_flow| {

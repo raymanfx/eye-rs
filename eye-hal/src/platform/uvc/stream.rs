@@ -1,6 +1,5 @@
 use std::sync::{mpsc, Arc};
 
-use crate::buffer::Buffer;
 use crate::error::Result;
 use crate::platform::uvc::device::UvcHandle;
 use crate::traits::Stream;
@@ -47,7 +46,7 @@ impl<'a> Handle<'a> {
 }
 
 impl<'a, 'b> Stream<'b> for Handle<'a> {
-    type Item = Result<Buffer<'b>>;
+    type Item = Result<&'b [u8]>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
         let frame = self.rx.recv().unwrap();
@@ -59,7 +58,6 @@ impl<'a, 'b> Stream<'b> for Handle<'a> {
             }
         };
 
-        let buffer = Buffer::from(pixels.to_vec());
-        Some(Ok(buffer))
+        Some(Ok(&pixels))
     }
 }

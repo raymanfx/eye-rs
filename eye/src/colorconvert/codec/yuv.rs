@@ -3,7 +3,6 @@ use ffimage::packed::{ImageBuffer, ImageView};
 use ffimage::traits::Convert;
 use ffimage_yuv::{yuv::Yuv, yuyv::Yuyv};
 
-use eye_hal::buffer::Buffer;
 use eye_hal::format::{ImageFormat, PixelFormat};
 
 use super::{Blueprint, Codec, Error, ErrorKind, Parameters, Result};
@@ -66,27 +65,20 @@ pub struct Instance {
 }
 
 impl Codec for Instance {
-    fn decode(&self, inbuf: &Buffer, outbuf: &mut Buffer) -> Result<()> {
+    fn decode(&self, inbuf: &[u8], outbuf: &mut Vec<u8>) -> Result<()> {
         match (&self.inparams.pixfmt, &self.outparams.pixfmt) {
             (PixelFormat::Custom(ident), PixelFormat::Rgb(24)) => {
                 if *ident != String::from("YUYV") {
                     return Err(Error::from(ErrorKind::UnsupportedFormat));
                 }
 
-                let mut buf = Vec::new();
                 let fmt = ImageFormat {
                     width: self.inparams.width,
                     height: self.inparams.height,
                     pixfmt: self.inparams.pixfmt.clone(),
                     stride: None,
                 };
-                match yuv422_to_rgb(inbuf.as_bytes(), &fmt, &mut buf) {
-                    Ok(()) => {
-                        *outbuf = Buffer::from(buf);
-                        Ok(())
-                    }
-                    Err(e) => Err(e),
-                }
+                yuv422_to_rgb(inbuf, &fmt, outbuf)
             }
             _ => Err(Error::from(ErrorKind::UnsupportedFormat)),
         }

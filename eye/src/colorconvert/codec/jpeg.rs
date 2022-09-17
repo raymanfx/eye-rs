@@ -1,6 +1,5 @@
 use jpeg_decoder::{Decoder, PixelFormat as JpegFormat};
 
-use eye_hal::buffer::Buffer;
 use eye_hal::format::PixelFormat;
 
 use super::{Blueprint, Codec, Error, ErrorKind, Parameters, Result};
@@ -63,18 +62,9 @@ pub struct Instance {
 }
 
 impl Codec for Instance {
-    fn decode(&self, inbuf: &Buffer, outbuf: &mut Buffer) -> Result<()> {
+    fn decode(&self, inbuf: &[u8], outbuf: &mut Vec<u8>) -> Result<()> {
         match (&self.inparams.pixfmt, &self.outparams.pixfmt) {
-            (PixelFormat::Jpeg, PixelFormat::Rgb(24)) => {
-                let mut buf = Vec::new();
-                match convert_to_rgb(inbuf.as_bytes(), &mut buf) {
-                    Ok(()) => {
-                        *outbuf = Buffer::from(buf);
-                        Ok(())
-                    }
-                    Err(e) => Err(e),
-                }
-            }
+            (PixelFormat::Jpeg, PixelFormat::Rgb(24)) => convert_to_rgb(inbuf, outbuf),
             _ => Err(Error::from(ErrorKind::UnsupportedFormat)),
         }
     }
