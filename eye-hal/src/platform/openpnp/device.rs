@@ -1,23 +1,28 @@
+use std::cell::Cell;
 use std::convert::TryInto;
 use std::{io, time};
 
 use openpnp_capture as pnp;
+use openpnp_capture_sys as sys;
 
 use crate::control;
 use crate::error::{Error, ErrorKind, Result};
 use crate::format::PixelFormat;
+use crate::platform::openpnp::control as pnp_ctrl;
 use crate::platform::openpnp::stream::Handle as StreamHandle;
 use crate::stream;
 use crate::traits::Device;
 
 pub struct Handle {
     inner: pnp::Device,
+    stream_id: Cell<Option<sys::CapStream>>,
 }
 
 impl Handle {
     pub fn new(index: u32) -> Option<Self> {
         let dev = Handle {
             inner: pnp::Device::new(index)?,
+            stream_id: Cell::new(None),
         };
         Some(dev)
     }
@@ -128,18 +133,48 @@ impl<'a> Device<'a> for Handle {
             fps: 0,
         };
 
-        Ok(StreamHandle::new(&self.inner, &fmt)?)
+        let handle = StreamHandle::new(&self.inner, &fmt)?;
+        self.stream_id.set(Some(handle.inner.id()));
+        Ok(handle)
     }
 
     fn controls(&self) -> Result<Vec<control::Descriptor>> {
-        Err(Error::new(ErrorKind::Other, "not supported"))
+        // Ensure a stream is currently open.
+        // This is required because openpnp is weird in that it insists to perform control
+        // operations on stream object instead of device ones.
+        let stream_id = self
+            .stream_id
+            .get()
+            .ok_or(Error::new(ErrorKind::Other, "stream not running"))?;
+
+        let pnp_ctx = pnp::context::CONTEXT.lock().unwrap().inner;
+        let controls = pnp_ctrl::all(pnp_ctx, stream_id).into_iter().collect();
+        Ok(controls)
     }
 
-    fn control(&self, _id: u32) -> Result<control::State> {
-        Err(Error::new(ErrorKind::Other, "not supported"))
+    fn control(&self, id: u32) -> Result<control::State> {
+        // Ensure a stream is currently open.
+        // This is required because openpnp is weird in that it insists to perform control
+        // operations on stream object instead of device ones.
+        let stream_id = self
+            .stream_id
+            .get()
+            .ok_or(Error::new(ErrorKind::Other, "stream not running"))?;
+
+        let pnp_ctx = pnp::context::CONTEXT.lock().unwrap().inner;
+        pnp_ctrl::read(pnp_ctx, stream_id, id)
     }
 
-    fn set_control(&mut self, _id: u32, _val: &control::State) -> Result<()> {
-        Err(Error::new(ErrorKind::Other, "not supported"))
+    fn set_control(&mut self, id: u32, val: &control::State) -> Result<()> {
+        // Ensure a stream is currently open.
+        // This is required because openpnp is weird in that it insists to perform control
+        // operations on stream object instead of device ones.
+        let stream_id = self
+            .stream_id
+            .get()
+            .ok_or(Error::new(ErrorKind::Other, "stream not running"))?;
+
+        let pnp_ctx = pnp::context::CONTEXT.lock().unwrap().inner;
+        pnp_ctrl::write(pnp_ctx, stream_id, id, val)
     }
 }

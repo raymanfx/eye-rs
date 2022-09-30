@@ -7,7 +7,7 @@ use crate::traits::Stream;
 use crate::{Error, ErrorKind};
 
 pub struct Handle {
-    inner: pnp::Stream,
+    pub(crate) inner: pnp::Stream,
     buffer: Vec<u8>,
 }
 
