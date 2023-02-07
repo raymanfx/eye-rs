@@ -1,6 +1,7 @@
-use ffimage::color::{Bgr, Rgb};
-use ffimage::packed::{ImageBuffer, ImageView};
-use ffimage::traits::{Convert, Pixel};
+use ffimage::{
+    color::{Bgr, Rgb},
+    iter::{BytesExt, ColorConvertExt, PixelsExt},
+};
 
 use eye_hal::format::{ImageFormat, PixelFormat};
 
@@ -81,26 +82,19 @@ impl Codec for Instance {
 }
 
 pub fn convert_to_bgr(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
-    let mut bgr = ImageBuffer::<Bgr<u8>>::new(src_fmt.width, src_fmt.height, 0u8);
-    match convert(src, src_fmt, &mut bgr) {
-        Ok(()) => {
-            *dst = bgr.into_buf();
-            Ok(())
-        }
-        Err(e) => Err(e),
+    let src_len = (src_fmt.width * src_fmt.height * 3) as usize;
+    let dst_len = (src_fmt.width * src_fmt.height * 3) as usize;
+    if src_len != src.len() {
+        return Err(Error::from(ErrorKind::InvalidBuffer));
     }
-}
 
-fn convert<DP>(src: &[u8], src_fmt: &ImageFormat, dst: &mut ImageBuffer<DP>) -> Result<()>
-where
-    DP: Pixel + From<Rgb<u8>> + Copy + Send,
-    DP::T: Default + Clone + Send,
-{
-    let rgb = match ImageView::<Rgb<u8>>::from_buf(src, src_fmt.width, src_fmt.height) {
-        Some(view) => view,
-        None => return Err(Error::from(ErrorKind::InvalidBuffer)),
-    };
+    dst.resize(dst_len, 0);
+    src.iter()
+        .copied()
+        .pixels::<Rgb<u8>>()
+        .colorconvert::<Bgr<u8>>()
+        .bytes()
+        .write(dst);
 
-    rgb.convert(dst);
     Ok(())
 }

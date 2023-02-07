@@ -1,7 +1,8 @@
-use ffimage::color::Rgb;
-use ffimage::packed::{ImageBuffer, ImageView};
-use ffimage::traits::Convert;
-use ffimage_yuv::{yuv::Yuv, yuyv::Yuyv};
+use ffimage::{
+    color::Rgb,
+    iter::{BytesExt, ColorConvertExt, PixelsExt},
+};
+use ffimage_yuv::{yuv::Yuv, yuv422::Yuv422};
 
 use eye_hal::format::{ImageFormat, PixelFormat};
 
@@ -86,26 +87,39 @@ impl Codec for Instance {
 }
 
 pub fn yuv444_to_rgb(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
-    let yuv444 = match ImageView::<Yuv<u8>>::from_buf(src, src_fmt.width, src_fmt.height) {
-        Some(view) => view,
-        None => return Err(Error::from(ErrorKind::InvalidBuffer)),
-    };
-    let mut rgb = ImageBuffer::<Rgb<u8>>::new(src_fmt.width, src_fmt.height, 0u8);
-    yuv444.convert(&mut rgb);
-    *dst = rgb.into_buf();
+    let src_len = (src_fmt.width * src_fmt.height * 3) as usize;
+    let dst_len = (src_fmt.width * src_fmt.height * 3) as usize;
+    if src_len != src.len() {
+        return Err(Error::from(ErrorKind::InvalidBuffer));
+    }
+
+    dst.resize(dst_len, 0);
+    src.iter()
+        .copied()
+        .pixels::<Yuv<u8>>()
+        .colorconvert::<Rgb<u8>>()
+        .bytes()
+        .write(dst);
 
     Ok(())
 }
 
 pub fn yuv422_to_rgb(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
-    // First stage conversion: YUV 4:2:0 --> YUV 4:4:4
-    let yuv422 = match ImageView::<Yuyv<u8>>::from_buf(src, src_fmt.width, src_fmt.height) {
-        Some(view) => view,
-        None => return Err(Error::from(ErrorKind::InvalidBuffer)),
-    };
-    let mut yuv444 = ImageBuffer::<Yuv<u8>>::new(src_fmt.width, src_fmt.height, 0u8);
-    yuv422.convert(&mut yuv444);
+    let src_len = (src_fmt.width * src_fmt.height * 2) as usize;
+    let dst_len = (src_fmt.width * src_fmt.height * 3) as usize;
+    if src_len != src.len() {
+        return Err(Error::from(ErrorKind::InvalidBuffer));
+    }
 
-    // Second stage conversion: YUV 4:4:4 --> RGB
-    yuv444_to_rgb(yuv444.as_ref(), src_fmt, dst)
+    dst.resize(dst_len, 0);
+    src.iter()
+        .copied()
+        .pixels::<Yuv422<u8, 0, 2, 1, 3>>()
+        .colorconvert::<[Yuv<u8>; 2]>()
+        .flatten()
+        .colorconvert::<Rgb<u8>>()
+        .bytes()
+        .write(dst);
+
+    Ok(())
 }
