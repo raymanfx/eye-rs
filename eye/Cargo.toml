@@ -1,7 +1,7 @@
 [package]
 name = "eye"
 description = "Cross platform camera capture and control"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["Christopher N. Hesse <raymanfx@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -13,7 +13,7 @@ default = ["jpeg"]
 jpeg = ["jpeg-decoder"]
 
 [dependencies]
-eye-hal = { version = "0.1.0", path = "../eye-hal" }
+eye-hal = { version = "0.2.0", path = "../eye-hal" }
 ffimage = "0.10.0"
 ffimage_yuv = "0.10.0"
 

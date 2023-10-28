@@ -1,5 +1,15 @@
 # Changelog
 
+### 0.5
+> #### Added
+> * Device product description (`device::Description`)
+> * Glium example
+> * Restored openpnp-capture HAL
+>   - libuvc does not support iSight cameras of current-gen MacBooks
+>   - libuvc remains as the default Windows backend, while macOS defaults to openpnp-capture
+> * Device controls (brightness, saturation, ...) for openpnp-capture HAL
+> * Support for YUYV formats (autoconversion to RGB) when using the high-level `eye` crate
+
 ### 0.4
 > #### Added
 > * Universal Video Class (UVC) HAL
