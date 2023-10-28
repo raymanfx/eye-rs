@@ -8,7 +8,6 @@ use crate::traits::Stream;
 
 pub struct Handle<'a> {
     stream: MmapStream<'a>,
-    stream_buf_index: usize,
     active: bool,
 }
 
@@ -17,7 +16,6 @@ impl<'a> Handle<'a> {
         let stream = MmapStream::new(dev.inner(), BufType::VideoCapture)?;
         Ok(Handle {
             stream,
-            stream_buf_index: 0,
             active: false,
         })
     }
@@ -41,27 +39,6 @@ impl<'a> Handle<'a> {
         self.active = false;
         Ok(())
     }
-
-    fn queue(&mut self) -> Result<()> {
-        if !self.active {
-            self.start()?;
-        }
-
-        self.stream.queue(self.stream_buf_index)?;
-        Ok(())
-    }
-
-    fn dequeue(&mut self) -> Result<&[u8]> {
-        self.stream_buf_index = self.stream.dequeue()?;
-
-        let buffer = self.stream.get(self.stream_buf_index).unwrap();
-        let meta = self.stream.get_meta(self.stream_buf_index).unwrap();
-
-        // For compressed formats, the buffer length will not actually describe the number of bytes
-        // in a frame. Instead, we have to explicitly query about the amount of used bytes.
-        let view = &buffer[0..meta.bytesused as usize];
-        Ok(view)
-    }
 }
 
 impl<'a> Drop for Handle<'a> {
@@ -77,10 +54,14 @@ impl<'a, 'b> Stream<'b> for Handle<'a> {
     type Item = Result<&'b [u8]>;
 
     fn next(&'b mut self) -> Option<Self::Item> {
-        if let Err(e) = self.queue() {
-            return Some(Err(e));
+        match self.stream.next() {
+            Ok((buf, meta)) => {
+                // For compressed formats, the buffer length will not actually describe the number
+                // of bytes in a frame. Instead, we have to explicitly query about the amount of
+                // used bytes.
+                Some(Ok(&buf[0..meta.bytesused as usize]))
+            }
+            Err(e) => Some(Err(e.into())),
         }
-
-        Some(self.dequeue())
     }
 }
