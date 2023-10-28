@@ -52,6 +52,14 @@ impl<'a> Context<'a> {
     }
 }
 
+impl<'a> Default for Context<'a> {
+    fn default() -> Self {
+        Self::all()
+            .next()
+            .expect("no contexts available for this platform")
+    }
+}
+
 impl<'a> ContextTrait<'a> for Context<'a> {
     type Device = Device<'a>;
 

@@ -44,7 +44,7 @@
 //!
 //! // First, we need a capture device to read images from. For this example, let's just choose
 //! // whatever device is first in the list.
-//! let dev = ctx.open_device(&devices[0]).expect("Failed to open video device");
+//! let dev = ctx.open_device(&devices[0].uri).expect("Failed to open video device");
 //!
 //! // Query for available streams and just choose the first one.
 //! let streams = dev.streams().expect("Failed to query streams");
