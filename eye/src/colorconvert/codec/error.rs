@@ -29,7 +29,7 @@ impl fmt::Debug for Repr {
 
 #[derive(Debug)]
 struct Custom {
-    kind: ErrorKind,
+    _kind: ErrorKind,
     error: Box<dyn error::Error + Send + Sync>,
 }
 
@@ -47,7 +47,12 @@ pub enum ErrorKind {
 
 impl fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        match self {
+            ErrorKind::InvalidBuffer => write!(f, "InvalidBuffer"),
+            ErrorKind::InvalidParam => write!(f, "InvalidParam"),
+            ErrorKind::UnsupportedFormat => write!(f, "UnsupportedFormat"),
+            ErrorKind::Other => write!(f, "Other"),
+        }
     }
 }
 
@@ -58,7 +63,7 @@ impl Error {
     {
         Error {
             repr: Repr::Custom(Box::new(Custom {
-                kind,
+                _kind: kind,
                 error: error.into(),
             })),
         }
@@ -77,7 +82,7 @@ impl From<io::Error> for Error {
     fn from(error: io::Error) -> Self {
         Error {
             repr: Repr::Custom(Box::new(Custom {
-                kind: ErrorKind::Other,
+                _kind: ErrorKind::Other,
                 error: error.into(),
             })),
         }

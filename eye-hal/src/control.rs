@@ -58,6 +58,7 @@ pub enum MenuItem {
 
 bitflags! {
     /// Control state flags
+   #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub struct Flags: u32 {
         /// No flags are set
         const NONE                  = 0x000;

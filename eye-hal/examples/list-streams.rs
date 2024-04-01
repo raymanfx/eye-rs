@@ -18,7 +18,7 @@ fn main() -> Result<()> {
 
         println!("  Streams:");
         for (pixfmt, streams) in &streams.into_iter().group_by(|desc| desc.pixfmt.clone()) {
-            println!("");
+            println!();
             println!("    Pixelformat : {}", pixfmt);
 
             // sort by resolution, smallest first
