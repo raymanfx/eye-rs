@@ -44,7 +44,10 @@ impl Blueprint for Builder {
     }
 
     fn src_fmts(&self) -> Vec<PixelFormat> {
-        vec![PixelFormat::Custom(String::from("YUYV"))]
+        vec![
+            PixelFormat::Custom(String::from("YUYV")),
+            PixelFormat::Custom(String::from("IYU2")),
+        ]
     }
 
     fn dst_fmts(&self) -> Vec<PixelFormat> {
@@ -61,24 +64,25 @@ impl Codec for Instance {
     fn decode(&self, inbuf: &[u8], outbuf: &mut Vec<u8>) -> Result<()> {
         match (&self.inparams.pixfmt, &self.outparams.pixfmt) {
             (PixelFormat::Custom(ident), PixelFormat::Rgb(24)) => {
-                if ident.as_str() != "YUYV" {
-                    return Err(Error::from(ErrorKind::UnsupportedFormat));
-                }
-
                 let fmt = ImageFormat {
                     width: self.inparams.width,
                     height: self.inparams.height,
                     pixfmt: self.inparams.pixfmt.clone(),
                     stride: None,
                 };
-                yuv422_to_rgb(inbuf, &fmt, outbuf)
+
+                match ident.as_str() {
+                    "YUYV" => yuv422_to_rgb(inbuf, &fmt, outbuf),
+                    "IYU2" => yuv444_to_rgb(inbuf, &fmt, outbuf),
+                    _ => return Err(Error::from(ErrorKind::UnsupportedFormat)),
+                }
             }
             _ => Err(Error::from(ErrorKind::UnsupportedFormat)),
         }
     }
 }
 
-pub fn _yuv444_to_rgb(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
+pub fn yuv444_to_rgb(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
     let src_len = (src_fmt.width * src_fmt.height * 3) as usize;
     let dst_len = (src_fmt.width * src_fmt.height * 3) as usize;
     if src_len != src.len() {
