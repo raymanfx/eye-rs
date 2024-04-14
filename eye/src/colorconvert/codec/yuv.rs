@@ -12,14 +12,8 @@ pub fn blueprint() -> impl Blueprint {
     Builder::default()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Builder {}
-
-impl Default for Builder {
-    fn default() -> Self {
-        Builder {}
-    }
-}
 
 impl Blueprint for Builder {
     fn instantiate(
@@ -27,16 +21,14 @@ impl Blueprint for Builder {
         inparams: Parameters,
         outparams: Parameters,
     ) -> Result<Box<dyn Codec + Send>> {
-        if self
+        if !self
             .src_fmts()
             .iter()
-            .find(|pixfmt| **pixfmt == inparams.pixfmt)
-            .is_none()
-            || self
+            .any(|pixfmt| *pixfmt == inparams.pixfmt)
+            || !self
                 .dst_fmts()
                 .iter()
-                .find(|pixfmt| **pixfmt == outparams.pixfmt)
-                .is_none()
+                .any(|pixfmt| *pixfmt == outparams.pixfmt)
         {
             return Err(Error::from(ErrorKind::UnsupportedFormat));
         }
@@ -69,7 +61,7 @@ impl Codec for Instance {
     fn decode(&self, inbuf: &[u8], outbuf: &mut Vec<u8>) -> Result<()> {
         match (&self.inparams.pixfmt, &self.outparams.pixfmt) {
             (PixelFormat::Custom(ident), PixelFormat::Rgb(24)) => {
-                if *ident != String::from("YUYV") {
+                if ident.as_str() != "YUYV" {
                     return Err(Error::from(ErrorKind::UnsupportedFormat));
                 }
 
@@ -86,7 +78,7 @@ impl Codec for Instance {
     }
 }
 
-pub fn yuv444_to_rgb(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
+pub fn _yuv444_to_rgb(src: &[u8], src_fmt: &ImageFormat, dst: &mut Vec<u8>) -> Result<()> {
     let src_len = (src_fmt.width * src_fmt.height * 3) as usize;
     let dst_len = (src_fmt.width * src_fmt.height * 3) as usize;
     if src_len != src.len() {

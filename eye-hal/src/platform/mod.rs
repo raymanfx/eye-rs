@@ -2,8 +2,6 @@
 //!
 //! Multiple backends can be implemented for a given platform.
 
-use std::array;
-
 use crate::control;
 use crate::device;
 use crate::error::Result;
@@ -41,7 +39,7 @@ pub enum Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn all() -> impl Iterator<Item = Context<'a>> {
-        array::IntoIter::new([
+        std::iter::IntoIterator::into_iter([
             #[cfg(target_os = "linux")]
             Context::V4l2(v4l2::context::Context {}),
             #[cfg(any(target_os = "windows", feature = "plat-uvc"))]

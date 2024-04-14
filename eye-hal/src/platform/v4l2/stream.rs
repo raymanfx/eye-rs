@@ -20,7 +20,7 @@ impl<'a> Handle<'a> {
         })
     }
 
-    fn start(&mut self) -> Result<()> {
+    fn _start(&mut self) -> Result<()> {
         if self.active {
             return Ok(());
         }

@@ -29,7 +29,7 @@ impl fmt::Debug for Repr {
 
 #[derive(Debug)]
 struct Custom {
-    kind: ErrorKind,
+    _kind: ErrorKind,
     error: Box<dyn error::Error + Send + Sync>,
 }
 
@@ -57,7 +57,7 @@ impl Error {
     {
         Error {
             repr: Repr::Custom(Box::new(Custom {
-                kind,
+                _kind: kind,
                 error: error.into(),
             })),
         }
@@ -76,7 +76,7 @@ impl From<io::Error> for Error {
     fn from(error: io::Error) -> Self {
         Error {
             repr: Repr::Custom(Box::new(Custom {
-                kind: ErrorKind::Other,
+                _kind: ErrorKind::Other,
                 error: error.into(),
             })),
         }

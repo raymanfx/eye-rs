@@ -9,7 +9,6 @@ pub mod context;
 pub mod device;
 pub mod stream;
 
-pub use context::Context;
 
 use std::{convert::TryInto, str};
 

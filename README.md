@@ -38,22 +38,22 @@ There are various HAL specific properties. For example, the v4l2 HAL on Linux su
 Below you can find a quick example usage of this crate. It introduces the basics necessary for image capturing.
 
 ```rust
-use eye_hal::PlatformContext;
 use eye_hal::traits::{Context, Device, Stream};
+use eye_hal::PlatformContext;
 
-fn main() -> Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a context
     let ctx = PlatformContext::default();
 
     // Query for available devices.
-    let devices = ctx.query_devices()?;
+    let devices = ctx.devices()?;
 
     // First, we need a capture device to read images from. For this example, let's just choose
     // whatever device is first in the list.
-    let dev = ctx.open_device(&devices[0])?;
+    let dev = ctx.open_device(&devices[0].uri)?;
 
     // Query for available streams and just choose the first one.
-    let streams = dev.query_streams()?;
+    let streams = dev.streams()?;
     let stream_desc = streams[0].clone();
     println!("Stream: {:?}", stream_desc);
 
@@ -65,7 +65,7 @@ fn main() -> Result<()> {
     // Here we create a loop and just capture images as long as the device produces them. Normally,
     // this loop will run forever unless we unplug the camera or exit the program.
     loop {
-        let frame = stream
+        let _frame = stream
             .next()
             .expect("Stream is dead")
             .expect("Failed to capture frame");

@@ -42,12 +42,9 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             for chain in blueprint.src_fmts().iter().zip(blueprint.dst_fmts().iter()) {
                 if streams
                     .iter()
-                    .find(|stream| stream.pixfmt == *chain.0)
-                    .is_some()
-                    && streams
-                        .iter()
-                        .find(|stream| stream.pixfmt == *chain.1)
-                        .is_none()
+                    .any(|stream| stream.pixfmt == *chain.0)
+                    && !streams
+                        .iter().any(|stream| stream.pixfmt == *chain.1)
                 {
                     // collect all streams with this pixfmt
                     let _streams: Vec<stream::Descriptor> = streams
@@ -78,9 +75,9 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
 
     fn start_stream(&self, desc: &stream::Descriptor) -> Result<Self::Stream> {
         let native_streams = self.inner.streams()?;
-        if let Some(_) = native_streams
+        if native_streams
             .iter()
-            .find(|stream| stream.pixfmt == desc.pixfmt)
+            .any(|stream| stream.pixfmt == desc.pixfmt)
         {
             // no emulation required
             return self.inner.start_stream(desc);
@@ -92,8 +89,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             .filter(|bp| {
                 bp.dst_fmts()
                     .iter()
-                    .find(|pixfmt| **pixfmt == desc.pixfmt)
-                    .is_some()
+                    .any(|pixfmt| *pixfmt == desc.pixfmt)
             })
             .collect();
         let src_fmt = if let Some(pixfmt) = blueprints.iter().find_map(|bp| {
@@ -118,8 +114,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         let blueprint = if let Some(bp) = blueprints.into_iter().find(|bp| {
             bp.src_fmts()
                 .into_iter()
-                .find(|pixfmt| *pixfmt == src_fmt)
-                .is_some()
+                .any(|pixfmt| pixfmt == src_fmt)
         }) {
             bp
         } else {
