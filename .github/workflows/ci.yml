@@ -16,7 +16,7 @@ env:
 jobs:
   rustfmt:
     name: rustfmt
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
 
   clippy:
     name: clippy
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
 
   test:
     name: test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
 
   check:
     name: check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -60,11 +60,11 @@ jobs:
       matrix:
         include:
         - build: v4l2-ubuntu
-          os: ubuntu-18.04
+          os: ubuntu-22.04
           rust: stable
           features: ""
         - build: openpnp-macos
-          os: macos-10.15
+          os: macos-14
           rust: stable
           features: ""
     steps:
