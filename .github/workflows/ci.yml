@@ -20,13 +20,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-        profile: minimal
-        components: rustfmt
     - name: Run rustfmt
       run: cargo fmt -- --check
 
@@ -36,13 +29,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-        profile: minimal
-        components: clippy
     - name: Run clippy
       continue-on-error: true
       run: cargo clippy -- -D warnings
@@ -53,12 +39,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-        profile: minimal
     - name: Run tests
       run: cargo test --manifest-path=eye/Cargo.toml
 
@@ -68,12 +48,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-        profile: minimal
     - name: Check
       run: cargo check
     - name: Check examples
@@ -96,11 +70,5 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Install rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        profile: minimal
-        override: true
     - name: Check
       run: cargo check --manifest-path=eye/Cargo.toml ${{ matrix.features }}
