@@ -9,7 +9,6 @@ pub mod context;
 pub mod device;
 pub mod stream;
 
-
 use std::{convert::TryInto, str};
 
 use crate::format::PixelFormat;

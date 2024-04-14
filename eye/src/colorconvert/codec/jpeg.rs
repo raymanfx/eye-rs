@@ -8,10 +8,8 @@ pub fn blueprint() -> impl Blueprint {
     Builder::default()
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Builder {}
-
 
 impl Blueprint for Builder {
     fn instantiate(
@@ -21,10 +19,12 @@ impl Blueprint for Builder {
     ) -> Result<Box<dyn Codec + Send>> {
         if !self
             .src_fmts()
-            .iter().any(|pixfmt| *pixfmt == inparams.pixfmt)
+            .iter()
+            .any(|pixfmt| *pixfmt == inparams.pixfmt)
             || !self
                 .dst_fmts()
-                .iter().any(|pixfmt| *pixfmt == outparams.pixfmt)
+                .iter()
+                .any(|pixfmt| *pixfmt == outparams.pixfmt)
         {
             return Err(Error::from(ErrorKind::UnsupportedFormat));
         }

@@ -40,11 +40,8 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         // now check which formats we can emulate
         for blueprint in codec::blueprints() {
             for chain in blueprint.src_fmts().iter().zip(blueprint.dst_fmts().iter()) {
-                if streams
-                    .iter()
-                    .any(|stream| stream.pixfmt == *chain.0)
-                    && !streams
-                        .iter().any(|stream| stream.pixfmt == *chain.1)
+                if streams.iter().any(|stream| stream.pixfmt == *chain.0)
+                    && !streams.iter().any(|stream| stream.pixfmt == *chain.1)
                 {
                     // collect all streams with this pixfmt
                     let _streams: Vec<stream::Descriptor> = streams
@@ -86,11 +83,7 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         // find a supported format mapping
         let blueprints: Vec<Box<dyn codec::Blueprint>> = codec::blueprints()
             .into_iter()
-            .filter(|bp| {
-                bp.dst_fmts()
-                    .iter()
-                    .any(|pixfmt| *pixfmt == desc.pixfmt)
-            })
+            .filter(|bp| bp.dst_fmts().iter().any(|pixfmt| *pixfmt == desc.pixfmt))
             .collect();
         let src_fmt = if let Some(pixfmt) = blueprints.iter().find_map(|bp| {
             for pixfmt in bp.src_fmts() {
@@ -111,11 +104,10 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
         };
 
         // get the codec blueprint
-        let blueprint = if let Some(bp) = blueprints.into_iter().find(|bp| {
-            bp.src_fmts()
-                .into_iter()
-                .any(|pixfmt| pixfmt == src_fmt)
-        }) {
+        let blueprint = if let Some(bp) = blueprints
+            .into_iter()
+            .find(|bp| bp.src_fmts().into_iter().any(|pixfmt| pixfmt == src_fmt))
+        {
             bp
         } else {
             return Err(Error::new(
