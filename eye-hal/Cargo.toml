@@ -15,7 +15,7 @@ bitflags = "2.5.0"
 v4l = "0.14.0"
 
 [target.'cfg(target_os="windows")'.dependencies]
-uvc = { version = "0.2.0", features = ["vendor"] }
+uvc = "0.2.0"
 
 [target.'cfg(target_os="macos")'.dependencies]
 openpnp_capture = { version = "0.2.4" }
