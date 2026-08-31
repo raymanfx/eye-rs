@@ -10,6 +10,14 @@ repository= "https://github.com/raymanfx/eye-rs"
 
 [dependencies]
 bitflags = "2.5.0"
+aravis-sys = { version = "0.11", optional = true }
+glib-sys = { version = "0.20", optional = true }
+gobject-sys = { version = "0.20", optional = true }
+libc = { version = "0.2", optional = true }
+log = { version = "0.4", optional = true }
+
+[features]
+aravis = ["dep:aravis-sys", "dep:glib-sys", "dep:gobject-sys", "dep:libc", "dep:log"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 v4l = "0.14.0"
@@ -24,3 +32,13 @@ openpnp_capture_sys = { version = "0.4.0" }
 [dev-dependencies]
 itertools = "0.11.0"
 image = "0.25.1"
+
+[[example]]
+name = "aravis-capture"
+path = "examples/aravis-capture.rs"
+required-features = ["aravis"]
+
+[[example]]
+name = "aravis-hal-capture"
+path = "examples/aravis-hal-capture.rs"
+required-features = ["aravis"]
