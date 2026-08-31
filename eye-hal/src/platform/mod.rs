@@ -17,6 +17,9 @@ pub(crate) mod uvc;
 #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
 pub(crate) mod openpnp;
 
+#[cfg(feature = "aravis")]
+pub(crate) mod aravis;
+
 /// Platform context
 ///
 /// Leaky abstraction: if you require access to platform specific features, match the enum instance
@@ -35,6 +38,9 @@ pub enum Context<'a> {
     #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
     /// Open Pick and Place
     OpenPnP(openpnp::context::Context),
+    #[cfg(feature = "aravis")]
+    /// Aravis (GenICam / USB3 Vision / GigE Vision) context
+    Aravis(aravis::context::Context),
 }
 
 impl<'a> Context<'a> {
@@ -46,6 +52,8 @@ impl<'a> Context<'a> {
             Context::Uvc(uvc::context::Context {}),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Context::OpenPnP(openpnp::context::Context {}),
+            #[cfg(feature = "aravis")]
+            Context::Aravis(aravis::context::Context {}),
         ])
     }
 }
@@ -70,6 +78,8 @@ impl<'a> ContextTrait<'a> for Context<'a> {
             Self::Uvc(ctx) => ctx.devices(),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(ctx) => ctx.devices(),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(ctx) => ctx.devices(),
         }
     }
 
@@ -82,6 +92,8 @@ impl<'a> ContextTrait<'a> for Context<'a> {
             Self::Uvc(ctx) => Ok(Device::Uvc(ctx.open_device(uri)?)),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(ctx) => Ok(Device::OpenPnP(ctx.open_device(uri)?)),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(ctx) => Ok(Device::Aravis(ctx.open_device(uri)?)),
         }
     }
 }
@@ -104,6 +116,9 @@ pub enum Device<'a> {
     #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
     /// Open Pick and Place
     OpenPnP(openpnp::device::Handle),
+    #[cfg(feature = "aravis")]
+    /// Aravis device handle
+    Aravis(aravis::device::Handle),
 }
 
 impl<'a> DeviceTrait<'a> for Device<'a> {
@@ -118,6 +133,8 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Uvc(dev) => dev.streams(),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(dev) => dev.streams(),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(dev) => dev.streams(),
         }
     }
 
@@ -130,6 +147,8 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Uvc(dev) => dev.controls(),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(dev) => dev.controls(),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(dev) => dev.controls(),
         }
     }
 
@@ -142,6 +161,8 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Uvc(dev) => dev.control(id),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(dev) => dev.control(id),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(dev) => dev.control(id),
         }
     }
 
@@ -154,6 +175,8 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Uvc(dev) => dev.set_control(id, val),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(dev) => dev.set_control(id, val),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(dev) => dev.set_control(id, val),
         }
     }
 
@@ -166,6 +189,8 @@ impl<'a> DeviceTrait<'a> for Device<'a> {
             Self::Uvc(dev) => Ok(Stream::Uvc(dev.start_stream(desc)?)),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(dev) => Ok(Stream::OpenPnP(dev.start_stream(desc)?)),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(dev) => Ok(Stream::Aravis(dev.start_stream(desc)?)),
         }
     }
 }
@@ -190,6 +215,9 @@ pub enum Stream<'a> {
     #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
     /// Open Pick and Place
     OpenPnP(openpnp::stream::Handle),
+    #[cfg(feature = "aravis")]
+    /// Aravis stream handle
+    Aravis(aravis::stream::Handle),
 }
 
 impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
@@ -204,6 +232,8 @@ impl<'a, 'b> StreamTrait<'b> for Stream<'a> {
             Self::Uvc(stream) => stream.next(),
             #[cfg(any(target_os = "macos", feature = "plat-openpnp"))]
             Self::OpenPnP(stream) => stream.next(),
+            #[cfg(feature = "aravis")]
+            Self::Aravis(stream) => stream.next(),
         }
     }
 }
