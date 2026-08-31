@@ -1,4 +1,6 @@
 use std::io;
+use std::thread;
+use std::time::Duration;
 
 use openpnp_capture as pnp;
 
@@ -34,7 +36,9 @@ impl<'a> Stream<'a> for Handle {
     type Item = Result<&'a [u8]>;
 
     fn next(&'a mut self) -> Option<Self::Item> {
-        while !self.inner.poll() { /* busy loop */ }
+        while !self.inner.poll() {
+            thread::sleep(Duration::from_millis(1));
+        }
         match self.inner.read(&mut self.buffer) {
             Ok(()) => {}
             Err(e) => return Some(Err(Error::new(ErrorKind::Other, e))),
