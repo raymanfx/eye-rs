@@ -139,7 +139,7 @@ pub fn write(
             }
         },
         Typ::Auto => unsafe {
-            let mut on_off = if let control::State::Boolean(on) = value {
+            let on_off = if let control::State::Boolean(on) = value {
                 if *on {
                     1
                 } else {
@@ -148,7 +148,7 @@ pub fn write(
             } else {
                 return Err(Error::new(ErrorKind::Other, "invalid control state"));
             };
-            match sys::Cap_getAutoProperty(ctx, stream, *id, &mut on_off) {
+            match sys::Cap_setAutoProperty(ctx, stream, *id, on_off) {
                 sys::CAPRESULT_OK => Ok(()),
                 sys::CAPRESULT_PROPERTYNOTSUPPORTED => {
                     Err(Error::new(ErrorKind::Other, "property not available"))
